@@ -12,18 +12,26 @@ transparente, sans lien.
 Ajouter un exercice : déposer sa page dans src/exercices/, sa vignette (480 × 270) dans src/images/, puis décrire
 la carte dans EXERCICES (avec "page" : nom du fichier publié). Remplacer une carte « en cours d'édition » : même chose,
 en retirant sa ligne de ENCOURS.
+
+Niveau 3 : le cours 3 (src/cours3.py) et les exercices 3.1 à 3.3 (src/niveau3.py) sont générés ici, sur le gabarit,
+au lieu d'être copiés ; leurs cartes sont décrites dans NIVEAU3.
 """
 import base64
 import html
 import pathlib
 import re
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import niveau3  # noqa: E402
+from cours3 import render_cours3  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GABARIT = ROOT / "src" / "gabarit-exercice-interactif.html"
 IMAGES = ROOT / "src" / "images"
 SOURCES = ROOT / "src" / "exercices"
 TITRE = "Statique"
-SOUS_TITRE = ("Statique du solide : modéliser les actions mécaniques, appliquer le principe fondamental de la statique, isoler un solide et déterminer les actions inconnues. Des cours, des exercices et des études de cas interactifs de deux niveaux, à faire en mode entraînement ou en mode examen.")
+SOUS_TITRE = ("Statique du solide : modéliser les actions mécaniques, appliquer le principe fondamental de la statique, isoler un solide et déterminer les actions inconnues. Des cours, des exercices et des études de cas interactifs de trois niveaux, à faire en mode entraînement ou en mode examen.")
 
 # Cartes avec contenu : la page est copiée de src/exercices/<source> vers <page> (lien de retour ajouté).
 EXERCICES = [
@@ -43,6 +51,14 @@ ENCOURS = [
     ("exercices", "Exercice 1.1", "Niveau 1", "Équilibre d'un solide", ["Bilan des actions", "Équations", "Résolution"]),
     ("etudes", "Étude 1", None, "Étude de cas", ["Système réel", "Isolement", "Dimensionnement"]),
 ]
+# Niveau 3 : pages générées (cours 3 par src/cours3.py, exercices par src/niveau3.py)
+NIVEAU3 = [
+    {"rubrique": "cours", "tag": "Cours 3", "level": "Niveau 3", "title": "Statique analytique",
+     "mots": ["PFS", "Torseurs", "Problème plan", "Méthode"], "vign": "carte-cours-statique-analytique.jpg",
+     "alt": "Solide en équilibre sous deux forces directement opposées", "page": "cours-statique-analytique.html",
+     "bouton": "Lire le cours"},
+] + [{"rubrique": "exercices", "tag": e["tag"], "level": e["level"], "title": e["title"], "mots": e["mots"],
+      "vign": e["vign"], "alt": e["alt"], "page": e["page"], "exo": e} for e in niveau3.EXOS]
 RUBRIQUES = [("cours", "Les cours"), ("formulaire", "Le formulaire"), ("exercices", "Les exercices"),
              ("etudes", "Études de cas")]
 
@@ -82,7 +98,7 @@ def carte(tag, level, title, mots, href=None, bouton="Ouvrir l'exercice", vign=N
 
 def render_hub():
     grilles = {k: [] for k, _ in RUBRIQUES}  # (étiquette, carte) : triées par étiquette
-    for e in EXERCICES:
+    for e in EXERCICES + NIVEAU3:
         grilles[e["rubrique"]].append((e["tag"], carte(e["tag"], e["level"], e["title"], e["mots"], e["page"],
                                             e.get("bouton", "Ouvrir l'exercice"), e["vign"], e["alt"])))
     for rub, tag, level, title, mots in ENCOURS:
@@ -92,7 +108,7 @@ def render_hub():
     return (f'<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head">'
             f'<h1 id="home-title">{TITRE}</h1><p class="home-sub">{SOUS_TITRE}</p></header></div></div>'
             f'{sections}<p class="home-note small">Pastilles : {pastille("Niveau 1").strip()} premier niveau, '
-            f'{pastille("Niveau 2").strip()} niveau approfondi. Les cartes légèrement transparentes sont en cours '
+            f'{pastille("Niveau 2").strip()} niveau approfondi, {pastille("Niveau 3").strip()} statique analytique. Les cartes légèrement transparentes sont en cours '
             "d'édition. Rien n'est enregistré sur l'ordinateur.</p>")
 
 
@@ -156,6 +172,7 @@ body.hub .carte-v .btn,body.hub .carte-v .etat{align-self:end; justify-self:star
 .en-edition .cv-mots li{background:#F4F5F2; border-color:var(--trait-fin); color:var(--encre-2)}
 .pastille{display:inline-block; font:700 .72rem var(--f-titre); letter-spacing:.03em; background:var(--vert); color:#fff; padding:2px 8px; margin-left:6px; vertical-align:middle}
 .pastille.n2{background:var(--bleu)}
+.pastille.n3{background:#7B3FA0}
 .mc-tag .pastille{margin-left:8px; font-size:.68rem; padding:1px 6px}
 .ex-grid .en-edition{opacity:.62}
 body.hub #home{min-height:0}
@@ -204,6 +221,15 @@ def build():
         out = page_exercice(e)
         (ROOT / e["page"]).write_text(out, encoding="utf-8")
         print(f"{e['page']} : {len(out.encode('utf-8')) / 1024:.0f} Kio")
+    # niveau 3 : cours et exercices générés sur le gabarit
+    cours = render_cours3(style, HUB_CSS)
+    (ROOT / "cours-statique-analytique.html").write_text(cours, encoding="utf-8")
+    print(f"cours-statique-analytique.html : {len(cours.encode('utf-8')) / 1024:.0f} Kio")
+    for e in niveau3.EXOS:
+        out, st = niveau3.build_exo(e, g)
+        (ROOT / e["page"]).write_text(out, encoding="utf-8")
+        print(f"{e['page']} : {len(out.encode('utf-8')) / 1024:.0f} Kio — {st['parts']} parties, {st['n_q']} questions, "
+              f"{st['n_sk']} tracé(s), {st['points']} points, {niveau3.hm(st['minutes'])}")
 
 
 if __name__ == "__main__":

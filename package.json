@@ -1,0 +1,12 @@
+{
+  "name": "statique-exercices-interactifs",
+  "private": true,
+  "description": "Statique : cours et exercices interactifs autonomes",
+  "scripts": {
+    "generer": "python3 src/generer.py",
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
