@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Fichier généré par src/generer.py (contenu : src/cours3.py) : ne pas modifier à la main. -->
+<title>Statique analytique — cours — Statique</title>
+<meta name="description" content="Cours interactif de statique analytique (niveau 3) : PFS, solide soumis à deux forces, torseurs des liaisons, problème plan, moment d'une force, méthode de résolution, quiz.">
+<style>:root{
+  --beton:#E3E5E0; --papier:#FFFFFF; --encre:#1C2530; --encre-2:#46525C;
+  --trait:#A5ADAA; --trait-fin:#D3D8D5;
+  --jaune:#F2B705; --jaune-pale:#FFF3C4;
+  --bleu:#1F5FA8; --bleu-pale:#E6EEF8;
+  --vert:#1B7A43; --vert-pale:#E2F1E7; --rouge:#B42318; --rouge-pale:#FBE6E4;
+  --orange:#B26A00; --orange-pale:#FCEFD8;
+  --f-titre:"Bahnschrift","DIN Alternate","DIN Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  --f-texte:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --rail:58px; --panel:min(900px, 47vw); --banner:58px;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:16px; scroll-padding-bottom:calc(var(--banner) + 16px)}
+body{margin:0; background:var(--beton); color:var(--encre); font:16px/1.55 var(--f-texte);
+  font-variant-numeric:tabular-nums; padding-bottom:calc(var(--banner) + 40px)}
+img{max-width:100%; height:auto}
+sub,sup{line-height:0}
+button,input{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--bleu); outline-offset:2px}
+.small{font-size:.9rem; color:var(--encre-2)}
+.print-only{display:none}
+
+/* ---------- mise en page ---------- */
+.page{max-width:900px; margin:0 auto; padding:28px 22px 0; transition:margin .25s ease}
+body.panel-open .page{margin-right:calc(var(--panel) + var(--rail) + 24px); margin-left:24px}
+@media (max-width:1180px){ body.panel-open .page{margin:0 auto} }
+
+/* ---------- cartouche ---------- */
+.cartouche{background:var(--papier); border:2px solid var(--encre); display:grid;
+  grid-template-columns:1fr; margin-bottom:26px}
+.cartouche>div{border-right:1px solid var(--encre); border-bottom:1px solid var(--encre); padding:8px 12px}
+.cartouche>div:nth-child(3n){border-right:0}
+.cartouche .k{display:block; font:600 .72rem/1.2 var(--f-titre); letter-spacing:.02em; color:var(--encre-2)}
+.cartouche .v{font:600 1rem/1.3 var(--f-titre)}
+.cartouche .title{grid-column:1/-1; border-right:0; padding:18px 16px 16px}
+.cartouche h1{margin-top:0}
+.cartouche h1{font:700 clamp(1.6rem,3.6vw,2.35rem)/1.08 var(--f-titre); margin:2px 0 6px; letter-spacing:-.01em}
+.cartouche .title p{margin:0; color:var(--encre-2)}
+.cartouche .nom{grid-column:1/-1; border-bottom:0; display:flex; gap:10px; align-items:center}
+.cartouche .nom label{font:600 .9rem var(--f-titre)}
+.cartouche .nom input{flex:1; border:0; border-bottom:1px dashed var(--trait); padding:4px 2px; background:transparent}
+
+
+.consignes{background:var(--papier); border-left:6px solid var(--jaune); padding:12px 16px; margin:0 0 30px}
+.consignes p{margin:.2rem 0}
+
+/* ---------- parties ---------- */
+.part{background:var(--papier); margin:0 0 34px; padding:0 0 22px; border:1px solid var(--trait-fin)}
+.part-head{display:grid; grid-template-columns:64px 1fr; border-bottom:2px solid var(--encre)}
+.part-num{background:var(--encre); color:var(--jaune); font:700 2.3rem/1 var(--f-titre);
+  display:flex; align-items:center; justify-content:center}
+.part-head h2{font:700 1.45rem/1.15 var(--f-titre); margin:0; padding:12px 16px 2px}
+.part-head .duree{padding:0 16px 10px; font-size:.9rem; color:var(--encre-2)}
+.part-body{padding:4px 22px 0}
+.part-body>p,.part-body>ul{max-width:72ch}
+h4.sub{font:700 1.1rem var(--f-titre); margin:26px 0 6px; padding-top:10px; border-top:1px dashed var(--trait)}
+
+/* barre de question (reprend l'en-tête du questionnaire) */
+.qbar{display:grid; grid-template-columns:auto 1fr auto; align-items:stretch; margin:30px 0 10px;
+  border:1.5px solid var(--encre); font:500 .95rem/1.2 var(--f-titre)}
+.qbar>*{padding:7px 10px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.qbar .qb-num{background:var(--jaune); font-weight:700; font-size:1.1rem; border-right:1.5px solid var(--encre); min-width:64px; justify-content:center}
+.qbar .qb-ans{border-left:1.5px solid var(--encre)}
+.qbar .qb-title{grid-column:1/-1; border-top:1px solid var(--encre); font-weight:700; font-style:italic}
+@media (max-width:640px){ .qbar{grid-template-columns:auto 1fr} .qbar .qb-ans{grid-column:1/-1; border-left:0; border-top:1px solid var(--encre)} }
+.doc-chip{border:1.5px solid var(--encre); background:var(--papier); padding:2px 8px; font:700 .88rem var(--f-titre);
+  cursor:pointer; border-radius:2px}
+.doc-chip:hover{background:var(--jaune-pale)}
+.doc-chip[aria-pressed="true"]{background:var(--jaune)}
+
+/* données */
+.data{border:1px solid var(--encre); padding:8px 14px; margin:12px 0; max-width:72ch; background:#FBFBF9}
+.data p{margin:.25rem 0}
+.data .data-title{font:700 .95rem var(--f-titre); text-decoration:underline; text-underline-offset:3px}
+.data ul{margin:.2rem 0; padding-left:1.1rem}
+.data ul.cols{columns:2; column-gap:28px}
+@media (max-width:560px){ .data ul.cols{columns:1} }
+
+figure{margin:14px 0}
+.fig img,.fig svg{display:block; width:100%; height:auto; border:1px solid var(--trait-fin); background:#fff}
+figcaption{font-size:.85rem; color:var(--encre-2); margin-top:4px}
+.fig1 .lead line{stroke:#6B7580; stroke-width:1}
+.fig1 .lab text{font:600 15px var(--f-titre); fill:var(--encre)}
+.fig1 .dir{stroke:var(--encre); stroke-width:3; fill:none}
+.fig1 .dirhead{fill:var(--encre)}
+.split{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap}
+.small-fig{width:220px; margin:0}
+
+.chain{display:flex; align-items:center; flex-wrap:wrap; gap:0; margin:18px 0 8px}
+.chain-box{border:2px solid var(--encre); padding:8px 10px; min-width:130px; text-align:center; background:#fff}
+.chain-box span{display:block; font-size:.9rem}
+.chain-box b{font:700 .95rem var(--f-titre)}
+.chain-arrow{width:34px; height:2px; background:var(--encre); position:relative; margin:0 2px}
+.chain-arrow::after{content:""; position:absolute; right:-1px; top:-5px; border:6px solid transparent; border-left:9px solid var(--encre); border-right:0}
+.chain figcaption{flex-basis:100%}
+
+table.t{border-collapse:collapse; margin:10px 0; font-size:.93rem; width:100%}
+table.t th,table.t td{border:1px solid var(--trait); padding:4px 8px; text-align:left; vertical-align:top}
+table.t th{background:#EEF0EC; font:600 .88rem var(--f-titre)}
+table.nomencl{width:auto; min-width:210px}
+table.nomencl td:first-child{font-weight:700; text-align:center}
+
+.vec{position:relative; display:inline-block; font-style:italic}
+.vec::before{content:""; position:absolute; left:0; right:-1px; top:-.12em; height:1.2px; background:currentColor}
+.vec::after{content:""; position:absolute; right:-3px; top:-.32em; border:.2em solid transparent; border-left:.36em solid currentColor; border-right:0}
+
+/* ---------- questions ---------- */
+.q{margin:14px 0 6px; padding:10px 0 12px 14px; border-left:3px solid var(--trait-fin)}
+.q.is-ok{border-left-color:var(--vert)} .q.is-ko{border-left-color:var(--rouge)} .q.is-half{border-left-color:var(--orange)}
+.q-stem{margin:0 0 3px; max-width:74ch}
+.q-num{display:inline-block; font:700 .92rem var(--f-titre); background:var(--encre); color:#fff; padding:1px 7px; margin-right:6px; border-radius:2px}
+.q-hint{margin:0 0 8px; font-size:.88rem; color:var(--encre-2); max-width:74ch}
+.q-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.q-input{flex:1 1 240px; max-width:420px; border:1.5px solid var(--encre-2); background:#fff; padding:7px 10px; border-radius:2px}
+.q-input:disabled{background:#F2F3F1; color:var(--encre); -webkit-text-fill-color:var(--encre)}
+.is-ok .q-input{border-color:var(--vert); background:var(--vert-pale)}
+.is-half .q-input{border-color:var(--orange); background:var(--orange-pale)}
+.is-ko .q-input{border-color:var(--rouge); background:var(--rouge-pale)}
+.btn{border:1.5px solid var(--encre); background:var(--encre); color:#fff; padding:7px 14px; border-radius:2px; cursor:pointer; font-weight:600}
+.btn:hover{background:#2E3B47}
+.btn:disabled{background:#9AA2A8; border-color:#9AA2A8; cursor:not-allowed}
+.btn.ghost{background:#fff; color:var(--encre)}
+.btn.ghost:hover{background:var(--jaune-pale)}
+.q-status{font-weight:700; font-size:.95rem}
+.is-ok .q-status{color:var(--vert)} .is-ko .q-status{color:var(--rouge)} .is-half .q-status{color:var(--orange)}
+.q-msg{margin:4px 0 0; font-size:.88rem; color:var(--rouge); min-height:0}
+.q-msg:empty{display:none}
+.q-expl{margin-top:10px; background:#F6F7F4; border:1px solid var(--trait-fin); padding:8px 14px; max-width:78ch}
+.is-ok .q-expl{border-top:3px solid var(--vert)} .is-ko .q-expl{border-top:3px solid var(--rouge)} .is-half .q-expl{border-top:3px solid var(--orange)}
+.q-unit-msg{margin:.1rem 0 .4rem; font-weight:600; color:var(--orange)}
+.q-unit-msg[hidden]{display:none}
+.q-expl p{margin:.35rem 0}
+.q-expected span,.q-yours span.lab{font:700 .9rem var(--f-titre)}
+.q-expl ul,.q-expl ol{padding-left:1.2rem; margin:.3rem 0}
+.q-expl li{margin:.2rem 0}
+.cor-imgs{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px}
+.cor-imgs figure{margin:0; flex:1 1 260px}
+.cor-imgs img{border:1px solid var(--trait-fin); background:#fff; display:block}
+.reveal{animation:reveal .35s ease-out}
+@keyframes reveal{from{opacity:0; transform:translateY(-4px)}to{opacity:1; transform:none}}
+
+/* ---------- FAST ---------- */
+.fast-wrap{overflow-x:auto; padding:6px 0 4px}
+.fast{display:grid; min-width:720px; grid-template-columns:138px 24px 112px 24px minmax(180px,1fr) 18px 178px; grid-auto-rows:minmax(64px,auto);
+  font-size:.84rem; line-height:1.25}
+.fast .box{border:1.5px solid var(--encre); background:#fff; padding:6px 8px; align-self:center}
+.fast .fp{grid-column:1; grid-row:1/9; font-weight:700}
+.fast .ft{grid-column:3}
+.fast .ft2{grid-column:5}
+.fast .sol{grid-column:7; align-self:center}
+.fast .sol input{width:100%; border:1.5px dashed var(--encre-2); padding:9px 8px; background:#fff; border-radius:0; font-size:.9rem}
+.fast .sol.is-ok input{border:2px solid var(--vert); background:var(--vert-pale)}
+.fast .sol.is-ko input{border:2px solid var(--rouge); background:var(--rouge-pale)}
+.fast .sol .mark{display:block; font-size:.78rem; font-weight:700; margin-top:2px; min-height:1em}
+.fast .sol.is-ok .mark{color:var(--vert)} .fast .sol.is-ko .mark{color:var(--rouge)}
+.fast .cn{position:relative}
+.fast .cn::before{content:""; position:absolute; left:0; right:0; top:50%; border-top:1.5px solid var(--encre)}
+.fast .bus{position:relative}
+.fast .bus::before{content:""; position:absolute; left:0; right:0; top:50%; border-top:1.5px solid var(--encre)}
+.fast .bus::after{content:""; position:absolute; left:0; top:0; bottom:0; border-left:1.5px solid var(--encre)}
+.fast .bus.first::after{top:50%} .fast .bus.last::after{bottom:50%}
+.fast .bus.mid::before{display:none}
+.fast .ft.grp{position:relative}
+.fast .ft.grp::before{content:""; position:absolute; right:100%; width:24px; top:50%; border-top:1.5px solid var(--encre)}
+.fast .dash::before{border-top-style:dashed}
+.fast .note{grid-column:5/8; align-self:center; color:var(--encre-2); font-style:italic; padding-left:8px}
+.fast-foot{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap}
+
+/* ---------- tracés ---------- */
+.sketch{margin:14px 0 6px; padding:10px 0 12px 14px; border-left:3px dashed var(--bleu)}
+.sk-layout{display:flex; flex-direction:column-reverse; gap:8px}
+.sk-main{min-width:0}
+.sk-side{max-width:78ch}
+.sk-side p,.sk-side ul{margin:.2rem 0}
+.nomencl-grid{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); border:1px solid var(--trait); font-size:.85rem; margin:2px 0 4px}
+.nomencl-grid span{padding:3px 8px; border-right:1px solid var(--trait-fin); border-bottom:1px solid var(--trait-fin)}
+.nomencl-grid b{font-family:var(--f-titre); margin-right:6px}
+@media (max-width:640px){ .nomencl-grid{grid-template-columns:repeat(2, minmax(0,1fr))} }
+.sk-toolbar{display:flex; flex-wrap:wrap; gap:4px; align-items:center; background:#EEF1F4; border:1px solid var(--trait); border-bottom:0; padding:5px}
+.sk-toolbar button{border:1px solid var(--trait); background:#fff; padding:4px 9px; font-size:.86rem; cursor:pointer; border-radius:2px; line-height:1.2}
+.sk-toolbar button[aria-pressed="true"]{background:var(--bleu); color:#fff; border-color:var(--bleu)}
+.sk-toolbar button:disabled{opacity:.45; cursor:not-allowed}
+.sk-toolbar .sep{width:1px; align-self:stretch; background:var(--trait); margin:0 4px}
+.sk-toolbar .tb-group{display:inline-flex; align-items:center; gap:4px; white-space:nowrap}
+.sk-toolbar .tb-lab{font:600 .78rem var(--f-titre); color:var(--encre-2); padding:0 2px}
+.sk-toolbar .zoom-val{font:600 .82rem var(--f-titre); min-width:3.6em; text-align:center}
+.sk-toolbar .btn-drprint{font-weight:600; border-color:var(--encre)}
+.sk-toolbar .btn-drprint:hover{background:var(--jaune-pale)}
+.sk-toolbar .sw{width:24px; height:24px; padding:0; border-radius:50%; border:2px solid #fff; outline:1px solid var(--trait)}
+.sk-toolbar .sw[aria-pressed="true"]{outline:2px solid var(--encre)}
+.sk-toolbar .spacer{flex:1}
+.sk-stage{position:relative; border:1px solid var(--trait); background:#fff; line-height:0; overflow:hidden}
+.sk-stage.zoomed{overflow:auto; max-height:min(72vh,640px)}
+/* au zoom, seule la largeur pilote la taille : la hauteur suit, sinon l'image est écrasée */
+.sk-stage.zoomed canvas{max-width:none!important; max-height:none!important; height:auto!important}
+.sk-stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair}
+.sketch.locked .sk-stage canvas{cursor:default; touch-action:auto}
+.sketch.tool-erase .sk-stage canvas{cursor:cell}
+.sk-toolbar button[data-tool="erase"][aria-pressed="true"]{background:var(--rouge); border-color:var(--rouge)}
+.sk-text{position:absolute; line-height:1.2; font:600 15px var(--f-texte); border:1.5px solid var(--bleu); padding:1px 4px; min-width:90px; background:#fff; z-index:2}
+.sk-foot{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px}
+.sk-meas{font-size:.85rem; color:var(--bleu); font-weight:600}
+.sk-corr-toggle{display:none; align-items:center; gap:6px; font-size:.92rem; cursor:pointer}
+.sketch.revealed .sk-corr-toggle{display:inline-flex}
+.sk-note{font-size:.86rem; color:var(--encre-2)}
+.sketch.is-full{position:fixed; inset:0; z-index:60; background:var(--beton); margin:0; padding:10px; border:0; overflow:auto; display:flex; flex-direction:column}
+.sketch.is-full .sk-side,.sketch.is-full .q-stem,.sketch.is-full .q-expl,.sketch.is-full .sk-note-wrap{display:none}
+.sketch.is-full .sk-layout{flex:1; min-height:0}
+.sketch.is-full .sk-main{display:flex; flex-direction:column; align-items:center; height:100%}
+.sketch.is-full .sk-toolbar{width:100%}
+.sketch.is-full .sk-stage{max-width:100%}
+.sketch.is-full .sk-stage.zoomed{max-height:calc(100vh - 150px); width:100%; align-self:stretch}
+.sketch.is-full .sk-stage canvas{width:auto; max-width:100%; max-height:calc(100vh - 120px)}
+body.sk-full-open{overflow:hidden}
+body.sk-full-open .banner,body.sk-full-open .rail{display:none}
+
+/* ---------- rail d'onglets ---------- */
+.rail{position:fixed; right:0; top:0; bottom:var(--banner); width:var(--rail); z-index:40; display:flex; flex-direction:column;
+  justify-content:center; gap:3px; padding:8px 0}
+.rail .grp{height:14px}
+.tab{display:block; width:100%; border:1.5px solid var(--encre); border-right:0; background:var(--papier); color:var(--encre);
+  font:700 .9rem/1 var(--f-titre); padding:10px 0 10px 4px; cursor:pointer; border-radius:4px 0 0 4px; text-align:center;
+  transform:translateX(6px); transition:transform .15s ease, background .15s}
+.tab.dt{background:var(--jaune)}
+.tab:hover{transform:translateX(0)}
+.tab[aria-selected="true"]{transform:translateX(0); background:var(--encre); color:var(--jaune)}
+@media (max-width:760px){ .rail{display:none} }
+
+/* ---------- panneau documents ---------- */
+#docpanel{position:fixed; top:0; bottom:var(--banner); right:var(--rail); width:var(--panel); z-index:45; background:var(--papier);
+  border-left:2px solid var(--encre); box-shadow:-10px 0 28px rgba(28,37,48,.18); display:flex; flex-direction:column;
+  transform:translateX(calc(100% + var(--rail) + 20px)); transition:transform .25s ease; visibility:hidden}
+body.panel-open #docpanel{transform:none; visibility:visible}
+@media (max-width:1180px){ :root{--panel:min(720px, calc(100vw - var(--rail) - 40px))} }
+@media (max-width:760px){ #docpanel{right:0; width:100vw} }
+.dp-head{display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1.5px solid var(--encre); background:#F4F5F2; flex-wrap:wrap}
+.dp-head h3{margin:0; font:700 1.05rem/1.2 var(--f-titre); flex:1; min-width:180px}
+.dp-head h3 small{display:block; font:500 .78rem var(--f-titre); color:var(--encre-2)}
+.dp-head button{border:1px solid var(--trait); background:#fff; padding:4px 9px; cursor:pointer; border-radius:2px}
+.dp-tabs{display:flex; gap:3px; padding:6px 10px; border-bottom:1px solid var(--trait-fin); overflow-x:auto}
+.dp-tabs button{border:1px solid var(--trait); background:#fff; font:700 .82rem var(--f-titre); padding:3px 8px; cursor:pointer; white-space:nowrap; border-radius:2px}
+.dp-tabs button[aria-selected="true"]{background:var(--encre); color:var(--jaune); border-color:var(--encre)}
+.dp-body{flex:1; overflow:auto; padding:12px; --z:1; background:#E9EBE7}
+.doc{display:none}
+.doc.active{display:block}
+.doc .doc-img{display:block; width:calc(var(--z) * 100%); max-width:none; background:#fff; border:1px solid var(--trait-fin); margin:0 auto 8px}
+.doc .doc-text{background:#fff; padding:6px 16px; width:calc(var(--z) * 100%); margin:0 auto 8px; font-size:calc(var(--z) * .95rem)}
+.doc .doc-text h3{font:700 1.1rem var(--f-titre)}
+.doc .doc-cap{width:calc(var(--z) * 100%); margin:-2px auto 10px; font-size:.85rem; color:var(--encre-2); background:#fff; padding:4px 10px}
+dl.steps dt{font:700 .98rem var(--f-titre); margin-top:10px}
+dl.steps dd{margin:2px 0 0 0}
+
+/* ---------- bandeau de note ---------- */
+.banner{position:fixed; left:0; right:0; bottom:0; height:var(--banner); z-index:50; background:var(--encre); color:#fff;
+  display:flex; align-items:center; gap:18px; padding:0 calc(var(--rail) + 14px) 0 18px; border-top:3px solid var(--jaune)}
+.banner .score{font:700 1.7rem/1 var(--f-titre); color:var(--jaune); min-width:5.5ch; white-space:nowrap}
+.banner .score small{font-size:.95rem; color:#fff}
+.banner .lab{font:600 .8rem/1.15 var(--f-titre); color:#C9D1D8}
+.banner .count{font-size:.9rem; color:#E7EBEE}
+.banner .spacer{flex:1}
+.banner .btn-docs{display:none; background:var(--jaune); color:var(--encre); border:0; padding:8px 12px; font:700 .9rem var(--f-titre); border-radius:2px; cursor:pointer}
+@media (max-width:760px){ .banner{padding:0 12px; gap:10px} .banner .btn-docs{display:block} .banner .count{font-size:.78rem} }
+
+/* ---------- auto-évaluation des tracés ---------- */
+.selfeval{margin:12px 0 4px; border:1.5px solid var(--bleu); background:var(--bleu-pale); padding:10px 14px; max-width:78ch}
+.selfeval[hidden]{display:none}
+.se-title{margin:0 0 2px; font:700 1rem var(--f-titre)}
+.se-lead{margin:0 0 8px; font-size:.9rem; color:var(--encre-2)}
+.se-item{display:flex; gap:8px; align-items:flex-start; padding:4px 0; border-top:1px solid rgba(31,95,168,.18); cursor:pointer; font-size:.94rem}
+.se-item input{margin-top:.25rem; width:17px; height:17px; flex:0 0 auto; accent-color:var(--bleu)}
+.se-item input:disabled{cursor:default}
+.se-foot{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px}
+.se-score{font-weight:700; color:var(--bleu)}
+.sketch.is-ok{border-left-color:var(--vert)} .sketch.is-half{border-left-color:var(--orange)} .sketch.is-ko{border-left-color:var(--rouge)}
+
+/* ---------- récapitulatif ---------- */
+.recap{background:var(--papier); border:2px solid var(--encre); margin:0 0 36px; padding:0 0 18px}
+.recap-head{border-bottom:2px solid var(--encre); padding:14px 20px 12px; background:#F4F5F2}
+.recap-head h2{margin:0 0 4px; font:700 1.5rem var(--f-titre)}
+.recap-head p{margin:0; max-width:74ch}
+.recap-wrap{overflow-x:auto; padding:14px 20px 0}
+.recap-table{min-width:620px}
+.recap-table th[scope="row"]{font-weight:600; text-align:left}
+.recap-table td,.recap-table th{vertical-align:middle}
+.recap-table .rc-note{font:700 1.05rem var(--f-titre); text-align:right; white-space:nowrap}
+.recap-table thead th{white-space:nowrap}
+.recap-table td:nth-child(2),.recap-table td:nth-child(3),.recap-table td:nth-child(6){white-space:nowrap}
+.recap-table th[scope="row"]{width:38%}
+.recap-table tfoot th{background:var(--encre); color:#fff; font:700 1.1rem var(--f-titre); border-color:var(--encre)}
+.recap-table tfoot th.final-note{color:var(--jaune); text-align:right; white-space:nowrap}
+.recap .final-detail{padding:8px 20px 0; margin:0; max-width:80ch}
+.recap-foot{display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:14px 20px 0}
+.recap-foot .btn{padding:10px 18px; font-size:1.02rem}
+
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+/* ---------- impression ---------- */
+@media print{
+  @page{size:A4; margin:12mm}
+  :root{--banner:0px}
+  body{background:#fff; padding:0; font-size:10.5pt}
+  .rail,#docpanel,.banner,.btn,.sk-toolbar,.sk-stage,.sk-foot,.fast-foot button,.se-foot,.no-print,.q-msg,.sk-corr-toggle{display:none!important}
+  .print-only{display:block!important}
+  span.print-only{display:inline!important}
+  .page{max-width:none; margin:0!important; padding:0}
+  .part{border:0; margin:0 0 8mm; break-before:auto}
+  .part-head{break-after:avoid}
+  .qbar{break-after:avoid}
+  .q{break-inside:avoid}
+  .q-row .q-status{display:none!important}
+  .q-expl,.q-expl[hidden],.sketch .q-expl[hidden]{display:block!important; background:#fff}
+  .q-unit-msg[hidden]{display:none!important}
+  .q-input{border:1px solid #555!important}
+  .fast-wrap{overflow:visible}
+  .fast{min-width:0; grid-template-columns:120px 16px 100px 16px 1fr 12px 160px; font-size:8pt}
+  .sk-print{display:block!important; width:auto; max-width:100%; max-height:115mm; border:1px solid #999; margin:2px 0 6px; break-inside:avoid}
+  .sk-print:not([src]),.sk-print[src=""]{display:none!important}
+  .sk-print-wrap{display:grid!important; grid-template-columns:1fr; gap:4px}
+  .sk-print-wrap p{margin:2px 0; font:600 9pt var(--f-titre); break-after:avoid}
+  .cor-imgs img{max-height:120mm; width:auto}
+  .print-summary{border:2px solid #000; padding:6px 10px; margin:0 0 6mm}
+  .print-summary strong{font-size:14pt}
+  .selfeval{background:#fff!important; border:1px solid #666; break-inside:avoid}
+  .se-lead{display:none}
+  .recap{break-before:page; border:1.5px solid #000}
+  .recap-head{background:#fff}
+  .recap-wrap{overflow:visible; padding:8px 10px 0}
+  .recap-table{min-width:0; font-size:9.5pt}
+  .recap-table tfoot th{background:#000!important; color:#fff!important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .recap-foot{display:none}
+  a{color:inherit}
+}
+
+
+/* ==================== PAGE D'ACCUEIL ==================== */
+body.no-mode .page,body.no-mode .rail,body.no-mode .banner,body.no-mode #docpanel{display:none!important}
+body.no-mode{padding-bottom:0}
+body:not(.no-mode) #home{display:none}
+#home{min-height:100vh; padding:32px 20px 48px}
+.home-inner{max-width:1040px; margin:0 auto}
+.home-head{background:var(--papier); border:2px solid var(--encre); border-left:10px solid var(--jaune); padding:20px 24px}
+#home h1{margin:0 0 8px; font:700 clamp(1.7rem,4vw,2.6rem)/1.06 var(--f-titre); letter-spacing:-.01em}
+.home-sub{margin:0; max-width:78ch; color:var(--encre-2)}
+.home-hero{margin:18px 0 0; background:var(--papier); border:1px solid var(--trait); padding:10px}
+.home-hero img{display:block; width:100%; height:auto}
+.home-hero figcaption{margin-top:6px; padding:0 4px}
+.home-facts{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0 26px}
+.home-facts div{background:var(--encre); color:#fff; padding:10px 14px}
+.home-facts b{display:block; font:700 1.25rem var(--f-titre); color:var(--jaune)}
+.home-facts span{font-size:.85rem; color:#D7DDE2}
+@media (max-width:820px){ .home-facts{grid-template-columns:repeat(2,1fr)} }
+.home-choose{font:700 1.4rem var(--f-titre); margin:0 0 12px}
+.modes{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+@media (max-width:820px){ .modes{grid-template-columns:1fr} }
+.mode-card{background:var(--papier); border:2px solid var(--encre); padding:18px 20px 20px; display:flex; flex-direction:column}
+.mode-card.exam{border-color:var(--bleu)}
+.mc-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px}
+.mc-tag{font:700 .74rem var(--f-titre); background:var(--jaune); padding:2px 8px; letter-spacing:.04em}
+.mode-card.exam .mc-tag{background:var(--bleu); color:#fff}
+.mode-card h3{margin:0; font:700 1.35rem var(--f-titre)}
+.mc-lead{margin:2px 0 8px; font-weight:600; color:var(--encre-2)}
+.mode-card ul{margin:0 0 16px; padding-left:1.1rem}
+.mode-card li{margin:.3rem 0}
+.mode-card .btn{margin-top:auto; align-self:flex-start; padding:11px 18px; font-size:1.02rem}
+.mode-card.exam .btn{background:var(--bleu); border-color:var(--bleu)}
+.mode-card.exam .btn:hover{background:#17508F}
+.home-note{margin:18px 0 0}
+
+/* ==================== MODES ==================== */
+body:not(.mode-training) .only-training,body:not(.mode-exam) .only-exam{display:none}
+.print-nograde{display:none}
+.mode-exam .btn-validate,.mode-exam .btn-fast,.mode-exam .btn-sketch,
+.mode-exam:not(.graded) .exam-only-hide{display:none!important}
+.mode-exam:not(.graded) .score-block,.mode-training .exam-block,.mode-exam.graded .exam-block{display:none}
+.mode-exam:not(.graded) #recap-graded,.mode-exam:not(.graded) #recap-foot,
+.mode-exam.graded #exam-submit-wrap,.mode-training #exam-submit-wrap{display:none}
+.banner .exam-state{font:700 1.05rem var(--f-titre); color:var(--jaune)}
+#exam-submit-wrap{padding:16px 20px 4px}
+.es-lead{margin:0 0 10px; max-width:74ch}
+.btn-exam{background:var(--bleu); border-color:var(--bleu); padding:12px 20px; font-size:1.05rem}
+.btn-exam:hover{background:#17508F}
+.es-warn{margin:8px 0 0; color:var(--rouge); font-weight:600}
+.es-warn:empty{display:none}
+
+/* ==================== CHRONOMÈTRE ==================== */
+.timer-block{padding-left:4px}
+.banner .timer{font:700 1.3rem/1 var(--f-titre); color:#fff; font-variant-numeric:tabular-nums}
+.banner .timer.over{color:var(--jaune)}
+@media (max-width:760px){ .banner .count{display:none} }
+
+@media print{
+  #home{display:none!important}
+  body:not(.corrections-open) .print-note-line{display:none!important}
+  body:not(.corrections-open) .print-nograde{display:block!important; font-weight:600}
+  .banner{display:none!important}
+  body:not(.corrections-open) .q-expl,body:not(.corrections-open) .selfeval,
+  body:not(.corrections-open) .sk-print-corr{display:none!important}
+  body:not(.corrections-open) #recap-graded{display:none!important}
+  #exam-submit-wrap{display:none!important}
+}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+<style>
+/* ---------- accueil en cartes (repris du dépôt « Chaîne fonctionnelle ») ---------- */
+a.btn{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
+a.btn svg,.c-top svg{width:18px; height:18px; flex:0 0 auto}
+.tab-home{display:flex; align-items:center; justify-content:center; padding:8px 0 8px 4px; background:var(--encre); color:var(--jaune); text-decoration:none}
+.tab-home svg{width:22px; height:22px; display:block}
+.tab-home:hover{background:#2E3B47}
+.c-top{margin:0 0 12px}
+.c-top a{display:inline-flex; align-items:center; gap:6px; font:600 .95rem var(--f-titre); color:var(--encre); text-decoration:none; border:1.5px solid var(--encre); background:var(--papier); padding:5px 12px 5px 10px}
+.c-top a:hover{background:var(--jaune-pale)}
+#home{padding:20px 20px 32px}
+.home-top{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:14px; align-items:stretch; margin:0 0 14px}
+.home-top-single{grid-template-columns:1fr}
+.home-top-l{display:flex; flex-direction:column; gap:10px; min-width:0}
+.home-top .home-head{padding:14px 20px; flex:1}
+.home-top .home-head h1{margin:6px 0 6px; font-size:clamp(1.4rem,2.4vw,1.85rem)}
+.home-top .home-sub{font-size:.95rem}
+.home-top .home-hero{margin:0; padding:8px; display:flex; flex-direction:column; justify-content:center; min-width:0}
+.home-top .home-hero img{width:auto!important; max-width:100%; max-height:160px; margin:0 auto}
+body.hub .home-top .home-hero img{max-height:210px}
+.home-top .home-hero figcaption{font-size:.78rem; line-height:1.3; margin-top:4px}
+.home-top .home-facts{grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0}
+.home-top .home-facts div{padding:6px 10px}
+.home-top .home-facts b{font-size:1.02rem}
+.home-top .home-facts span{font-size:.76rem; line-height:1.3; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+@media (max-width:980px){ .home-top .home-facts{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:820px){ .home-top{grid-template-columns:1fr} }
+#home .home-choose{margin:18px 0 8px; font-size:1.25rem}
+#home .mode-card{padding:12px 18px 14px}
+#home .mode-card .mc-lead{margin:2px 0 4px; font-size:.92rem}
+#home .mode-card ul{margin:0 0 10px; font-size:.9rem; line-height:1.45}
+#home .mode-card li{margin:.15rem 0}
+#home .mode-card .btn{padding:9px 16px}
+#home .home-note{margin:10px 0 0}
+.home-back{margin:12px 0 0}
+.ex-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px}
+.ex-grid .mode-card p{margin:4px 0 8px; font-size:.95rem}
+.ex-grid .mode-card .ex-meta{margin:0 0 12px; font-size:.85rem}
+.ex-grid .mode-card h3{font-size:1.2rem}
+.ex-grid .mc-head{flex-direction:column; align-items:flex-start; gap:6px}
+.ex-grid .mode-card .btn{margin-top:auto; align-self:flex-start}
+.ex-grid .en-edition{border-style:dashed; border-color:var(--trait)}
+.ex-grid .en-edition h3,.ex-grid .en-edition p{color:var(--encre-2)}
+.ex-grid .etat{font-weight:700; color:var(--orange)}
+/* cartes de l'accueil : image, titre, mots-clés ; toutes de la même taille, dans toutes les rubriques */
+body.hub .ex-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); grid-auto-rows:1fr}
+.carte-v{display:grid; grid-template-rows:auto auto 62px 46px; gap:8px; padding:0 0 16px!important; overflow:hidden; height:100%}
+body.hub .carte-v>*:not(.cv-img){margin-left:18px; margin-right:18px}
+.carte-v .cv-img{display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; background:#fff; border-bottom:2px solid var(--encre); margin:0}
+.carte-v .cv-vide{background:repeating-linear-gradient(135deg,#F4F5F2 0 12px,#ECEEEA 12px 24px)}
+.carte-v .mc-head{margin:6px 18px 0}
+.carte-v h3{margin:0; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2}
+#home .carte-v .cv-mots{display:flex; flex-wrap:wrap; align-content:flex-start; gap:5px; list-style:none; margin:0 18px; padding:0}
+#home .carte-v .cv-mots li{margin:0}
+body.hub .carte-v .btn,body.hub .carte-v .etat{align-self:end; justify-self:start; margin-top:0; margin-bottom:0}
+.cv-mots li{font:600 .8rem var(--f-titre); background:var(--bleu-pale); color:var(--encre); border:1px solid #C9D8EC; padding:2px 8px; border-radius:12px; white-space:nowrap}
+.en-edition .cv-img{filter:grayscale(1) opacity(.55)}
+.en-edition .cv-mots li{background:#F4F5F2; border-color:var(--trait-fin); color:var(--encre-2)}
+.pastille{display:inline-block; font:700 .72rem var(--f-titre); letter-spacing:.03em; background:var(--vert); color:#fff; padding:2px 8px; margin-left:6px; vertical-align:middle}
+.pastille.n2{background:var(--bleu)}
+.pastille.n3{background:#7B3FA0}
+.mc-tag .pastille{margin-left:8px; font-size:.68rem; padding:1px 6px}
+.ex-grid .en-edition{opacity:.62}
+body.hub #home{min-height:0}
+</style>
+<style>
+/* ---------- cours interactif (d'après les cours du dépôt RDM) ---------- */
+.pastille.n3{background:#7B3FA0}
+.cours .part{margin-bottom:22px}
+.cours .part-body h3{font:700 1.12rem var(--f-titre); margin:16px 0 6px}
+.cours-nav{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 16px}
+.cours-nav a{font:600 .92rem var(--f-titre); color:var(--encre); background:var(--papier); border:1.5px solid var(--encre); padding:5px 12px; text-decoration:none}
+.cours-nav a:hover{background:var(--jaune-pale)}
+.cours-split{display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap}
+.cours-split>div{flex:1 1 300px; min-width:0}
+.cours-split>.fig{flex:0 1 auto; margin:0}
+.cours-defi{font-weight:700; color:var(--bleu)}
+.enonce{border:2px solid var(--encre); background:#fff; padding:10px 16px; margin:10px 0; font-weight:700; text-align:center; max-width:640px}
+.formule{display:flex; flex-wrap:wrap; gap:14px 28px; align-items:center; border:2px solid var(--rouge); background:#fff; padding:10px 18px; margin:12px 0; max-width:680px}
+.formule .f-main{font:700 1.35rem var(--f-titre); line-height:2}
+.formule .f-units{font-size:.9rem; color:var(--encre-2)}
+.exemple{background:#F6F7F4; border:1px solid var(--trait-fin); padding:6px 16px; margin-top:12px}
+.simu{border:2px solid var(--bleu); background:var(--bleu-pale); padding:12px 16px; margin:14px 0}
+.simu h3{margin:0 0 8px!important; font:700 1.15rem var(--f-titre); color:var(--bleu)}
+.simu-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 18px; margin:8px 0}
+.simu-grid.k3-col{grid-template-columns:1fr; align-content:start}
+@media (max-width:640px){ .simu-grid{grid-template-columns:1fr} }
+.simu-grid label{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem}
+.simu-grid output{font:700 1rem var(--f-titre); color:var(--bleu)}
+.simu-grid input[type=range]{width:100%; accent-color:var(--bleu)}
+.simu-out{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0 8px}
+.simu-out div{background:var(--encre); color:#fff; padding:6px 10px}
+.simu-out span{display:block; font-size:.78rem; color:#D7DDE2}
+.simu-out b{font:700 1.05rem var(--f-titre); color:var(--jaune)}
+@media (max-width:640px){ .simu-out{grid-template-columns:1fr} }
+.simu-verdict{font-weight:700; margin:8px 0 4px}
+.simu-defi{margin-top:8px; background:#fff; border:1px dashed var(--bleu); padding:6px 10px}
+.simu-defi summary{cursor:pointer; font-weight:600}
+.jeu{border:2px dashed var(--encre-2); background:#fff; padding:10px 16px; margin:14px 0}
+.jeu h3{margin:0 0 8px!important}
+.jeu-l{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid var(--trait-fin)}
+.jeu-l>span:first-child{flex:1 1 220px; font-weight:600}
+.jeu-l .btn{padding:4px 12px; min-width:2.6em}
+.jeu-l.is-ok{background:var(--vert-pale)} .jeu-l.is-ko{background:var(--rouge-pale)}
+.jeu-fb{min-width:1.6em}
+.jeu-score{font:700 1.1rem var(--f-titre); margin:8px 0 0}
+.k3-jp-why{flex-basis:100%; font-size:.88rem; color:var(--encre-2)}
+.quiz{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px}
+.quiz-q{border:1.5px solid var(--encre); background:#fff; padding:8px 14px 10px; margin:0}
+.quiz-q legend{font-weight:700; padding:0 4px}
+.quiz-q label{display:block; padding:3px 0; cursor:pointer}
+.quiz-q.is-ok{border-color:var(--vert); background:var(--vert-pale)}
+.quiz-q.is-ko{border-color:var(--rouge); background:var(--rouge-pale)}
+.quiz-q label.good{font-weight:700; color:var(--vert)}
+.quiz-fb{margin:4px 0 0; font-weight:700}
+.quiz-q.is-ok .quiz-fb{color:var(--vert)} .quiz-q.is-ko .quiz-fb{color:var(--rouge)}
+.quiz-why{margin:2px 0 0; font-size:.9rem}
+.quiz-score{display:flex; align-items:center; gap:14px; margin:14px 0 0; font:700 1.3rem var(--f-titre)}
+#qz-stars{color:var(--jaune); font-size:1.6rem; letter-spacing:2px}
+.cours-foot{display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 0}
+.cours-foot .small{align-self:center}
+.k3-obj{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 14px}
+.k3-obj>div{background:var(--papier); border:1px solid var(--trait-fin); border-top:4px solid #7B3FA0; padding:6px 16px}
+.k3-obj h3{margin:4px 0; font:700 1.05rem var(--f-titre)}
+.k3-obj ul{margin:4px 0 6px; padding-left:1.2rem}
+@media (max-width:640px){ .k3-obj{grid-template-columns:1fr} }
+/* balance */
+.bal{flex:0 1 300px!important}
+.bal-svg{width:100%; max-width:300px; background:#fff; border:1px solid var(--trait-fin)}
+.bal-l{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem; margin-top:6px}
+.bal-l input{accent-color:var(--bleu)}
+.bal-out{font-size:1.05rem}
+.lab-b,.lab-r,.lab-g,.lab-v{font:italic 700 17px var(--f-texte)}
+.pou-svg .lab-b,.pou-svg .lab-g{font-size:14px; font-style:normal}
+.lab-b{fill:#1F5FA8} .lab-r{fill:#C62828} .lab-g{fill:#1B7A43} .lab-v{fill:#7B3FA0}
+.pt{font:700 15px var(--f-titre); fill:var(--encre)}
+.ax{font:600 13px var(--f-texte); fill:var(--encre-2)}
+/* cartes à retourner */
+.k3-cartes{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin:8px 0 14px}
+.k3-carte{display:flex; flex-direction:column; gap:6px; align-items:flex-start; text-align:left; min-height:110px; padding:12px 14px; border:2px solid var(--encre); background:var(--jaune-pale); font:inherit; cursor:pointer; transition:background .2s}
+.k3-carte b{font:700 1.1rem var(--f-titre)}
+.k3-carte .k3-dos{display:none}
+.k3-carte[aria-expanded="true"]{background:#fff; border-color:#7B3FA0}
+.k3-carte[aria-expanded="true"] .k3-dos{display:block; animation:reveal .25s ease}
+.k3-carte[aria-expanded="true"] .k3-q{color:var(--encre-2); font-size:.85rem}
+.k3-carte[aria-expanded="false"]::after{content:"Clique pour retourner"; font-size:.8rem; color:var(--encre-2)}
+/* jeu deux forces */
+.deux-g{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px}
+.deux-c{border:1.5px solid var(--encre); background:#fff; padding:8px 12px}
+.deux-c p{margin:4px 0; font-size:.92rem}
+.deux-svg{width:100%; height:auto; max-height:100px}
+.deux-b{display:flex; gap:6px; flex-wrap:wrap}
+.deux-b .btn{padding:4px 10px; font-size:.88rem}
+.deux-c.is-ok{background:var(--vert-pale); border-color:var(--vert)} .deux-c.is-ko{background:var(--rouge-pale); border-color:var(--rouge)}
+.deux-fb{font-weight:700}
+/* atelier des liaisons */
+.regle{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0}
+.regle>div{background:#fff; border-left:5px solid var(--vert); padding:8px 12px}
+.regle>div+div{border-left-color:var(--rouge)}
+.regle>div>b{display:block; font:700 1.05rem var(--f-titre)}
+@media (max-width:640px){ .regle{grid-template-columns:1fr} }
+.k3-lias{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px}
+.k3-lia{border:1.5px solid var(--encre); background:var(--papier); padding:5px 10px; font:600 .88rem var(--f-titre); cursor:pointer}
+.k3-lia[aria-pressed="true"]{background:var(--encre); color:var(--jaune)}
+.k3-lia.fait::after{content:" ✔"; color:var(--vert)}
+.k3-lia[aria-pressed="true"].fait::after{color:var(--jaune)}
+.k3-desc{font-style:italic; margin:0 0 8px}
+.k3-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:16px; align-items:start}
+@media (max-width:760px){ .k3-grid{grid-template-columns:1fr} }
+.k3-lab{font-weight:700; font-size:.9rem; margin:0 0 4px}
+.k3-ddl{background:#fff}
+.k3-ddl td{text-align:center; font:700 1.1rem var(--f-titre); width:3.2em}
+.k3-ddl td.libre{background:var(--vert-pale); color:var(--vert)}
+.k3-ddl td.bloque{background:#F4F5F2; color:var(--encre-2)}
+.k3-tor{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.k3-brace{font:300 4.4rem/1 var(--f-texte); color:var(--encre)}
+.k3-cells{display:grid; grid-template-columns:repeat(2,64px); grid-auto-flow:column; grid-template-rows:repeat(3,40px); gap:4px}
+.k3-c{border:1.5px solid var(--encre); background:#fff; font:italic 700 1.15rem var(--f-texte); cursor:pointer}
+.k3-c.on{background:var(--jaune-pale)}
+.k3-c.ok{background:var(--vert-pale); border-color:var(--vert)} .k3-c.ko{background:var(--rouge-pale); border-color:var(--rouge)}
+.k3-c.barre{text-decoration:line-through; opacity:.4}
+.k3-base{font-size:.85rem; color:var(--encre-2)}
+.k3-plan-l{display:block; margin-top:8px; font-weight:600; font-size:.92rem}
+.k3-foot{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:10px 0 4px}
+#k3-fb.ok{color:var(--vert)} #k3-fb.ko{color:var(--rouge)}
+.k3-ex{background:#fff; border:1px solid var(--trait); padding:6px 12px; margin:6px 0}
+.k3-ex summary{cursor:pointer; font-weight:700}
+.torseur{display:inline-flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; vertical-align:middle}
+.tz-b{display:inline-block; border-left:2px solid currentColor; border-right:2px solid currentColor; border-radius:10px; padding:2px 6px}
+.tz-b table{border-collapse:collapse} .tz-b td{padding:1px 10px; text-align:center; min-width:3em; line-height:1.5}
+.tz-r{font-size:.8rem; color:var(--encre-2)}
+.formule .torseur{font-size:1.1rem}
+.eq{margin:.35rem 0 .55rem; overflow-x:auto; line-height:2.1}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .12em; line-height:1.25}
+.frac>span{padding:0 .25em; white-space:nowrap}
+.frac>span:first-child{border-bottom:1px solid currentColor}
+/* calculateur de moment */
+.k3-mom-g{display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:14px; align-items:start}
+@media (max-width:760px){ .k3-mom-g{grid-template-columns:1fr} }
+.mom-svg{width:100%; height:auto; background:#fff; border:1px solid var(--trait-fin)}
+.mom-svg .axe{stroke:#46525C; stroke-width:1.5}
+.mom-svg .grille line{stroke:#ECEEEA; stroke-width:1}
+.mom-svg .ligne-action{stroke:#C62828; stroke-width:1.3; stroke-dasharray:6 5; opacity:.7}
+.mom-svg .bras{stroke:#7B3FA0; stroke-width:2.5; stroke-dasharray:4 3}
+.mom-svg .ap{stroke:#46525C; stroke-width:1.3; stroke-dasharray:2 4}
+#mr-v.pos{color:var(--vert)} #mr-v.neg{color:var(--rouge)} #mr-v.nul{color:var(--encre-2)}
+/* méthode et poutre */
+.k3-steps{list-style:none; padding:0; margin:6px 0 12px; display:grid; gap:8px}
+.k3-step{display:grid; grid-template-columns:44px 1fr; gap:10px; background:#fff; border:1px solid var(--trait-fin); padding:8px 12px; transition:background .2s, border-color .2s}
+.k3-step p{margin:2px 0 0}
+.k3-sn{display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:var(--encre); color:var(--jaune); font:700 1.3rem var(--f-titre)}
+.k3-step.on{background:var(--jaune-pale); border-color:var(--jaune)}
+.pou-svg{display:block; width:100%; max-width:660px; height:auto; background:#fff; border:1px solid var(--trait-fin); margin:6px auto}
+.k3-etapes{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+@media (max-width:760px){ .k3-etapes{grid-template-columns:1fr} }
+.k3-et{background:#fff; border:1.5px solid var(--trait); padding:8px 12px; min-height:70px}
+.k3-et>div{display:none; font-size:.92rem; margin-top:4px}
+.k3-et.vu{border-color:var(--bleu)}
+.k3-et.vu>div{display:block; animation:reveal .25s ease}
+.k3-et .torseur{font-size:.85rem}
+.k3-et .eqs p{margin:2px 0}
+.k3-defis li{margin:4px 0}
+.k3-defis b{color:var(--vert)}
+@media print{
+  body.cours-page #home{display:block!important; padding:0}
+  .no-print,.cours-nav,.cours-foot,.k3-foot,.simu-defi{display:none!important}
+  .k3-carte .k3-dos,.quiz-why[hidden],.deux-why[hidden],.k3-jp-why[hidden],.k3-et>div{display:block!important}
+  .k3-ex{display:block} .k3-ex>div{display:block!important}
+}
+</style>
+</head>
+<body class="no-mode hub cours-page">
+<section id="home" aria-labelledby="home-title"><div class="home-inner"><div class="cours" id="cours-3">
+<nav class="c-top no-print" aria-label="Navigation"><a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg> Accueil</a></nav>
+<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head"><span class="mc-tag">Cours 3</span> <span class="pastille n3">Niveau 3</span>
+<h1 id="home-title">Statique analytique</h1><p class="home-sub">Résoudre un problème de statique par le calcul : le principe
+fondamental de la statique écrit avec des torseurs, le torseur transmissible par chaque liaison, l'hypothèse du problème
+plan et une méthode en quatre étapes. Environ 1 heure, avec des cartes à retourner, deux jeux, un atelier des liaisons,
+un calculateur de moment, une poutre résolue pas à pas et un quiz.</p></header></div></div>
+<div class="k3-obj"><div><h3>Objectif</h3><ul><li>Résoudre par la méthode analytique un problème de statique.</li></ul></div>
+<div><h3>Prérequis</h3><ul><li>Savoir calculer le moment d'une force (rappel en section 6).</li>
+<li>Savoir écrire une action mécanique sous forme de torseur.</li></ul></div></div>
+<nav class="cours-nav no-print" aria-label="Étapes du cours"><a href="#k3-pfs">1. Le PFS</a><a href="#k3-deux">2. Deux forces</a><a href="#k3-gen">3. Généralisation</a><a href="#k3-tor">4. Torseurs des liaisons</a><a href="#k3-plan">5. Problème plan</a><a href="#k3-mom">6. Moments</a><a href="#k3-meth">7. Méthode</a><a href="#k3-quiz">8. Quiz</a></nav>
+<section class="part cours-sec" id="k3-pfs" aria-labelledby="k3-pfs-t"><header class="part-head"><div class="part-num" aria-hidden="true">1</div><div><h2 id="k3-pfs-t" style="padding:14px 16px">Rappel du principe fondamental de la statique</h2></div></header><div class="part-body"><p>La <b>statique</b> est la partie de la mécanique qui étudie l'<b>équilibre des systèmes matériels</b> (un solide ou un ensemble de solides) <b>au repos</b> par rapport à un repère fixe. Son but : connaître les forces qui existent dans un mécanisme pour le <b>dimensionner</b> correctement.</p><div class="cours-split"><div class="bal"><svg class="bal-svg" viewBox="0 0 320 300" role="img" aria-labelledby="bal-t">
+<title id="bal-t">Bloc posé sur le sol : son poids P et la réaction R du sol</title>
+<defs><marker id="bal-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker>
+<pattern id="bal-h" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#46525C" stroke-width="1.4"/></pattern></defs>
+<rect x="20" y="160" width="280" height="22" fill="url(#bal-h)"/><line x1="20" y1="160" x2="300" y2="160" stroke="#1C2530" stroke-width="2"/>
+<rect id="bal-bloc" x="100" y="120" width="120" height="40" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/>
+<line id="bal-r" x1="160" y1="160" x2="160" y2="80" stroke="#1F5FA8" stroke-width="4" marker-end="url(#bal-ah)"/>
+<line id="bal-p" x1="160" y1="140" x2="160" y2="220" stroke="#C62828" stroke-width="4" marker-end="url(#bal-ah)"/>
+<circle cx="160" cy="140" r="4" fill="#1C2530"/><circle cx="160" cy="160" r="4" fill="#1C2530"/>
+<text id="bal-rt" x="172" y="92" class="lab-b">R</text><text id="bal-pt" x="172" y="226" class="lab-r">P</text>
+</svg><label class="bal-l"><span>Masse du bloc : <output id="bal-m">50 kg</output></span><input type="range" id="bal-in" min="10" max="150" step="5" value="50"></label></div><div><p>Un solide immobile voit son poids <b>compensé</b> par une résultante directement opposée : la réaction du sol.</p><div class="formule"><span class="f-main"><span class="vec">R</span> = −<span class="vec">P</span> &nbsp;ou&nbsp; <span class="vec">R</span> + <span class="vec">P</span> = <span class="vec">0</span></span></div><p class="bal-out">P = <b id="bal-p-v">490,5 N</b> ; R = <b id="bal-r-v">490,5 N</b></p><p class="cours-defi">À toi : change la masse. Les deux flèches restent-elles égales ?</p><p class="small">Cette relation est une conséquence du principe fondamental de la statique (PFS).</p></div></div><h3>Énoncé</h3><p>Un ensemble matériel {S} est en <b>équilibre</b> par rapport à un repère R si, au cours du temps, chaque point de {S} conserve une position fixe par rapport à R.</p><div class="enonce">Si un ensemble matériel {S} est en équilibre par rapport à un repère R, la somme des actions mécaniques extérieures à {S} qui agissent sur {S} est nulle.</div></div></section><section class="part cours-sec" id="k3-deux" aria-labelledby="k3-deux-t"><header class="part-head"><div class="part-num" aria-hidden="true">2</div><div><h2 id="k3-deux-t" style="padding:14px 16px">Solide soumis à l'action de deux forces</h2></div></header><div class="part-body"><div class="cours-split"><figure class="fig" style="max-width:280px"><img src="data:image/png;base64,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" alt="Solide S en équilibre sous deux forces F et −F appliquées en A et B, portées par la droite AB" width="377" height="362"></figure><div><div class="enonce">Un solide est en équilibre sous l'action de deux forces si et seulement si ces deux forces ont la <b>même direction</b>, la <b>même intensité</b> et des <b>sens contraires</b>.</div><p>La direction commune est la droite qui joint les deux points d'application. C'est l'outil qui débloque beaucoup de problèmes : un vérin, un tirant ou une biellette articulés à leurs deux extrémités et de poids négligé donnent immédiatement la <b>direction</b> d'une action.</p></div></div><div class="jeu"><h3>Jeu : équilibre ou pas ?</h3><div class="deux-g"><div class="deux-c" data-ok="oui"><svg viewBox="0 0 240 110" class="deux-svg" role="img" aria-label="Barre soumise à deux forces"><defs><marker id="ah-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#C62828"/></marker></defs><rect x="50" y="42" width="140" height="26" rx="13" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/><line x1="60" y1="55" x2="8" y2="55" marker-end="url(#ah-ok)" stroke="#C62828" stroke-width="3.5"/><line x1="180" y1="55" x2="232" y2="55" marker-end="url(#ah-ok)" stroke="#C62828" stroke-width="3.5"/></svg><p>Même droite d'action, même intensité, sens contraires</p><div class="deux-b"><button type="button" class="btn ghost" data-v="oui">Équilibre</button><button type="button" class="btn ghost" data-v="non">Pas d'équilibre</button></div><p class="deux-fb" aria-live="polite"></p><p class="deux-why" hidden>Les trois conditions sont réunies : le solide reste immobile.</p></div><div class="deux-c" data-ok="non"><svg viewBox="0 0 240 110" class="deux-svg" role="img" aria-label="Barre soumise à deux forces"><defs><marker id="ah-couple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#C62828"/></marker></defs><rect x="50" y="42" width="140" height="26" rx="13" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/><line x1="60" y1="45" x2="10" y2="45" marker-end="url(#ah-couple)" stroke="#C62828" stroke-width="3.5"/><line x1="180" y1="65" x2="230" y2="65" marker-end="url(#ah-couple)" stroke="#C62828" stroke-width="3.5"/></svg><p>Droites d'action parallèles, même intensité, sens contraires</p><div class="deux-b"><button type="button" class="btn ghost" data-v="oui">Équilibre</button><button type="button" class="btn ghost" data-v="non">Pas d'équilibre</button></div><p class="deux-fb" aria-live="polite"></p><p class="deux-why" hidden>La somme des forces est nulle mais elles forment un couple : le solide tourne.</p></div><div class="deux-c" data-ok="non"><svg viewBox="0 0 240 110" class="deux-svg" role="img" aria-label="Barre soumise à deux forces"><defs><marker id="ah-inegal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#C62828"/></marker></defs><rect x="50" y="42" width="140" height="26" rx="13" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/><line x1="60" y1="55" x2="30" y2="55" marker-end="url(#ah-inegal)" stroke="#C62828" stroke-width="3.5"/><line x1="180" y1="55" x2="236" y2="55" marker-end="url(#ah-inegal)" stroke="#C62828" stroke-width="3.5"/></svg><p>Même droite d'action, sens contraires, intensités différentes</p><div class="deux-b"><button type="button" class="btn ghost" data-v="oui">Équilibre</button><button type="button" class="btn ghost" data-v="non">Pas d'équilibre</button></div><p class="deux-fb" aria-live="polite"></p><p class="deux-why" hidden>La somme des forces n'est pas nulle : le solide part dans le sens de la plus grande.</p></div><div class="deux-c" data-ok="non"><svg viewBox="0 0 240 110" class="deux-svg" role="img" aria-label="Barre soumise à deux forces"><defs><marker id="ah-meme" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#C62828"/></marker></defs><rect x="50" y="42" width="140" height="26" rx="13" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/><line x1="60" y1="55" x2="8" y2="55" marker-end="url(#ah-meme)" stroke="#C62828" stroke-width="3.5"/><line x1="180" y1="55" x2="128" y2="55" marker-end="url(#ah-meme)" stroke="#C62828" stroke-width="3.5"/></svg><p>Même droite d'action, même intensité, même sens</p><div class="deux-b"><button type="button" class="btn ghost" data-v="oui">Équilibre</button><button type="button" class="btn ghost" data-v="non">Pas d'équilibre</button></div><p class="deux-fb" aria-live="polite"></p><p class="deux-why" hidden>Les forces s'ajoutent : le solide est entraîné dans leur sens.</p></div></div><p class="jeu-score" aria-live="polite">Score : <span id="deux-s">0 / 4</span></p></div></div></section><section class="part cours-sec" id="k3-gen" aria-labelledby="k3-gen-t"><header class="part-head"><div class="part-num" aria-hidden="true">3</div><div><h2 id="k3-gen-t" style="padding:14px 16px">Généralisation : la méthode analytique</h2></div></header><div class="part-body"><p>En première, les problèmes de statique étaient résolus <b>graphiquement</b>. Cette méthode est limitée aux problèmes <b>plans</b> et aux solides soumis à <b>2 ou 3 forces</b>. La méthode <b>analytique</b>, qui utilise les torseurs, résout des problèmes dans l'espace, avec autant d'actions mécaniques qu'on veut.</p><p>Pour un solide S quelconque, en équilibre sous l'action de <i>n</i> actions mécaniques, s'il y a équilibre :</p><p class="cours-defi">À toi : réponds dans ta tête, puis retourne chaque carte.</p><div class="k3-cartes"><button type="button" class="k3-carte" aria-expanded="false"><b>Condition 1</b><span class="k3-q">Que vaut la somme des forces extérieures ?</span><span class="k3-dos"><b>Théorème de la résultante statique</b> : Σ <span class="vec">F</span><sub>ext→S</sub> = <span class="vec">0</span></span></button><button type="button" class="k3-carte" aria-expanded="false"><b>Condition 2</b><span class="k3-q">Que vaut la somme des moments, en un point A ?</span><span class="k3-dos"><b>Théorème du moment statique</b> : Σ <span class="vec">M</span><sub>A</sub>(<span class="vec">F</span><sub>ext→S</sub>) = <span class="vec">0</span>, quel que soit A (le même pour toutes les forces)</span></button><button type="button" class="k3-carte" aria-expanded="false"><b>Écriture torseur</b><span class="k3-q">Comment écrire les deux conditions en une seule ligne ?</span><span class="k3-dos">Σ {<i>T</i><sub>ext→S</sub>}<sub>A</sub> = {0} : la somme des torseurs, tous écrits au <b>même point</b>, est le torseur nul. Dans l'espace : 3 + 3 = <b>6 équations</b>.</span></button></div><div class="exemple"><h3>Graphique ou analytique ?</h3><table class="t"><thead><tr><th></th><th>Graphique</th><th>Analytique</th></tr></thead><tbody><tr><td>Problème</td><td>plan uniquement</td><td>plan ou espace</td></tr><tr><td>Nombre d'actions</td><td>2 ou 3 forces</td><td>quelconque</td></tr><tr><td>Outil</td><td>dynamique, concours des droites</td><td>torseurs, équations</td></tr><tr><td>Précision</td><td>celle du tracé</td><td>celle du calcul</td></tr></tbody></table></div></div></section><section class="part cours-sec" id="k3-tor" aria-labelledby="k3-tor-t"><header class="part-head"><div class="part-num" aria-hidden="true">4</div><div><h2 id="k3-tor-t" style="padding:14px 16px">Torseur d'action mécanique transmissible par une liaison</h2></div></header><div class="part-body"><p>Dès que l'on assemble deux pièces, il y a contact, donc une <b>liaison</b> et une <b>action mécanique</b>. Il existe un lien direct entre les <b>degrés de liberté</b> de la liaison et les <b>coordonnées du torseur</b> qu'elle transmet :</p><div class="regle"><div><b>Mouvement libre</b><span>⇒ composante <b>nulle</b> : une translation libre selon x ne peut pas transmettre de force selon x (<i>X</i> = 0) ; une rotation libre autour de x ne peut pas transmettre de moment autour de x (<i>L</i> = 0).</span></div><div><b>Mouvement bloqué</b><span>⇒ composante <b>inconnue</b> : c'est l'obstacle qui fait naître l'effort.</span></div></div><p>Le torseur au centre O de la liaison s'écrit dans la base (x, y, z) :</p><div class="eq"><span class="torseur"><span class="tz-n">{<i>T</i><sub>1→2</sub>}<sub>O</sub> =</span><span class="tz-b"><table><tr><td><i>X</i></td><td><i>L</i></td></tr><tr><td><i>Y</i></td><td><i>M</i></td></tr><tr><td><i>Z</i></td><td><i>N</i></td></tr></table></span><span class="tz-r">(O, x, y, z)</span></span></div><div class="simu k3-atelier" id="k3-atelier"><h3>Atelier des liaisons</h3><div class="k3-lias" role="group" aria-label="Choisir une liaison"><button type="button" class="k3-lia" data-k="ponctuelle" data-ddl="101111" data-desc="Une sphère posée sur un plan : seul le déplacement selon la normale y est empêché." aria-pressed="true">Ponctuelle de normale y</button><button type="button" class="k3-lia" data-k="pivot" data-ddl="000001" data-desc="Un arbre dans un palier avec épaulements : seule la rotation autour de z reste." aria-pressed="false">Pivot d'axe z</button><button type="button" class="k3-lia" data-k="glissiere" data-ddl="100000" data-desc="Un tiroir dans ses rails : seule la translation selon x reste." aria-pressed="false">Glissière d'axe x</button><button type="button" class="k3-lia" data-k="pivotglissant" data-ddl="100100" data-desc="Un arbre long dans un alésage : il tourne et coulisse selon x." aria-pressed="false">Pivot glissant d'axe x</button><button type="button" class="k3-lia" data-k="rotule" data-ddl="000111" data-desc="Une sphère dans une sphère creuse : les trois rotations restent." aria-pressed="false">Rotule de centre O</button><button type="button" class="k3-lia" data-k="lannulaire" data-ddl="100111" data-desc="Une sphère dans un cylindre d&#x27;axe x : translation x et trois rotations." aria-pressed="false">Linéaire annulaire d'axe x</button><button type="button" class="k3-lia" data-k="lrectiligne" data-ddl="101110" data-desc="Un cylindre posé sur un plan, contact selon une ligne x : il glisse selon x et z, roule autour de x et pivote autour de y." aria-pressed="false">Linéaire rectiligne de normale y, ligne x</button><button type="button" class="k3-lia" data-k="appuiplan" data-ddl="101010" data-desc="Deux surfaces planes en contact : glissement selon x et z, rotation autour de y." aria-pressed="false">Appui plan de normale y</button><button type="button" class="k3-lia" data-k="encastrement" data-ddl="000000" data-desc="Deux pièces soudées ou boulonnées : aucun mouvement." aria-pressed="false">Encastrement</button></div><p class="k3-desc" id="k3-desc"></p><div class="k3-grid"><div><p class="k3-lab">Degrés de liberté (1 = mouvement libre)</p><table class="t k3-ddl"><thead><tr><th></th><th>x</th><th>y</th><th>z</th></tr></thead><tbody><tr><th>Translation</th><td data-i="0"></td><td data-i="1"></td><td data-i="2"></td></tr><tr><th>Rotation</th><td data-i="3"></td><td data-i="4"></td><td data-i="5"></td></tr></tbody></table></div><div><p class="k3-lab">Torseur transmissible : clique sur une case pour basculer 0 ↔ inconnue</p><div class="k3-tor"><span class="k3-brace">{</span><div class="k3-cells"><button type="button" class="k3-c" data-i="0" aria-label="Composante X">0</button><button type="button" class="k3-c" data-i="1" aria-label="Composante Y">0</button><button type="button" class="k3-c" data-i="2" aria-label="Composante Z">0</button><button type="button" class="k3-c" data-i="3" aria-label="Composante L">0</button><button type="button" class="k3-c" data-i="4" aria-label="Composante M">0</button><button type="button" class="k3-c" data-i="5" aria-label="Composante N">0</button></div><span class="k3-brace">}</span><span class="k3-base">O, (x, y, z)</span></div><label class="k3-plan-l"><input type="checkbox" id="k3-plan-cb"> Problème plan (x, y) : barrer <i>Z</i>, <i>L</i> et <i>M</i></label></div></div><p class="k3-foot"><button type="button" class="btn" id="k3-ok">Vérifier</button> <button type="button" class="btn ghost" id="k3-sol">Solution</button> <b id="k3-fb" aria-live="polite"></b></p><p class="small" id="k3-nb"></p></div></div></section><section class="part cours-sec" id="k3-plan" aria-labelledby="k3-plan-t"><header class="part-head"><div class="part-num" aria-hidden="true">5</div><div><h2 id="k3-plan-t" style="padding:14px 16px">Hypothèse du problème plan</h2></div></header><div class="part-body"><p>Quand le système admet un <b>plan de symétrie</b> qui contient les efforts (ou des efforts symétriques par rapport à ce plan), on l'étudie dans ce plan d'étude. Dans un problème plan :</p><div class="k3-cartes"><button type="button" class="k3-carte" aria-expanded="false"><b>Forces</b><span class="k3-q">Que devient la résultante dans un problème plan (x, y) ?</span><span class="k3-dos">Les forces sont <b>contenues dans le plan</b> (x, y) : <i>Z</i> = 0.</span></button><button type="button" class="k3-carte" aria-expanded="false"><b>Moments</b><span class="k3-q">Que devient le moment ?</span><span class="k3-dos">Les moments sont <b>perpendiculaires au plan</b>, portés par z : <i>L</i> = <i>M</i> = 0.</span></button></div><div class="formule"><span class="f-main"><span class="torseur"><span class="tz-n">{<i>T</i><sub>1→2</sub>}<sub>O</sub> =</span><span class="tz-b"><table><tr><td><i>X</i></td><td>—</td></tr><tr><td><i>Y</i></td><td>—</td></tr><tr><td>—</td><td><i>N</i></td></tr></table></span><span class="tz-r">(O, x, y, z)</span></span></span><span class="f-units">3 composantes au plus<br>⇒ le PFS donne <b>3 équations</b> : Σ<i>X</i> = 0, Σ<i>Y</i> = 0, Σ<i>N</i> = 0</span></div><h3>Exemples du cours</h3><details class="k3-ex"><summary>Liaison glissière d'axe x, problème dans le plan (x, y)</summary><div><p>Degrés de liberté : translation selon x seulement ⇒ torseur dans l'espace {0 <i>L</i> ; <i>Y</i> <i>M</i> ; <i>Z</i> <i>N</i>}. Dans le plan (x, y), on barre <i>Z</i>, <i>L</i>, <i>M</i> :</p><div class="eq"><span class="torseur"><span class="tz-n">{<i>T</i><sub>1→2</sub>}<sub>O</sub> =</span><span class="tz-b"><table><tr><td>0</td><td>—</td></tr><tr><td><i>Y</i></td><td>—</td></tr><tr><td>—</td><td><i>N</i></td></tr></table></span><span class="tz-r">(O, x, y, z)</span></span></div><p><b>2 inconnues</b> : <i>Y</i> et <i>N</i>.</p></div></details><details class="k3-ex"><summary>Liaison rotule, problème dans le plan (y, z)</summary><div><p>Degrés de liberté : les trois rotations ⇒ {<i>X</i> 0 ; <i>Y</i> 0 ; <i>Z</i> 0}. Dans le plan (y, z), les forces utiles sont <i>Y</i> et <i>Z</i>, et le seul moment utile est <i>L</i> (autour de x, perpendiculaire au plan), nul ici :</p><div class="eq"><span class="torseur"><span class="tz-n">{<i>T</i><sub>1→2</sub>}<sub>O</sub> =</span><span class="tz-b"><table><tr><td>—</td><td>0</td></tr><tr><td><i>Y</i></td><td>—</td></tr><tr><td><i>Z</i></td><td>—</td></tr></table></span><span class="tz-r">(O, x, y, z)</span></span></div><p><b>2 inconnues</b> : <i>Y</i> et <i>Z</i>.</p></div></details><div class="jeu"><h3>Jeu : combien d'inconnues dans le plan (x, y) ?</h3><div class="jeu-l k3-jp" data-ok="2"><span>Pivot d'axe z</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>X et Y : le moment N est nul (rotation libre autour de z).</span></div><div class="jeu-l k3-jp" data-ok="1"><span>Ponctuelle de normale y</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>Y seulement : la force est portée par la normale au contact.</span></div><div class="jeu-l k3-jp" data-ok="2"><span>Glissière d'axe x</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>Y et N : la translation selon x est libre, la rotation autour de z bloquée.</span></div><div class="jeu-l k3-jp" data-ok="3"><span>Encastrement</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>X, Y et N : tout est bloqué.</span></div><div class="jeu-l k3-jp" data-ok="2"><span>Rotule de centre O</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>X et Y : aucune rotation n'est bloquée, donc N = 0.</span></div><div class="jeu-l k3-jp" data-ok="1"><span>Linéaire annulaire d'axe y</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>X seulement : translation libre selon y, rotations libres.</span></div><div class="jeu-l k3-jp" data-ok="2"><span>Appui plan de normale y</span><button type="button" class="btn ghost" data-v="0">0</button><button type="button" class="btn ghost" data-v="1">1</button><button type="button" class="btn ghost" data-v="2">2</button><button type="button" class="btn ghost" data-v="3">3</button><b class="jeu-fb" aria-live="polite"></b><span class="k3-jp-why" hidden>Y et N : glissement selon x libre, rotation autour de z bloquée.</span></div><p class="jeu-score" aria-live="polite">Score : <span id="k3-jp-s">0 / 7</span></p></div></div></section><section class="part cours-sec" id="k3-mom" aria-labelledby="k3-mom-t"><header class="part-head"><div class="part-num" aria-hidden="true">6</div><div><h2 id="k3-mom-t" style="padding:14px 16px">Prérequis : le moment d'une force</h2></div></header><div class="part-body"><p>Le moment d'une force mesure sa capacité à faire tourner le solide autour d'un point. Dans le plan (x, y), pour une force <span class="vec">F</span> (<i>F</i><sub>x</sub> ; <i>F</i><sub>y</sub>) appliquée en P, avec <span class="vec">AP</span> (<i>x</i> ; <i>y</i>) :</p><div class="formule"><span class="f-main"><i>M</i><sub>A</sub> = <i>x</i> · <i>F</i><sub>y</sub> − <i>y</i> · <i>F</i><sub>x</sub> = ± <i>F</i> × <i>d</i></span><span class="f-units"><i>d</i> : bras de levier, distance de A à la droite d'action<br>positif dans le sens trigonométrique (anti-horaire)</span></div><div class="simu" id="k3-mom-simu"><h3>Calculateur : déplace la force, regarde son moment en A</h3><div class="k3-mom-g"><svg class="mom-svg" viewBox="0 0 520 330" role="img" aria-labelledby="mom-t">
+<title id="mom-t">Force F appliquée en P et son moment par rapport au point A</title>
+<defs><marker id="mom-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs>
+<g class="grille" id="mom-grille"></g>
+<line x1="20" y1="210" x2="505" y2="210" class="axe" marker-end="url(#mom-ah)"/><text x="500" y="228" class="ax">x</text>
+<line x1="80" y1="315" x2="80" y2="15" class="axe" marker-end="url(#mom-ah)"/><text x="90" y="20" class="ax">y</text>
+<line id="mom-ligne" class="ligne-action"/>
+<line id="mom-d" class="bras"/><text id="mom-dt" class="lab-v">d</text>
+<line id="mom-ap" class="ap"/>
+<path id="mom-arc" fill="none" stroke-width="3" marker-end="url(#mom-ah)"/>
+<line id="mom-f" stroke="#C62828" stroke-width="4" marker-end="url(#mom-ah)"/>
+<circle cx="80" cy="210" r="5" fill="#1C2530"/><text x="62" y="230" class="pt">A</text>
+<circle id="mom-p" r="5" fill="#1C2530"/><text id="mom-pt" class="pt">P</text><text id="mom-ft" class="lab-r">F</text>
+</svg><div class="simu-grid k3-col"><label><span>Position x de P : <output id="mo-x">4 m</output></span><input type="range" id="mi-x" min="-1" max="10" step="0.5" value="4"></label><label><span>Position y de P : <output id="mo-y">1 m</output></span><input type="range" id="mi-y" min="-2" max="4" step="0.5" value="1"></label><label><span>Intensité F : <output id="mo-f">500 N</output></span><input type="range" id="mi-f" min="0" max="1000" step="50" value="500"></label><label><span>Angle de F avec x : <output id="mo-a">270°</output></span><input type="range" id="mi-a" min="0" max="355" step="5" value="270"></label></div></div><div class="simu-out"><div><span>Composantes de F</span><b id="mr-fxy"></b></div><div><span>Moment en A</span><b id="mr-m"></b></div><div><span>Bras de levier d</span><b id="mr-d"></b></div></div><p class="simu-verdict" id="mr-v"></p><details class="simu-defi"><summary>Défi : annule le moment sans mettre F à zéro</summary><p>Oriente la force pour que sa droite d'action passe par A. <b id="mr-defi"></b></p></details></div><h3>Déplacer un torseur</h3><p>Pour écrire toutes les équations au même point, on <b>déplace</b> les torseurs : la résultante est la même en tout point, le moment se transporte par la relation de Varignon (« BABAR ») :</p><div class="formule"><span class="f-main"><span class="vec">M</span><sub>B</sub> = <span class="vec">M</span><sub>A</sub> + <span class="vec">BA</span> ∧ <span class="vec">R</span></span><span class="f-units">dans le plan : <i>N</i><sub>B</sub> = <i>N</i><sub>A</sub> + <i>x</i><sub>BA</sub> · <i>R</i><sub>y</sub> − <i>y</i><sub>BA</sub> · <i>R</i><sub>x</sub></span></div></div></section><section class="part cours-sec" id="k3-meth" aria-labelledby="k3-meth-t"><header class="part-head"><div class="part-num" aria-hidden="true">7</div><div><h2 id="k3-meth-t" style="padding:14px 16px">Méthode de résolution</h2></div></header><div class="part-body"><ol class="k3-steps"><li class="k3-step" data-s="0"><span class="k3-sn">1</span><div><b>Isoler et faire le bilan</b><p>Après l'étude du système (énoncé, documents techniques), <b>isoler</b> un solide ou un ensemble de solides et faire le <b>bilan des actions mécaniques extérieures</b> (B.A.M.E.) en écrivant les torseurs en leurs points d'application.</p></div></li><li class="k3-step" data-s="1"><span class="k3-sn">2</span><div><b>Compter</b><p>La méthode analytique donne jusqu'à <b>6 équations</b> (<b>3</b> dans un problème plan). Vérifier que le nombre d'inconnues est <b>inférieur ou égal</b> au nombre d'équations. Sinon, le problème ne peut pas être résolu tel quel : il faut le simplifier (isoler d'abord un autre solide).</p></div></li><li class="k3-step" data-s="2"><span class="k3-sn">3</span><div><b>Choisir un point</b><p>Choisir le point de résolution — en général celui où l'action mécanique a <b>le plus d'inconnues</b> — et y <b>déplacer</b> tous les autres torseurs en calculant leurs nouveaux moments.</p></div></li><li class="k3-step" data-s="3"><span class="k3-sn">4</span><div><b>Écrire et résoudre</b><p>Écrire les équations issues du PFS et les résoudre. Présenter les résultats avec les <b>coordonnées</b> des forces et leurs <b>normes</b>.</p></div></li></ol><div class="simu" id="k3-pou"><h3>Simulateur : une poutre résolue pas à pas</h3><p>Une poutre AB de 4 m (poids négligé) est articulée en A (pivot d'axe z) et posée en B sur un appui ponctuel de normale y. Une charge <i>F</i> s'applique à la distance <i>a</i> de A, inclinée de <i>α</i> sur la poutre.</p><svg class="pou-svg" viewBox="0 30 580 268" role="img" aria-labelledby="pou-t">
+<title id="pou-t">Poutre AB de 4 m : pivot en A, appui ponctuel en B, charge F inclinée</title>
+<defs><marker id="pou-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker>
+<pattern id="pou-h" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#46525C" stroke-width="1.3"/></pattern></defs>
+<rect x="70" y="146" width="440" height="16" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/>
+<path d="M70 162 56 190 84 190Z" fill="#fff" stroke="#1C2530" stroke-width="2"/><rect x="44" y="190" width="52" height="10" fill="url(#pou-h)"/>
+<circle cx="70" cy="162" r="4" fill="#1C2530"/>
+<circle cx="510" cy="175" r="12" fill="#fff" stroke="#1C2530" stroke-width="2"/><rect x="484" y="187" width="52" height="10" fill="url(#pou-h)"/>
+<line x1="484" y1="187" x2="536" y2="187" stroke="#1C2530" stroke-width="2"/>
+<text x="44" y="214" class="pt">A</text><text x="530" y="214" class="pt">B</text>
+<line x1="70" y1="276" x2="510" y2="276" stroke="#9AA2A8" stroke-width="1"/><text x="275" y="290" class="ax">L = 4 m</text>
+<line id="pou-xa" stroke="#1F5FA8" stroke-width="4" marker-end="url(#pou-ah)"/><text id="pou-xat" class="lab-b" x="4" y="128"></text>
+<line id="pou-ya" stroke="#1F5FA8" stroke-width="4" marker-end="url(#pou-ah)"/><text id="pou-yat" class="lab-b" x="82" y="240"></text>
+<line id="pou-yb" stroke="#1B7A43" stroke-width="4" marker-end="url(#pou-ah)"/><text id="pou-ybt" class="lab-g" x="498" y="240" text-anchor="end"></text>
+<line id="pou-f" stroke="#C62828" stroke-width="4" marker-end="url(#pou-ah)"/><text id="pou-ft" class="lab-r">F</text>
+<circle id="pou-pt" r="4" fill="#C62828"/>
+</svg><div class="simu-grid"><label><span>Intensité F : <output id="po-f">1 000 N</output></span><input type="range" id="pi-f" min="0" max="2000" step="100" value="1000"></label><label><span>Position a : <output id="po-a">1,0 m</output></span><input type="range" id="pi-a" min="0" max="4" step="0.1" value="1"></label><label><span>Angle α : <output id="po-al">90°</output></span><input type="range" id="pi-al" min="30" max="150" step="5" value="90"></label></div><div class="k3-etapes"><div class="k3-et" data-e="0"><b>1. Bilan</b><div id="pe-1"></div></div><div class="k3-et" data-e="1"><b>2. Compter</b><div>Inconnues : <i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub> (pivot), <i>Y</i><sub>B</sub> (ponctuelle) = 3 ≤ 3 équations : résoluble.</div></div><div class="k3-et" data-e="2"><b>3. Point A</b><div>Deux inconnues en A : on y écrit les moments, <i>X</i><sub>A</sub> et <i>Y</i><sub>A</sub> disparaissent.</div></div><div class="k3-et" data-e="3"><b>4. Équations et résultats</b><div id="pe-4"></div></div></div><p class="k3-foot"><button type="button" class="btn" id="pe-next">Étape suivante</button> <button type="button" class="btn ghost" id="pe-all">Tout afficher</button> <button type="button" class="btn ghost" id="pe-reset">Recommencer</button></p><details class="simu-defi"><summary>Défis</summary><ul class="k3-defis"><li id="df-1">Place la charge pour que les deux appuis portent autant : <i>Y</i><sub>A</sub> = <i>Y</i><sub>B</sub>. <b></b></li><li id="df-2">Oriente la charge pour que le pivot A ne reçoive aucun effort horizontal. <b></b></li><li id="df-3">Trouve une position où l'appui B ne porte rien. <b></b></li></ul></details></div></div></section><section class="part cours-sec" id="k3-quiz" aria-labelledby="k3-quiz-t"><header class="part-head"><div class="part-num" aria-hidden="true">8</div><div><h2 id="k3-quiz-t" style="padding:14px 16px">Quiz : vérifie tes connaissances</h2></div></header><div class="part-body"><p>Choisis une réponse : la correction s'affiche aussitôt.</p><div class="quiz"><fieldset class="quiz-q" data-ok="0"><legend><span class="q-num">1</span> Un solide est en équilibre sous l'action de deux forces. Elles ont nécessairement…</legend><label><input type="radio" name="k3q0" value="0"> la même direction, la même intensité et des sens contraires</label><label><input type="radio" name="k3q0" value="1"> la même intensité seulement</label><label><input type="radio" name="k3q0" value="2"> des directions perpendiculaires</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Deux forces en équilibre sont directement opposées : même droite d'action, même intensité, sens contraires.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">2</span> Combien d'équations scalaires le PFS fournit-il pour un problème plan ?</legend><label><input type="radio" name="k3q1" value="0"> 2</label><label><input type="radio" name="k3q1" value="1"> 3</label><label><input type="radio" name="k3q1" value="2"> 6</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Σ<i>X</i> = 0, Σ<i>Y</i> = 0 et Σ<i>N</i> = 0 : trois équations (six dans l'espace).</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">3</span> Une liaison laisse libre la rotation autour de z. Dans son torseur…</legend><label><input type="radio" name="k3q2" value="0"> X = 0</label><label><input type="radio" name="k3q2" value="1"> N = 0</label><label><input type="radio" name="k3q2" value="2"> Z = 0</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Un mouvement libre correspond à une composante nulle : rotation libre autour de z ⇒ moment N nul.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">4</span> Dans le plan (x, y), combien d'inconnues transmet une liaison pivot d'axe z ?</legend><label><input type="radio" name="k3q3" value="0"> 1</label><label><input type="radio" name="k3q3" value="1"> 2</label><label><input type="radio" name="k3q3" value="2"> 3</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden><i>X</i> et <i>Y</i> : la force passe par le centre de la liaison, le moment <i>N</i> est nul.</p></fieldset><fieldset class="quiz-q" data-ok="0"><legend><span class="q-num">5</span> Où vaut-il mieux écrire l'équation des moments ?</legend><label><input type="radio" name="k3q4" value="0"> au point où l'action a le plus d'inconnues</label><label><input type="radio" name="k3q4" value="1"> toujours à l'origine du repère</label><label><input type="radio" name="k3q4" value="2"> au centre de gravité</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Les inconnues de l'action en ce point ont un moment nul : elles disparaissent de l'équation.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">6</span> Une force (0 ; −100 N) est appliquée au point (2 m ; 0). Son moment en l'origine vaut…</legend><label><input type="radio" name="k3q5" value="0"> +200 N·m</label><label><input type="radio" name="k3q5" value="1"> −200 N·m</label><label><input type="radio" name="k3q5" value="2"> −50 N·m</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden><i>M</i> = <i>x</i> · <i>F</i><sub>y</sub> − <i>y</i> · <i>F</i><sub>x</sub> = 2 × (−100) − 0 = −200 N·m (sens horaire).</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">7</span> Le problème compte 4 inconnues dans le plan. On peut…</legend><label><input type="radio" name="k3q6" value="0"> le résoudre directement</label><label><input type="radio" name="k3q6" value="1"> chercher une simplification (solide soumis à deux forces…)</label><label><input type="radio" name="k3q6" value="2"> ignorer une inconnue</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>4 inconnues pour 3 équations : il faut d'abord isoler un autre solide (souvent un solide soumis à deux forces) pour connaître une direction.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">8</span> Pour déplacer un torseur du point A au point B…</legend><label><input type="radio" name="k3q7" value="0"> la résultante et le moment ne changent pas</label><label><input type="radio" name="k3q7" value="1"> la résultante est conservée, le moment devient M_A + BA ∧ R</label><label><input type="radio" name="k3q7" value="2"> le moment est conservé, la résultante change</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>La résultante est la même en tout point ; le moment se transporte par la relation de Varignon (« BABAR »).</p></fieldset></div><div class="quiz-score" aria-live="polite"><span id="qz-score">0 / 8</span><span id="qz-stars" aria-hidden="true"></span><button type="button" class="btn ghost" id="qz-reset">Recommencer</button></div></div></section>
+<div class="cours-foot no-print"><span class="small">S'entraîner :</span> <a class="btn ghost" href="coffre-fort.html">Exercice 3.1 — Porte de coffre-fort</a><a class="btn ghost" href="echelle-pompier.html">Exercice 3.2 — Échelle de pompier</a><a class="btn ghost" href="cadre-velo.html">Exercice 3.3 — Cadre de vélo</a>
+<button type="button" class="btn ghost" id="cours-print">Imprimer le cours</button>
+<a class="btn ghost" href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg> Retour à l'accueil</a></div>
+</div></div></section>
+<script>
+(function () {
+  "use strict";
+  var root = document.getElementById("cours-3");
+  function q(s) { return root.querySelector(s); }
+  function qa(s) { return Array.prototype.slice.call(root.querySelectorAll(s)); }
+  function fr(x, d) {
+    return (Math.abs(x) < 0.5 * Math.pow(10, -d) ? 0 : x).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "\u2212");
+  }
+  function setLine(el, x1, y1, x2, y2) { el.setAttribute("x1", x1); el.setAttribute("y1", y1); el.setAttribute("x2", x2); el.setAttribute("y2", y2); }
+  function show(el, on) { el.style.display = on ? "" : "none"; }
+  function setText(el, s, x, y) { el.textContent = s; el.setAttribute("x", x); el.setAttribute("y", y); }
+
+  // ---------- 1. balance : R = −P
+  var balIn = q("#bal-in");
+  function balance() {
+    var m = +balIn.value, p = m * 9.81, L = 20 + m * 0.6;
+    q("#bal-m").textContent = m + " kg";
+    setLine(q("#bal-r"), 160, 160, 160, 160 - L); setLine(q("#bal-p"), 160, 140, 160, 140 + L);
+    q("#bal-rt").setAttribute("y", 160 - L + 12); q("#bal-pt").setAttribute("y", 140 + L);
+    q("#bal-p-v").textContent = fr(p, 1) + " N"; q("#bal-r-v").textContent = fr(p, 1) + " N";
+  }
+  balIn.addEventListener("input", balance); balance();
+
+  // ---------- 2. jeu : équilibre ou pas ?
+  var deux = qa(".deux-c");
+  function deuxScore() { q("#deux-s").textContent = deux.filter(function (c) { return c.classList.contains("is-ok"); }).length + " / " + deux.length; }
+  deux.forEach(function (c) {
+    Array.prototype.forEach.call(c.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () {
+        if (c.classList.contains("is-ok") || c.classList.contains("is-ko")) return;
+        var ok = b.getAttribute("data-v") === c.getAttribute("data-ok");
+        c.classList.add(ok ? "is-ok" : "is-ko");
+        c.querySelector(".deux-fb").textContent = ok ? "✔ Bien vu !" : "✘ Non : " + (c.getAttribute("data-ok") === "oui" ? "équilibre." : "pas d'équilibre.");
+        c.querySelector(".deux-why").hidden = false;
+        deuxScore();
+      });
+    });
+  });
+  deuxScore();
+
+  // ---------- 3 et 5. cartes à retourner
+  qa(".k3-carte").forEach(function (b) {
+    b.addEventListener("click", function () { b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true" ? "false" : "true"); });
+  });
+
+  // ---------- 4. atelier des liaisons
+  var COMP = ["X", "Y", "Z", "L", "M", "N"], cur = null, ddl = "";
+  var cells = qa(".k3-c"), ddlTd = qa(".k3-ddl td"), plan = q("#k3-plan-cb"), fb = q("#k3-fb");
+  function attendu(i) { return ddl.charAt(i) === "0"; }  // mouvement bloqué ⇒ composante inconnue
+  function renderCells() {
+    cells.forEach(function (c, i) {
+      var on = c.classList.contains("on");
+      c.textContent = on ? COMP[i] : "0";
+      c.classList.toggle("barre", plan.checked && (i === 2 || i === 3 || i === 4));
+    });
+    var n = 0, np = 0;
+    for (var i = 0; i < 6; i++) if (attendu(i)) { n++; if (i === 0 || i === 1 || i === 5) np++; }
+    q("#k3-nb").innerHTML = plan.checked ? "Dans le plan (x, y), on ne garde que <i>X</i>, <i>Y</i> et <i>N</i>." : "";
+    q("#k3-nb").dataset.n = n; q("#k3-nb").dataset.np = np;
+  }
+  function choisir(btn) {
+    qa(".k3-lia").forEach(function (b) { b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
+    cur = btn; ddl = btn.getAttribute("data-ddl");
+    q("#k3-desc").textContent = btn.getAttribute("data-desc");
+    ddlTd.forEach(function (td) {
+      var i = +td.getAttribute("data-i"), libre = ddl.charAt(i) === "1";
+      td.textContent = libre ? "1" : "0"; td.className = libre ? "libre" : "bloque";
+    });
+    cells.forEach(function (c) { c.classList.remove("on", "ok", "ko"); });
+    fb.textContent = ""; fb.className = "";
+    renderCells();
+  }
+  qa(".k3-lia").forEach(function (b) { b.addEventListener("click", function () { choisir(b); }); });
+  cells.forEach(function (c) {
+    c.addEventListener("click", function () { c.classList.toggle("on"); c.classList.remove("ok", "ko"); fb.textContent = ""; renderCells(); });
+  });
+  plan.addEventListener("change", renderCells);
+  function verifier() {
+    var bons = 0;
+    cells.forEach(function (c, i) {
+      var ok = c.classList.contains("on") === attendu(i);
+      c.classList.toggle("ok", ok); c.classList.toggle("ko", !ok); if (ok) bons++;
+    });
+    var nb = +q("#k3-nb").dataset.n, np = +q("#k3-nb").dataset.np;
+    if (bons === 6) {
+      fb.className = "ok";
+      fb.innerHTML = "✔ Juste ! " + nb + " inconnue" + (nb > 1 ? "s" : "") + " dans l'espace" +
+        (plan.checked ? ", " + np + " dans le plan (x, y)." : ".");
+      cur.classList.add("fait");
+    } else { fb.className = "ko"; fb.textContent = "✘ " + (6 - bons) + " case" + (6 - bons > 1 ? "s" : "") + " à revoir : un mouvement libre donne une composante nulle."; }
+  }
+  q("#k3-ok").addEventListener("click", verifier);
+  q("#k3-sol").addEventListener("click", function () {
+    cells.forEach(function (c, i) { c.classList.toggle("on", attendu(i)); });
+    renderCells(); verifier();
+  });
+  choisir(qa(".k3-lia")[0]);
+
+  // ---------- 5. jeu : combien d'inconnues dans le plan ?
+  var jp = qa(".k3-jp");
+  function jpScore() { q("#k3-jp-s").textContent = jp.filter(function (l) { return l.classList.contains("is-ok"); }).length + " / " + jp.length; }
+  jp.forEach(function (l) {
+    Array.prototype.forEach.call(l.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () {
+        if (l.classList.contains("is-ok") || l.classList.contains("is-ko")) return;
+        var ok = b.getAttribute("data-v") === l.getAttribute("data-ok");
+        l.classList.add(ok ? "is-ok" : "is-ko");
+        l.querySelector(".jeu-fb").textContent = ok ? "✔" : "✘ " + l.getAttribute("data-ok");
+        l.querySelector(".k3-jp-why").hidden = false;
+        jpScore();
+      });
+    });
+  });
+  jpScore();
+
+  // ---------- 6. calculateur de moment (1 m = 40 px, A en (80 ; 210))
+  var OX = 80, OY = 210, K = 40;
+  var g = q("#mom-grille"), svgNS = "http://www.w3.org/2000/svg";
+  for (var gx = -1; gx <= 10; gx++) { var l1 = document.createElementNS(svgNS, "line"); setLine(l1, OX + gx * K, 15, OX + gx * K, 315); g.appendChild(l1); }
+  for (var gy = -2; gy <= 4; gy++) { var l2 = document.createElementNS(svgNS, "line"); setLine(l2, 20, OY - gy * K, 505, OY - gy * K); g.appendChild(l2); }
+  var MX = q("#mi-x"), MY = q("#mi-y"), MF = q("#mi-f"), MA = q("#mi-a");
+  function moment() {
+    var x = +MX.value, y = +MY.value, F = +MF.value, a = +MA.value * Math.PI / 180;
+    var fx = F * Math.cos(a), fy = F * Math.sin(a), M = x * fy - y * fx;
+    q("#mo-x").textContent = fr(x, 1) + " m"; q("#mo-y").textContent = fr(y, 1) + " m";
+    q("#mo-f").textContent = fr(F, 0) + " N"; q("#mo-a").textContent = MA.value + "°";
+    var px = OX + x * K, py = OY - y * K, L = 20 + F * 0.09;
+    var ex = px + L * Math.cos(a), ey = py - L * Math.sin(a);
+    q("#mom-p").setAttribute("cx", px); q("#mom-p").setAttribute("cy", py);
+    setText(q("#mom-pt"), "P", px - 16, py + 18);
+    setLine(q("#mom-f"), px, py, ex, ey); show(q("#mom-f"), F > 0);
+    setText(q("#mom-ft"), "F", ex + 6, ey - 6); show(q("#mom-ft"), F > 0);
+    setLine(q("#mom-ap"), OX, OY, px, py);
+    var ca = Math.cos(a), sa = Math.sin(a);
+    setLine(q("#mom-ligne"), px - 700 * ca, py + 700 * sa, px + 700 * ca, py - 700 * sa); show(q("#mom-ligne"), F > 0);
+    // pied de la perpendiculaire de A sur la droite d'action
+    var t = (OX - px) * ca + (OY - py) * (-sa), hx = px + t * ca, hy = py - t * sa;
+    var d = F > 0 ? Math.abs(M) / F : 0;
+    setLine(q("#mom-d"), OX, OY, hx, hy); show(q("#mom-d"), F > 0 && d > 0.01);
+    setText(q("#mom-dt"), "d", (OX + hx) / 2 + 6, (OY + hy) / 2 - 6); show(q("#mom-dt"), F > 0 && d > 0.01);
+    var arc = q("#mom-arc"), r = 26;
+    if (Math.abs(M) > 0.5) {
+      var s = M > 0 ? 0 : 1, a1 = M > 0 ? 0.3 : 2.8, a2 = M > 0 ? 2.8 : 0.3;
+      arc.setAttribute("d", "M" + (OX + r * Math.cos(a1)) + " " + (OY - r * Math.sin(a1)) + " A" + r + " " + r + " 0 0 " + s + " " + (OX + r * Math.cos(a2)) + " " + (OY - r * Math.sin(a2)));
+      arc.setAttribute("stroke", M > 0 ? "#1B7A43" : "#C62828"); show(arc, true);
+    } else show(arc, false);
+    q("#mr-fxy").textContent = "(" + fr(fx, 0) + " ; " + fr(fy, 0) + ") N";
+    q("#mr-m").textContent = fr(M, 0) + " N·m";
+    q("#mr-d").textContent = fr(d, 2) + " m";
+    var v = q("#mr-v");
+    if (Math.abs(M) < 0.5) { v.className = "simu-verdict nul"; v.textContent = F > 0 ? "Moment nul : la droite d'action de F passe par A, la force ne fait pas tourner autour de A." : "Pas de force, pas de moment."; }
+    else if (M > 0) { v.className = "simu-verdict pos"; v.textContent = "M > 0 : F fait tourner autour de A dans le sens trigonométrique (anti-horaire)."; }
+    else { v.className = "simu-verdict neg"; v.textContent = "M < 0 : F fait tourner autour de A dans le sens horaire."; }
+    q("#mr-defi").textContent = (F > 0 && Math.abs(M) < 0.5 && (x !== 0 || y !== 0)) ? "✔ Défi réussi !" : "";
+  }
+  [MX, MY, MF, MA].forEach(function (el) { el.addEventListener("input", moment); });
+  moment();
+
+  // ---------- 7. méthode : poutre AB de 4 m, pas à pas (1 m = 110 px, A en (70 ; 154))
+  var PF = q("#pi-f"), PA = q("#pi-a"), PAL = q("#pi-al"), etape = 0;
+  var steps = qa(".k3-step"), ets = qa(".k3-et");
+  function tz(n, p, x, y, nn) {
+    return '<span class="torseur"><span class="tz-n">{<i>T</i><sub>' + n + '</sub>}<sub>' + p + '</sub> =</span><span class="tz-b"><table><tr><td>' + x + "</td><td>—</td></tr><tr><td>" + y + "</td><td>—</td></tr><tr><td>—</td><td>" + nn + '</td></tr></table></span></span>';
+  }
+  function poutre() {
+    var F = +PF.value, a = +PA.value, al = +PAL.value * Math.PI / 180;
+    var fx = F * Math.cos(al), fy = -F * Math.sin(al);
+    var YB = -a * fy / 4, XA = -fx, YA = -fy - YB;
+    q("#po-f").textContent = fr(F, 0) + " N"; q("#po-a").textContent = fr(a, 1) + " m"; q("#po-al").textContent = PAL.value + "°";
+    var ax = 70 + a * 110, ay = 146, L = 18 + F * 0.045;
+    setLine(q("#pou-f"), ax - L * Math.cos(al), ay - L * Math.sin(al), ax, ay); show(q("#pou-f"), F > 0);
+    q("#pou-pt").setAttribute("cx", ax); q("#pou-pt").setAttribute("cy", ay);
+    setText(q("#pou-ft"), "F", ax - L * Math.cos(al) - 18, ay - L * Math.sin(al));
+    // réaction : flèche attachée au point (px ; py), du côté −u ; pointe sur le point si la valeur est positive
+    function reac(id, tid, px, py, ux, uy, val, lab) {
+      var el = q(id), t = q(tid);
+      if (Math.abs(val) < 0.5 || F <= 0) { show(el, false); show(t, false); return; }
+      show(el, true); show(t, true);
+      var len = 12 + 55 * Math.abs(val) / F, ox = px - ux * len, oy = py - uy * len;
+      if (val > 0) setLine(el, ox, oy, px, py); else setLine(el, px, py, ox, oy);
+      t.textContent = lab + " = " + fr(val, 0) + " N";
+    }
+    reac("#pou-xa", "#pou-xat", 62, 154, 1, 0, XA, "XA");
+    reac("#pou-ya", "#pou-yat", 70, 204, 0, -1, YA, "YA");
+    reac("#pou-yb", "#pou-ybt", 510, 204, 0, -1, YB, "YB");
+    q("#pe-1").innerHTML = '<div class="eqs">' + tz("0→1", "A", "<i>X</i><sub>A</sub>", "<i>Y</i><sub>A</sub>", "0") + " " +
+      tz("0→1", "B", "0", "<i>Y</i><sub>B</sub>", "0") + " " + tz("F", "P", fr(fx, 0), fr(fy, 0), "0") + "</div>";
+    q("#pe-4").innerHTML = '<div class="eqs"><p>Σ<i>N</i><sub>A</sub> : 4 · <i>Y</i><sub>B</sub> + ' + fr(a, 1) + " × (" + fr(fy, 0) + ") = 0 ⇒ <b><i>Y</i><sub>B</sub> = " + fr(YB, 0) + " N</b></p>" +
+      "<p>Σ<i>X</i> : <i>X</i><sub>A</sub> + (" + fr(fx, 0) + ") = 0 ⇒ <b><i>X</i><sub>A</sub> = " + fr(XA, 0) + " N</b></p>" +
+      "<p>Σ<i>Y</i> : <i>Y</i><sub>A</sub> + <i>Y</i><sub>B</sub> + (" + fr(fy, 0) + ") = 0 ⇒ <b><i>Y</i><sub>A</sub> = " + fr(YA, 0) + " N</b></p>" +
+      "<p>‖<i>A</i>‖ = " + fr(Math.hypot(XA, YA), 0) + " N ; ‖<i>B</i>‖ = " + fr(Math.abs(YB), 0) + " N</p></div>";
+    var df = [F > 0 && Math.abs(YA - YB) < 1, F > 0 && Math.abs(XA) < 1, F > 0 && Math.abs(YB) < 1 && Math.abs(YA) > 1];
+    ["#df-1 b", "#df-2 b", "#df-3 b"].forEach(function (s, i) { if (df[i]) q(s).textContent = "✔ Réussi !"; });
+  }
+  function montrer(n) {
+    etape = n;
+    ets.forEach(function (e, i) { e.classList.toggle("vu", i < n); });
+    steps.forEach(function (s, i) { s.classList.toggle("on", i === n - 1); });
+    q("#pe-next").disabled = n >= 4;
+  }
+  q("#pe-next").addEventListener("click", function () { montrer(Math.min(4, etape + 1)); });
+  q("#pe-all").addEventListener("click", function () { montrer(4); });
+  q("#pe-reset").addEventListener("click", function () { montrer(0); });
+  [PF, PA, PAL].forEach(function (el) { el.addEventListener("input", poutre); });
+  poutre(); montrer(0);
+
+  // ---------- 8. quiz
+  var qs = qa(".quiz-q");
+  function score() {
+    var n = qs.filter(function (f) { return f.classList.contains("is-ok"); }).length;
+    var done = qs.filter(function (f) { return f.classList.contains("done"); }).length;
+    var st = n === qs.length ? 3 : n >= qs.length - 2 ? 2 : n >= 2 ? 1 : 0;
+    q("#qz-score").textContent = n + " / " + qs.length;
+    q("#qz-stars").textContent = done === qs.length ? "★★★".slice(0, st) + "☆☆☆".slice(0, 3 - st) : "";
+  }
+  qs.forEach(function (fs) {
+    fs.addEventListener("change", function (e) {
+      if (fs.classList.contains("done")) return;
+      var ok = e.target.value === fs.getAttribute("data-ok");
+      fs.classList.add("done", ok ? "is-ok" : "is-ko");
+      fs.querySelector(".quiz-fb").textContent = ok ? "✔ Bonne réponse !" : "✘ Pas tout à fait.";
+      fs.querySelector(".quiz-why").hidden = false;
+      Array.prototype.forEach.call(fs.querySelectorAll("input"), function (i) {
+        i.disabled = true;
+        if (i.value === fs.getAttribute("data-ok")) i.parentNode.classList.add("good");
+      });
+      score();
+    });
+  });
+  q("#qz-reset").addEventListener("click", function () {
+    qs.forEach(function (fs) {
+      fs.classList.remove("done", "is-ok", "is-ko");
+      fs.querySelector(".quiz-fb").textContent = "";
+      fs.querySelector(".quiz-why").hidden = true;
+      Array.prototype.forEach.call(fs.querySelectorAll("input"), function (i) { i.disabled = false; i.checked = false; i.parentNode.classList.remove("good"); });
+    });
+    score();
+  });
+  score();
+  q("#cours-print").addEventListener("click", function () { window.print(); });
+})();
+</script>
+</body>
+</html>
