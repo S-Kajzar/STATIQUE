@@ -27,6 +27,7 @@ import niveau3  # noqa: E402
 import graphique  # noqa: E402
 from cours3 import render_cours3  # noqa: E402
 from cours1 import render_cours1  # noqa: E402
+from torseur_alea import render_torseur_alea  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GABARIT = ROOT / "src" / "gabarit-exercice-interactif.html"
@@ -60,7 +61,11 @@ NIVEAU3 = [
      "alt": "Solide en équilibre sous deux forces directement opposées", "page": "cours-statique-analytique.html",
      "bouton": "Lire le cours"},
 ] + [{"rubrique": "exercices", "tag": e["tag"], "level": e["level"], "title": e["title"], "mots": e["mots"],
-      "vign": e["vign"], "alt": e["alt"], "page": e["page"], "exo": e} for e in niveau3.EXOS]
+      "vign": e["vign"], "alt": e["alt"], "page": e["page"], "exo": e} for e in niveau3.EXOS] + [
+    {"rubrique": "exercices", "tag": "Exercice 3.4", "level": "Niveau 3", "title": "Déplacer un torseur",
+     "mots": ["Varignon", "Produit vectoriel", "Tirages aléatoires", "Entraînement"], "vign": "carte-deplacer-torseur.jpg",
+     "alt": "Torseur connu en A, transporté au point B par la relation de Varignon", "page": "deplacer-torseur.html",
+     "bouton": "S'entraîner"}]
 # Statique graphique (Niveau 1) : exercices indépendants générés par src/graphique.py, avec l'atelier de tracé
 GRAPHIQUE = [{"rubrique": "cours", "tag": "Cours 1.1", "level": "Niveau 1", "title": "Statique graphique",
               "mots": ["Isoler", "Deux forces", "Trois forces", "Dynamique"], "vign": "carte-cours-statique-graphique.jpg",
@@ -236,6 +241,9 @@ def build():
     cours = render_cours3(style, HUB_CSS)
     (ROOT / "cours-statique-analytique.html").write_text(cours, encoding="utf-8")
     print(f"cours-statique-analytique.html : {len(cours.encode('utf-8')) / 1024:.0f} Kio")
+    ta = render_torseur_alea(style, HUB_CSS)
+    (ROOT / "deplacer-torseur.html").write_text(ta, encoding="utf-8")
+    print(f"deplacer-torseur.html : {len(ta.encode('utf-8')) / 1024:.0f} Kio")
     for e in niveau3.EXOS + graphique.EXOS:
         out, st = niveau3.build_exo(e, g)
         (ROOT / e["page"]).write_text(out, encoding="utf-8")

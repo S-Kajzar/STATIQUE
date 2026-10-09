@@ -49,7 +49,7 @@ test("accueil : cours 3 et exercices 3.1 à 3.3 avec la pastille Niveau 3", asyn
     ["Exercice 3.2 Niveau 3", "Échelle de pompier", "echelle-pompier.html"],
     ["Exercice 3.3 Niveau 3", "Cadre de vélo tout terrain", "cadre-velo.html"]])
     assert.ok(cards.some((c) => JSON.stringify(c) === JSON.stringify(exp)), exp.join(" | "));
-  assert.equal(await page.locator(".pastille.n3").count(), 5); // 4 cartes + la légende
+  assert.equal(await page.locator(".pastille.n3").count(), 6); // 5 cartes + la légende
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
   assert.deepEqual(errors, []);

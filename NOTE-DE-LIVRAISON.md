@@ -1,3 +1,27 @@
+# Note de livraison — Exercice 3.4 : déplacer un torseur (entraînement aléatoire)
+
+Nouvelle carte **Exercice 3.4 · Niveau 3** (`deplacer-torseur.html`), page autonome : chaque tirage donne un torseur
+connu au point A et les coordonnées de A et de B ; l'élève écrit le **vecteur BA** puis le **torseur au point B**.
+
+- **Trois niveaux** : 1 · glisseur dans le plan (moment nul en A) ; 2 · torseur quelconque dans le plan (N<sub>A</sub>
+  ≠ 0) ; 3 · torseur dans l'espace (6 composantes, produit vectoriel complet).
+- **Tirages** : coordonnées au décimètre entre −0,6 et 1,2 m (A et B distants d'au moins 0,25 m), forces par pas de
+  10 N, moments par pas de 5 N·m ; les résultats tombent juste au millième.
+- **Figure** (niveaux 1 et 2) : axes, A, B, vecteur BA en tirets, résultante R, arc du moment N<sub>A</sub> orienté
+  selon son signe ; étiquettes placées automatiquement.
+- **Correction** case par case (tolérance ± 0,01 m sur BA, ± 0,5 % sur le torseur), puis correction pas à pas :
+  BA = A − B, résultante inchangée, N<sub>B</sub> = N<sub>A</sub> + a·Y − b·X (ou les trois composantes de BA ∧ R),
+  torseur final.
+- **Score** : tirages réussis du premier coup, série en cours, et une **série de 10 notée sur 20**. Voir la correction
+  avant de répondre compte le tirage comme manqué. Rien n'est enregistré.
+- `?seed=…` dans l'adresse rend les tirages reproductibles (utile pour un sujet commun en classe et pour les tests).
+
+Tests (`tests/torseur.test.js`) : réponses recalculées indépendamment de la page pour les trois niveaux ; erreurs de
+signe (AB au lieu de BA) notées case par case ; saisies avec virgule, point, signe − typographique ; série de 10 =
+20/20 ; 300 tirages cohérents et variés ; sens de l'arc du moment ; aucun débordement sur téléphone.
+
+---
+
 # Note de livraison — Niveau 3 : saisie des torseurs et des vecteurs
 
 Les exercices 3.1 à 3.3 sont **moins guidés** : les questions intermédiaires (nature de chaque liaison, nombre
