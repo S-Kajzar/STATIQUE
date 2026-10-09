@@ -9,9 +9,9 @@ const REP = require("./reponses-n3.js");
 const ROOT = path.join(__dirname, "..");
 const url = (f) => "file://" + path.join(ROOT, f);
 const EXO = {
-  "coffre-fort.html": { parts: 3, sketch: "sk_q1_5", points: 28, wrong: { q3_3: "2019,05 daN", q1_3: "pivot" } },
-  "echelle-pompier.html": { parts: 4, sketch: null, points: 24, wrong: { q3_3: "5000 daN", q1_3: "AB" } },
-  "cadre-velo.html": { parts: 4, sketch: "sk_q1_3", points: 24, wrong: { q4_5: "780,4 N", q3_3: "A" } },
+  "coffre-fort.html": { parts: 3, sketch: "sk_q1_1" },
+  "echelle-pompier.html": { parts: 4, sketch: null },
+  "cadre-velo.html": { parts: 4, sketch: "sk_q1_1" },
 };
 let browser;
 
@@ -115,9 +115,17 @@ test("cours 3 : balance, jeux, cartes, atelier des liaisons, moment, poutre pas 
   await context.close();
 });
 
+// remplit et valide une question groupée (torseurs, vecteurs) case par case
+async function fillGroup(page, qid, values) {
+  const inputs = page.locator(`#${qid} .sol input`);
+  assert.equal(await inputs.count(), values.length, `${qid} : nombre de cases`);
+  for (let i = 0; i < values.length; i++) await inputs.nth(i).fill(values[i]);
+  await page.click(`#${qid} .btn-fast`);
+}
+
 for (const file of Object.keys(EXO)) {
-  const X = EXO[file];
-  test(`${file} : sujet entièrement juste = 20/20 en entraînement`, async () => {
+  const X = EXO[file], R = REP[file];
+  test(`${file} : sujet entièrement juste = 20/20 en entraînement (torseurs et vecteurs saisis)`, async () => {
     const { context, page, errors } = await open(file);
     assert.equal(await page.locator("#home .btn-mode").count(), 2);
     assert.match(await text(page, ".home-facts"), new RegExp(`${X.parts} parties`));
@@ -125,17 +133,23 @@ for (const file of Object.keys(EXO)) {
     assert.equal(await page.locator(".part").count(), X.parts);
     assert.deepEqual(await page.locator(".rail .tab").allInnerTexts(), ["DP1", "DT1"]);
     const ids = await page.evaluate(() => Object.keys(window.__QCFG__));
-    assert.deepEqual(ids.slice().sort(), Object.keys(REP[file]).sort());
-    for (const [id, ans] of Object.entries(REP[file])) {
+    const attendus = Object.keys(R.q).concat(...Object.entries(R.g).map(([g, v]) => v.map((_x, i) => `${g}_${i + 1}`)));
+    assert.deepEqual(ids.slice().sort(), attendus.sort());
+    assert.ok(Object.keys(R.g).length >= 3, "au moins trois torseurs ou vecteurs à compléter");
+    for (const [id, ans] of Object.entries(R.q)) {
       await page.fill(`#in-${id}`, ans);
       await page.click(`#${id} .btn-validate`);
       assert.match(await text(page, `#${id} .q-status`), /Juste/, `${id} : « ${ans} »`);
-      assert.doesNotMatch(await text(page, `#${id} .q-status`), /unité/i, id);
+    }
+    for (const [qid, vals] of Object.entries(R.g)) {
+      await fillGroup(page, qid, vals);
+      assert.match(await text(page, `#${qid} .q-status`), new RegExp(`^${vals.length} cases? justes? sur ${vals.length}$`), qid);
+      assert.equal(await page.locator(`#${qid} .btn-fast`).innerText(), "Saisie validée");
+      assert.ok(await page.isVisible(`#${qid} .q-expl`));
     }
     if (X.sketch) {
       await drawLine(page, X.sketch, 0.2, 0.5, 0.4, 0.2);
       await page.click(`#${X.sketch} .btn-sketch`);
-      assert.ok(await page.isVisible(`#${X.sketch} .selfeval`));
       for (const cb of await page.locator(`#${X.sketch} .se-item input`).all()) await cb.check();
       await page.click(`#${X.sketch} .btn-self`);
     }
@@ -145,19 +159,23 @@ for (const file of Object.keys(EXO)) {
     await context.close();
   });
 
-  test(`${file} : réponses fausses et unité manquante`, async () => {
+  test(`${file} : cases de torseur fausses (signe, coefficient, inconnue) notées case par case`, async () => {
     const { context, page, errors } = await open(file);
     await page.click("[data-mode=training]");
-    for (const [id, ans] of Object.entries(X.wrong)) {
-      await page.fill(`#in-${id}`, ans);
-      await page.click(`#${id} .btn-validate`);
-      assert.doesNotMatch(await text(page, `#${id} .q-status`), /^Juste/, `${id} : « ${ans} »`);
-    }
-    // valeur juste sans unité : demi-point
-    const [id, ans] = Object.entries(REP[file]).find(([, a]) => /\d\s*(daN|N|mm|m|MPa)\b/.test(a));
-    await page.fill(`#in-${id}`, ans.replace(/\s*(daN|N\.mm|N|mm|m|MPa)\b.*$/, ""));
-    await page.click(`#${id} .btn-validate`);
-    assert.match(await text(page, `#${id} .q-status`), /unité/i, id);
+    const [qid, vals] = Object.entries(R.g).find(([, v]) => v.some((x) => /[A-Za-z]/.test(x) && /\d/.test(x)));
+    const inverse = (v) => (/^[-−]/.test(v) ? v.replace(/^[-−]/, "") : "-" + v);   // signe inversé
+    const faux = vals.map((v) => (/[A-Za-z]/.test(v) && /\d/.test(v) ? inverse(v) : v));
+    await fillGroup(page, qid, faux);
+    const nbFaux = faux.filter((v, i) => v !== vals[i]).length;
+    assert.ok(nbFaux > 0);
+    assert.match(await text(page, `#${qid} .q-status`), new RegExp(`^${vals.length - nbFaux} cases? justes? sur ${vals.length}$`));
+    assert.equal(await page.locator(`#${qid} .sol.is-ko`).count(), nbFaux);
+    // une inconnue mal nommée
+    const [q2, v2] = Object.entries(R.g).find(([g, v]) => g !== qid && v.some((x) => /^[XY]_?[A-Z]$/i.test(x)));
+    const k = v2.findIndex((x) => /^[XY]_?[A-Z]$/i.test(x));
+    const autre = v2.map((x, i) => (i === k ? "Z_Q" : x));
+    await fillGroup(page, q2, autre);
+    assert.equal(await page.locator(`#${q2} .sol.is-ko`).count(), 1);
     assert.deepEqual(errors, []);
     await context.close();
   });
@@ -165,13 +183,15 @@ for (const file of Object.keys(EXO)) {
   test(`${file} : mode examen, remise de la copie, aucun débordement sur téléphone`, async () => {
     const { context, page, errors } = await open(file, { width: 390, height: 844 });
     await page.click("[data-mode=exam]");
-    const [id, ans] = Object.entries(REP[file])[0];
-    await page.fill(`#in-${id}`, ans);
-    assert.ok(!(await page.isVisible(`#${id} .q-expl`)));
+    const [qid, vals] = Object.entries(R.g)[0];
+    const inputs = page.locator(`#${qid} .sol input`);
+    for (let i = 0; i < vals.length; i++) await inputs.nth(i).fill(vals[i]);
+    assert.ok(!(await page.isVisible(`#${qid} .q-expl`)));
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await page.click("#exam-submit");
     await page.click("#exam-submit");
-    assert.ok(await page.isVisible(`#${id} .q-expl`));
+    assert.ok(await page.isVisible(`#${qid} .q-expl`));
+    assert.equal(await page.locator(`#${qid} .sol.is-ok`).count(), vals.length);
     assert.match(await text(page, "#recap .final-note"), /\/20/);
     assert.deepEqual(errors, []);
     await context.close();

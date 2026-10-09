@@ -442,6 +442,29 @@ body:not(.no-mode) .home-back{display:none}
 .home-head .mc-tag{vertical-align:middle}
 .recap-foot a.btn{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
 .recap-foot a.btn svg{width:18px; height:18px}
+
+/* ---------- torseurs et vecteurs à compléter ---------- */
+.tzq{margin:14px 0 6px; padding:10px 0 12px 14px; border-left:3px solid var(--trait)}
+.tzq.is-ok{border-left-color:var(--vert)}
+.tzq-items{display:flex; flex-wrap:wrap; gap:14px 26px; align-items:center; margin:8px 0}
+.tzq-item{max-width:100%; overflow-x:auto}
+.tzq .tz-b td{padding:2px 6px; vertical-align:top}
+.tzq .sol{display:inline-flex; flex-direction:column; align-items:center}
+.tzq .sol input{width:7.6em; border:1.5px dashed var(--encre-2); padding:5px 6px; background:#fff; font:600 .95rem var(--f-texte); text-align:center}
+.tzq .sol.is-ok input{border:2px solid var(--vert); background:var(--vert-pale)}
+.tzq .sol.is-ko input{border:2px solid var(--rouge); background:var(--rouge-pale)}
+.tzq .sol input:disabled{color:var(--encre); -webkit-text-fill-color:var(--encre)}
+.tzq .sol .mark{display:block; font-size:.72rem; font-weight:700; min-height:1em}
+.tzq .sol.is-ok .mark{color:var(--vert)} .tzq .sol.is-ko .mark{color:var(--rouge)}
+.vecq{display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:1.02rem}
+.vecq-n{font-weight:700}
+.vc{display:inline-flex; flex-direction:column; align-items:center; gap:1px}
+.vc-l{font-size:.75rem; color:var(--encre-2)}
+.tzq-att .vc-l{display:none}
+.tzq-att{background:#fff; border:1px solid var(--trait-fin); padding:6px 10px}
+.tzq .q-status{font-weight:700}
+@media print{ .tzq .sol input{border:1px solid #555!important} }
+
 @media print{
   .c-top,.home-back{display:none!important}
   /* correctif repris du dépôt RDM : la correction des tracés ne doit pas s'imprimer avant la remise en mode examen */
@@ -1354,7 +1377,7 @@ if (typeof module !== "undefined") module.exports = Grading;
         $(".mark", cell).textContent = r.ok ? "✓ Juste" : "✗ Faux";
       });
       btn.disabled = true;
-      btn.textContent = "Diagramme validé";
+      btn.textContent = btn.getAttribute("data-done") || "Diagramme validé";
       $(".q-status", root).textContent = ok + " case" + (ok > 1 ? "s" : "") + " juste" + (ok > 1 ? "s" : "") + " sur " + inputs.length;
       var ex = $(".q-expl", root); ex.hidden = false; ex.classList.add("reveal");
       afterValidation();
@@ -1915,6 +1938,37 @@ if (typeof module !== "undefined") module.exports = Grading;
                      partStats: partStats, weighted: weighted, updateScore: updateScore,
                      startMode: startMode, gradeAll: gradeAll, elapsedMs: elapsedMs,
                      mode: function () { return MODE; }, isGraded: function () { return graded; } };
+})();
+</script>
+<script>/* Correcteur « expression linéaire » (coefficient × inconnue) des cases de torseurs : il s'ajoute aux types
+   du moteur Grading sans le modifier. Accepte −2,1X_A, -2.1*XA, XA×(-2,1), 3,24 F… */
+(function () {
+  "use strict";
+  if (typeof Grading === "undefined" || Grading.__lin) return;
+  var base = Grading.grade;
+  function norm(s) {
+    return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\u2212\u2013\u2014]/g, "-").replace(/,/g, ".").replace(/[\s\u00a0\u202f×*·⋅_()]/g, "");
+  }
+  function gradeLin(ans, g) {
+    var s = norm(ans), m, sign = 1, k = null, v = null;
+    if ((m = s.match(/^([+-]?)(\d*\.?\d*)([a-z]+)$/))) { sign = m[1] === "-" ? -1 : 1; k = m[2]; v = m[3]; }
+    else if ((m = s.match(/^([+-]?)([a-z]+)([+-]?\d*\.?\d+)$/))) { sign = m[1] === "-" ? -1 : 1; v = m[2]; k = m[3]; }
+    else return { ok: false };
+    if (g.vars.indexOf(v) < 0) return { ok: false };
+    var c = k === "" || k === "." ? 1 : parseFloat(k);
+    if (!isFinite(c)) return { ok: false };
+    c *= sign;
+    return { ok: Math.abs(c - g.coef) <= (g.absTol || 0) + 1e-9 };
+  }
+  Grading.grade = function (ans, g) {
+    if (g && g.type === "lin") {
+      if (ans == null || !String(ans).trim()) return { ok: false, score: 0, invalid: "Saisis une réponse avant de valider." };
+      var r = gradeLin(ans, g); r.score = r.ok ? 1 : 0; return r;
+    }
+    return base(ans, g);
+  };
+  Grading.__lin = true;
 })();
 </script>
 <script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction greffés sur le moteur de tracé du gabarit

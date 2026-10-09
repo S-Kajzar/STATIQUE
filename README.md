@@ -13,9 +13,9 @@ même accueil en cartes illustrées). Publié par GitHub Pages depuis `index.htm
 | `suspension-vtt.html` | Exercice 1.5 (Niveau 1) — Suspension arrière de VTT : 3 parties, 11 questions et 1 tracé sur DR, 1 h 10 |
 | `potence.html` | Exercice 2.1 (Niveau 2) — Potence à tirant sur mur : 5 parties, 45 questions et 1 tracé, 2 h (repris du dépôt `statique-potence`) |
 | `cours-statique-analytique.html` | Cours 3 (Niveau 3) — Statique analytique : balance, jeux, cartes à retourner, atelier des liaisons, calculateur de moment, poutre résolue pas à pas, quiz |
-| `coffre-fort.html` | Exercice 3.1 (Niveau 3) — Porte de coffre-fort : 3 parties, 23 questions et 1 tracé, 1 h |
-| `echelle-pompier.html` | Exercice 3.2 (Niveau 3) — Échelle de pompier : 4 parties, 24 questions, 1 h 15 |
-| `cadre-velo.html` | Exercice 3.3 (Niveau 3) — Cadre de vélo tout terrain : 4 parties, 20 questions et 1 tracé, 1 h 10 |
+| `coffre-fort.html` | Exercice 3.1 (Niveau 3) — Porte de coffre-fort : 3 parties, 4 torseurs ou vecteurs à compléter, 2 questions et 1 tracé, 1 h |
+| `echelle-pompier.html` | Exercice 3.2 (Niveau 3) — Échelle de pompier : 4 parties, 4 torseurs ou vecteurs à compléter, 6 questions, 1 h 10 |
+| `cadre-velo.html` | Exercice 3.3 (Niveau 3) — Cadre de vélo tout terrain : 4 parties, 6 torseurs ou vecteurs à compléter, 3 questions et 1 tracé, 1 h 10 |
 
 Les autres cartes (cours 1 et 2, formulaire, exercice 1.1, étude de cas) sont légèrement transparentes et annoncées « En cours d'édition ».
 
@@ -37,7 +37,8 @@ NODE_PATH=$(npm root -g) node --test tests/*.test.js   # accueil, cours 1.1 et 3
 - `src/generer.py` : cartes de l'accueil (`EXERCICES` pour les contenus, `ENCOURS` pour les cartes en cours d'édition).
 - `src/exercices/potence-source.html` : page de l'exercice telle que publiée dans `statique-potence` ; le générateur la copie en `potence.html` en ajoutant un lien de retour vers l'accueil.
 - `src/images/` : vignettes des cartes (480 × 270) et figures du niveau 3 (`n3-*.png`, tirées de `src/images/originaux/`).
-- `src/niveau3.py` : exercices 3.1 à 3.3 (questions, corrections, tolérances, graphes de liaisons) assemblés sur le gabarit.
+- `src/niveau3.py` : exercices 3.1 à 3.3 (torseurs et vecteurs à compléter case par case, questions, corrections, graphes
+  de liaisons) assemblés sur le gabarit ; constructeur de page commun à tous les exercices générés (`build_exo`).
 - `src/cours3.py` : cours 3, page autonome interactive ; `src/cours1.py` : cours 1.1 (statique graphique).
 - `src/graphique.py` : exercices 1.2 à 1.5 (points relevés sur les DR, constructions résolues, questions, corrections).
 - `src/atelier.py` : **atelier de tracé** des exercices de statique graphique, greffé sur le moteur de tracé du gabarit

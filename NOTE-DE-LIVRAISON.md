@@ -1,3 +1,31 @@
+# Note de livraison — Niveau 3 : saisie des torseurs et des vecteurs
+
+Les exercices 3.1 à 3.3 sont **moins guidés** : les questions intermédiaires (nature de chaque liaison, nombre
+d'inconnues, coordonnées une à une, moment de chaque force…) sont remplacées par des **torseurs et des vecteurs à
+compléter**, comme sur une copie.
+
+- **Torseur plan** {T}<sub>P</sub> écrit en colonnes (X | — ; Y | — ; — | N) : l'élève remplit X, Y et N. Une inconnue
+  s'écrit par son nom (X_A, Y_B ; casse et tiret bas indifférents), une composante nulle par 0, une valeur par un nombre
+  signé, un moment transporté par une **expression linéaire** coefficient × inconnue (−2,1X_A, 3,24F, 1 102Y_B…).
+- **Vecteur** (coordonnées d'un point, vecteur unitaire, résultat) : une case par composante.
+- Chaque case est notée séparément (½ point) ; le bloc se valide en une fois (question « groupe » du gabarit, déjà
+  prévue par son moteur) et la correction affiche les torseurs attendus et la démarche. En mode examen, les cases sont
+  corrigées à la remise de la copie.
+- Le correcteur d'expressions linéaires (type `lin`) est ajouté au moteur Grading par un petit script, sans modifier le
+  moteur ; seul le libellé du bouton validé (« Saisie validée » au lieu de « Diagramme validé ») est rendu paramétrable
+  dans la copie générée.
+
+| Exercice | À compléter |
+|---|---|
+| 3.1 Porte de coffre-fort | graphe des liaisons (tracé) ; coordonnées de A, G3, G4 ; 4 torseurs en leur point ; 4 torseurs transportés en B ; vecteurs A1/3 et B2/3 ; ‖B‖ ; gond porteur |
+| 3.2 Échelle de pompier | droite d'action du vérin, compression ; B et vecteur unitaire u ; 3 torseurs en leur point (action du vérin en fonction de F) ; 3 torseurs en A ; F ; vecteurs A2/3, B4/3 ; ‖A‖ ; surface, pression |
+| 3.3 Cadre de vélo | graphe des liaisons (tracé) ; 3 torseurs du cadre complet puis transportés en C ; Y_B, Y_C ; amortisseur (EF), point C ; A, E, u ; 3 torseurs du bras arrière en A ; E ; vecteur A1/2 |
+
+Tests : pour chaque exercice, sujet entièrement juste = 20/20 en saisissant tous les torseurs ; cases fausses (signe
+inversé, inconnue mal nommée) notées case par case ; mode examen. Les résultats numériques sont inchangés (voir plus bas).
+
+---
+
 # Note de livraison — Statique graphique (Niveau 1) : cours 1.1 et exercices 1.2 à 1.5
 
 **Sources** : « Séquence : Statique — Cours » (statique graphique), « Exercice — Panneau solaire », « Activité 3 – Pince

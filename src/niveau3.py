@@ -201,6 +201,62 @@ def label_of(qid):
     return f"Q{p}.{n}"
 
 
+# ============================================================ torseurs et vecteurs à compléter (questions groupées)
+# Un groupe est rendu comme une question « groupe » du gabarit (.fast-q) : chaque case est notée séparément
+# (pts par case), toutes les cases se valident ensemble. Cases : 0, nom d'une inconnue, valeur, expression linéaire.
+def Z():
+    """Case nulle."""
+    return num(0, absTol=1e-6)
+
+
+def SYM(*noms):
+    """Case « inconnue » : son nom (X_A, Y_B…), insensible à la casse et au tiret bas."""
+    return CODE(equals=[n.lower().replace("_", "") for n in noms])
+
+
+def VAL(v, rel=0.002, abs_=None):
+    """Case numérique, sans unité (l'unité est donnée par l'en-tête du torseur)."""
+    return num(v, absTol=abs_ if abs_ is not None else 1e-9, relTol=rel)
+
+
+def LIN(noms, coef, tol):
+    """Case « expression » : coefficient × inconnue, par exemple −2,1X_A ou 3,24F."""
+    return {"type": "lin", "vars": [n.lower().replace("_", "") for n in noms], "coef": coef, "absTol": tol}
+
+
+def TZ(nom, point, cX, cY, cN):
+    """Torseur plan (x, y) : composantes X, Y (résultante) et N (moment) ; chaque cellule = (grader, texte attendu)."""
+    return {"kind": "tz", "nom": nom, "point": point, "cells": [("X", *cX), ("Y", *cY), ("N", *cN)]}
+
+
+def VEC(nom, cells, unite=""):
+    """Vecteur à composantes (ou liste de valeurs) : cells = [(nom de la case, grader, texte attendu)…]."""
+    return {"kind": "vec", "nom": nom, "cells": cells, "unite": unite}
+
+
+def GRP(qid, stem, hint, items, why, pts=0.5, unite=""):
+    return {"kind": "grp", "id": qid, "stem": stem, "hint": hint, "items": items, "why": why, "pts": pts,
+            "unite": unite}
+
+
+def z():
+    return (Z(), "0")
+
+
+def sym(n):
+    return (SYM(n), n.replace("_", "<sub>", 1) + "</sub>" if "_" in n else n)
+
+
+def val(v, d=2, rel=0.002, abs_=None):
+    return (VAL(v, rel, abs_), fr(v, d))
+
+
+def lin(noms, coef, tol, d=3):
+    n = noms[0]
+    nh = n.replace("_", "<sub>", 1) + "</sub>" if "_" in n else n
+    return (LIN(noms, coef, tol), f"{fr(coef, d)} {nh}")
+
+
 # ============================================================ DOCUMENT TECHNIQUE COMMUN
 DT_FORMULAIRE = (
     '<div class="doc-text"><h3>Principe fondamental de la statique (PFS)</h3>'
@@ -255,14 +311,20 @@ XB_C = -XA_C
 YB_C = P3_C + P4_C
 NB_C = math.hypot(XB_C, YB_C)
 
+H_TZ = ("Une composante inconnue s'écrit avec son nom (X_A, Y_B…), une composante nulle s'écrit 0, une valeur connue "
+        "se saisit en nombre avec son signe. Unités : celles indiquées dans la question.")
+H_TZ_B = ("Moments en daN·m, positifs dans le sens trigonométrique. Un moment inconnu s'écrit coefficient × inconnue, "
+          "par exemple −1,5X_A (signe et coefficient comptent).")
+H_RES = "Composantes algébriques, arrondies au centième, en daN. Une composante nulle s'écrit 0."
+
 PARTS_COFFRE = [
-    {"num": "1", "minutes": 15, "title": "Analyse du mécanisme : graphe des liaisons",
+    {"num": "1", "minutes": 15, "title": "Modélisation : graphe des liaisons",
      "intro": [
          "<p>La porte de coffre-fort ferme la salle des coffres d'une banque. Elle se compose d'une porte "
          "<strong>(4)</strong> articulée sur un bras de manœuvre <strong>(3)</strong>. L'ensemble est articulé sur "
-         "deux gonds <strong>(1)</strong> et <strong>(2)</strong> scellés dans le mur <strong>(0)</strong> en A et B.</p>"
-         "<p>Avant de calculer, on identifie chaque liaison sur le schéma cinématique (DP1) : c'est elle qui fixera "
-         "la forme des torseurs.</p>",
+         "deux gonds <strong>(1)</strong> et <strong>(2)</strong> scellés dans le mur <strong>(0)</strong> en A et B. "
+         "L'étude est réalisée dans le plan (<var>x</var>, <var>y</var>) ; l'ensemble est en équilibre. "
+         f"{V('P', '4')} (3 000 daN) schématise le poids de la porte et {V('P', '3')} (1 000 daN) le poids du bras.</p>",
          '<div class="n3-split">' +
          figure("n3-coffre-plan", "Plan de la porte : gonds A en haut et B en bas, bras 3 en bleu, porte 4, poids "
                 "P3 de 1 000 daN en G3 et P4 de 3 000 daN en G4 ; cotes 1 050, 1 050, 400 et a = 880 mm",
@@ -271,190 +333,80 @@ PARTS_COFFRE = [
                 "Figure 2 — Schéma cinématique.", 230) + "</div>",
      ],
      "blocks": [
-         QBAR("Q1.1 – Q1.4", ["DP1", "DT1"]),
-         Q("q1_1", "Les gonds (1) et (2) sont scellés dans le mur (0). Quelle liaison existe entre le mur (0) et le "
-           "gond (1) ?", H_MOT, LIAISON_ENC, "encastrement (liaison complète, aucun mouvement possible)",
-           "<p>« Scellé » signifie que le gond est noyé dans la maçonnerie : aucun mouvement relatif n'est possible "
-           "entre (0) et (1). C'est une <strong>liaison encastrement</strong> (0 degré de liberté). Il en va de même "
-           "pour le gond (2). Sur le schéma, le trait plein qui relie chaque gond au mur hachuré le traduit.</p>"),
-         Q("q1_2", "Sur le schéma cinématique, quelle liaison relie le gond (1) au bras (3) en A ?", H_MOT,
-           LIAISON_LA, "liaison linéaire annulaire (sphère-cylindre) d'axe (A, <var>y</var>)",
-           "<p>En A, le symbole est une <strong>sphère</strong> (le cercle) prise entre deux traits parallèles "
-           "verticaux qui représentent un <strong>cylindre</strong> d'axe vertical : c'est la liaison "
-           "<strong>linéaire annulaire</strong> d'axe (A, <var>y</var>).</p><p>Degrés de liberté : la translation "
-           "selon <var>y</var> et les trois rotations. Le gond (1) ne peut donc pas porter de charge verticale.</p>"),
-         Q("q1_3", "Quelle liaison relie le gond (2) au bras (3) en B ?", H_MOT, LIAISON_ROTULE,
-           "liaison rotule (sphérique) de centre B",
-           "<p>En B, la sphère est entourée de deux arcs de cercle : c'est le symbole de la <strong>liaison "
-           "rotule</strong> (ou sphérique) de centre B. Trois rotations possibles, aucune translation : le gond (2) "
-           "transmet une force de direction quelconque passant par B, mais aucun moment.</p>"),
-         Q("q1_4", "Quelle liaison relie le bras (3) à la porte (4) ?", H_MOT, LIAISON_PIVOT,
-           "liaison pivot d'axe vertical (<var>y</var>)",
-           "<p>L'arbre vertical solidaire de (3) tourne dans un palier de (4) muni de deux épaulements qui "
-           "interdisent la translation : c'est une <strong>liaison pivot</strong> d'axe vertical. La porte peut "
-           "pivoter sur le bras pour s'ajuster contre le chambranle.</p>"),
-         QBAR("Q1.5", ["DP1"], ans="sur la figure"),
-         SK("sk_q1_5", "Q1.5", "GRAPHE_COFFRE",
-            "Compléter le graphe des liaisons : relier les solides deux à deux et nommer chaque liaison (avec son "
-            "centre ou son axe).",
+         QBAR("Q1.1", ["DP1", "DT1"], ans="sur la figure"),
+         SK("sk_q1_1", "Q1.1", "GRAPHE_COFFRE",
+            "À l'aide du schéma cinématique, réaliser le graphe des liaisons du système : relier les solides et nommer "
+            "chaque liaison (avec son centre ou son axe).",
             ["Cinq liaisons sont tracées, ni plus ni moins : 0–1, 0–2, 1–3, 2–3 et 3–4.",
              "Les liaisons 0–1 et 0–2 sont nommées « encastrement ».",
              "La liaison 1–3 est nommée « linéaire annulaire d'axe (A, y) ».",
              "La liaison 2–3 est nommée « rotule de centre B ».",
              "La liaison 3–4 est nommée « pivot d'axe y » (vertical)."],
-            "<p>Outils : <b>Ligne</b> pour relier deux solides, <b>Texte</b> pour nommer la liaison. Les bulles "
-            "représentent les solides ; deux solides sont reliés s'ils sont en contact direct.</p>" +
+            "<p>Outils : <b>Ligne</b> pour relier deux solides, <b>Texte</b> pour nommer la liaison.</p>" +
             figure("n3-coffre-cine", "Schéma cinématique de la porte", "Schéma cinématique (rappel).", 200),
-            "<p>Le graphe compte <strong>cinq liaisons</strong>. Les gonds (1) et (2) ne touchent que le mur et le "
-            "bras ; la porte (4) ne touche que le bras (3).</p><ul>"
-            "<li>0–1 et 0–2 : <strong>encastrements</strong> (gonds scellés) ;</li>"
-            "<li>1–3 : <strong>linéaire annulaire d'axe (A, <var>y</var>)</strong> ;</li>"
-            "<li>2–3 : <strong>rotule de centre B</strong> ;</li>"
-            "<li>3–4 : <strong>pivot d'axe <var>y</var></strong>.</li></ul>"
-            "<p>Comme (0), (1) et (2) sont liés rigidement, l'ensemble {0, 1, 2} se comporte comme un seul bâti : "
-            "le bras (3) est guidé par une linéaire annulaire en A et une rotule en B, ce qui réalise un pivot "
-            "d'axe (AB) — la porte tourne autour de la verticale passant par ses gonds.</p>"),
-         QBAR("Q1.6", ["DP1"]),
-         Q("q1_6", "On va isoler l'ensemble (3 + 4). L'action de la liaison pivot entre (3) et (4) fera-t-elle "
-           "partie du bilan des actions extérieures ?", H_OUINON, NO,
-           "non : c'est une action intérieure à l'ensemble isolé",
-           "<p>Seules les actions exercées <strong>par l'extérieur</strong> de l'ensemble isolé comptent. La liaison "
-           "3–4 relie deux solides de l'ensemble : ses actions (3 → 4 et 4 → 3) sont intérieures, opposées, et "
-           "s'annulent dans le PFS. Sur le graphe, on « entoure » 3 et 4 : seules les liaisons qui traversent la "
-           "frontière (1–3 et 2–3) et les poids donnent des actions extérieures.</p>"),
+            "<p>Cinq liaisons : 0–1 et 0–2 <strong>encastrements</strong> (gonds scellés) ; 1–3 <strong>linéaire "
+            "annulaire d'axe (A, <var>y</var>)</strong> (sphère dans un cylindre vertical) ; 2–3 <strong>rotule de "
+            "centre B</strong> ; 3–4 <strong>pivot d'axe <var>y</var></strong>. L'ensemble {0, 1, 2} forme le bâti ; "
+            "la linéaire annulaire et la rotule réalisent ensemble un pivot d'axe (AB).</p>"),
      ]},
     {"num": "2", "minutes": 20, "title": "Isolement de l'ensemble (3 + 4) : bilan des actions",
-     "intro": [
-         "<p>On isole l'ensemble E = {bras (3) + porte (4)}. L'étude est menée dans le plan (<var>x</var>, "
-         "<var>y</var>) : chaque torseur se réduit à deux composantes de force <i>X</i>, <i>Y</i> et un moment "
-         "<i>N</i> autour de <var>z</var>.</p>",
-         data_box(["Repère (B, <var>x</var>, <var>y</var>) : origine B, <var>x</var> horizontal vers la droite, "
-                   "<var>y</var> vertical vers le haut.",
-                   "A est à la verticale de B : AB = 1 050 + 1 050 mm.",
-                   "G3 : 400 mm à droite de l'axe AB, à mi-hauteur ; G4 : 880 mm plus loin, à la même hauteur.",
-                   f"{V('P', '3')} = 1 000 daN en G3, {V('P', '4')} = 3 000 daN en G4, verticaux vers le bas.",
-                   "Liaisons supposées parfaites (sans frottement)."], cols=True),
-     ],
+     "intro": ["<p>On isole l'ensemble {3 + 4}. Repère (B, <var>x</var>, <var>y</var>) : origine B, <var>x</var> "
+               "horizontal vers la droite, <var>y</var> vertical vers le haut. Les cotes sont sur la figure 1.</p>"],
      "blocks": [
-         QBAR("Q2.1 – Q2.6", ["DT1"]),
-         Q("q2_1", "Combien d'actions mécaniques extérieures s'exercent sur l'ensemble (3 + 4) ?", H_ENTIER, ENTIER(4),
-           "4 actions : A<sub>1/3</sub>, B<sub>2/3</sub>, P<sub>3</sub> et P<sub>4</sub>",
-           f"<p>Deux actions de liaison — {V('A', '1/3')} (gond 1 en A) et {V('B', '2/3')} (gond 2 en B) — et deux "
-           f"actions à distance, les poids {V('P', '3')} et {V('P', '4')}.</p>"),
-         Q("q2_2", "Dans le plan (<var>x</var>, <var>y</var>), combien d'inconnues comporte l'action "
-           f"{V('A', '1/3')} transmise par la linéaire annulaire d'axe (A, <var>y</var>) ?", H_ENTIER, ENTIER(1),
-           "1 inconnue : <i>X</i><sub>A</sub>",
-           "<p>La linéaire annulaire d'axe <var>y</var> laisse la translation selon <var>y</var> et toutes les "
-           "rotations : <i>Y</i><sub>A</sub> = 0 et les moments sont nuls. Dans le plan, il reste la seule "
-           "composante <i>X</i><sub>A</sub>, perpendiculaire à l'axe :</p>" +
-           eq(tzp("1→3", "A", "<i>X</i><sub>A</sub>", "0", "0"))),
-         Q("q2_3", f"Laquelle des deux composantes de force de {V('A', '1/3')}, <i>X</i><sub>A</sub> ou "
-           "<i>Y</i><sub>A</sub>, est nulle ?", H_COMP, CODE(equals=["ya", "ya0", "y", "y0", "yaestnulle"]),
-           "<i>Y</i><sub>A</sub> = 0",
-           "<p>La translation selon l'axe <var>y</var> de la linéaire annulaire est libre : aucune force ne peut "
-           "être transmise dans cette direction, donc <i>Y</i><sub>A</sub> = 0. Conséquence importante : "
-           "<strong>tout le poids sera repris par le gond B</strong>.</p>"),
-         Q("q2_4", f"Combien d'inconnues comporte l'action {V('B', '2/3')} transmise par la rotule de centre B, "
-           "dans le plan ?", H_ENTIER, ENTIER(2), "2 inconnues : <i>X</i><sub>B</sub> et <i>Y</i><sub>B</sub>",
-           "<p>La rotule bloque les trois translations et laisse les trois rotations : force quelconque passant "
-           "par B, moment nul.</p>" + eq(tzp("2→3", "B", "<i>X</i><sub>B</sub>", "<i>Y</i><sub>B</sub>", "0"))),
-         Q("q2_5", "Combien d'inconnues compte au total le problème ?", H_ENTIER, ENTIER(3),
-           "3 inconnues : <i>X</i><sub>A</sub>, <i>X</i><sub>B</sub>, <i>Y</i><sub>B</sub>",
-           "<p>1 inconnue en A + 2 inconnues en B = <strong>3 inconnues</strong>. Les poids sont entièrement "
-           "connus :</p>" + eq(tzp("P3", "G3", "0", "−1 000", "0") + " &nbsp; " +
-                               tzp("P4", "G4", "0", "−3 000", "0")) + "<p class=\"small\">(en daN)</p>"),
-         Q("q2_6", "Le problème plan est-il résoluble par le PFS ?", H_OUINON, YES,
-           "oui : 3 inconnues pour 3 équations",
-           "<p>Un problème plan fournit <strong>3 équations</strong> (Σ<i>X</i> = 0, Σ<i>Y</i> = 0, Σ<i>N</i> = 0). "
-           "Avec 3 inconnues, le système est <strong>déterminé</strong> : on peut le résoudre.</p>"),
-         QBAR("Q2.7 – Q2.9", ["DP1", "DT1"]),
-         Q("q2_7", "Quelle est l'ordonnée <i>y</i><sub>A</sub> du point A dans le repère (B, <var>x</var>, "
-           "<var>y</var>) ?", H_EX, num(2.1, "m", absTol=0.0005, variants=[var(2100, "mm", absTol=0.5),
-                                                                            var(210, "cm", absTol=0.05)]),
-           "<i>y</i><sub>A</sub> = 2,1 m (2 100 mm)",
-           eq("<i>y</i><sub>A</sub> = 1 050 + 1 050 = <b>2 100 mm = 2,1 m</b>") +
-           "<p>A est à la verticale de B : <i>x</i><sub>A</sub> = 0, donc <span class=\"vec\">BA</span> (0 ; 2,1).</p>"),
-         Q("q2_8", "Quelle est l'abscisse <i>x</i><sub>G4</sub> du centre de gravité G4 de la porte ?", H_EX,
-           num(1.28, "m", absTol=0.0005, variants=[var(1280, "mm", absTol=0.5), var(128, "cm", absTol=0.05)]),
-           "<i>x</i><sub>G4</sub> = 1,28 m (1 280 mm)",
-           eq("<i>x</i><sub>G4</sub> = 400 + 880 = <b>1 280 mm = 1,28 m</b>") +
-           "<p>La cote <i>a</i> = 880 mm part de G3, pas de l'axe AB : il faut lui ajouter les 400 mm.</p>"),
-         Q("q2_9", "En quel point vaut-il mieux écrire le théorème du moment statique ?", H_POINT, POINT("B"),
-           "au point B",
-           "<p>On choisit le point où l'action a <strong>le plus d'inconnues</strong> : B (2 inconnues). Les "
-           "moments de <i>X</i><sub>B</sub> et <i>Y</i><sub>B</sub> y sont nuls, et l'équation des moments ne "
-           "contient plus que <i>X</i><sub>A</sub> : elle se résout immédiatement.</p>"),
+         QBAR("Q2.1 – Q2.2", ["DP1", "DT1"]),
+         GRP("q2_1", "Donner les coordonnées des points A, G3 et G4 dans le repère (B, x, y), en mètres.",
+             "Nombres en mètres, arrondis au centième.",
+             [VEC("A", [("x", *val(0, 2, 0, 0.005)), ("y", *val(YA_C, 2, 0, 0.005))]),
+              VEC("G3", [("x", *val(XG3_C, 2, 0, 0.005)), ("y", *val(YG_C, 2, 0, 0.005))]),
+              VEC("G4", [("x", *val(XG4_C, 2, 0, 0.005)), ("y", *val(YG_C, 2, 0, 0.005))])],
+             "<p>A est à la verticale de B, 1 050 + 1 050 = 2 100 mm plus haut. G3 est à 400 mm de l'axe AB, à "
+             "mi-hauteur ; G4 est 880 mm plus loin (la cote <i>a</i> part de G3, pas de l'axe).</p>"),
+         GRP("q2_2", "Isoler l'ensemble (3 + 4) et écrire, en leur point d'application, les torseurs des actions "
+             "mécaniques extérieures, dans le plan (x, y). Forces en daN.", H_TZ,
+             [TZ("1→3", "A", sym("X_A"), z(), z()),
+              TZ("2→3", "B", sym("X_B"), sym("Y_B"), z()),
+              TZ("P3", "G3", z(), val(-P3_C, 0, 0, 0.5), z()),
+              TZ("P4", "G4", z(), val(-P4_C, 0, 0, 0.5), z())],
+             "<p><strong>Linéaire annulaire d'axe (A, <var>y</var>)</strong> : translation selon <var>y</var> et "
+             "rotations libres ⇒ <i>Y</i><sub>A</sub> = 0 et moment nul : une seule inconnue, <i>X</i><sub>A</sub>. "
+             "<strong>Rotule de centre B</strong> : force quelconque passant par B, moment nul : <i>X</i><sub>B</sub>, "
+             "<i>Y</i><sub>B</sub>. Les poids sont verticaux, vers le bas. Bilan : 3 inconnues pour 3 équations, le "
+             "problème est résoluble. La liaison 3–4 est intérieure à l'ensemble isolé : elle n'apparaît pas.</p>"),
      ]},
-    {"num": "3", "minutes": 25, "title": "Application du PFS et résultats",
-     "intro": [
-         "<p>On écrit tous les torseurs au point B, puis les trois équations du PFS. Convention : moment positif "
-         "dans le sens trigonométrique, <i>M</i><sub>B</sub>(<span class=\"vec\">F</span>) = <i>x</i> · "
-         "<i>F</i><sub>y</sub> − <i>y</i> · <i>F</i><sub>x</sub>, où (<i>x</i> ; <i>y</i>) sont les coordonnées du "
-         "point d'application dans le repère (B, <var>x</var>, <var>y</var>).</p>",
-     ],
+    {"num": "3", "minutes": 25, "title": "Application du PFS au point B",
+     "intro": ["<p>On choisit le point où l'action a le plus d'inconnues : B. Tous les torseurs y sont transportés, "
+               "puis on écrit les trois équations du PFS.</p>"],
      "blocks": [
-         QBAR("Q3.1 – Q3.3", ["DT1"]),
-         Q("q3_1", f"Calculer le moment en B du poids {V('P', '3')}.", H_EX_SIGNE,
-           num(MP3_C, "daNm", absTol=0.5, variants=[var(MP3_C * 10, "Nm", absTol=5), var(MP3_C * 1000, "daNmm", absTol=500)]),
-           f"<i>M</i><sub>B</sub>({V('P', '3')}) = −400 daN·m",
-           eq(f"<i>M</i><sub>B</sub>({V('P', '3')}) = <i>x</i><sub>G3</sub> · (−<i>P</i><sub>3</sub>) − "
-              "<i>y</i><sub>G3</sub> · 0 = 0,4 × (−1 000) = <b>−400 daN·m</b>") +
-           "<p>Négatif : le poids tend à faire tourner l'ensemble dans le sens horaire autour de B.</p>"),
-         Q("q3_2", f"Calculer le moment en B du poids {V('P', '4')}.", H_EX_SIGNE,
-           num(MP4_C, "daNm", absTol=0.5, variants=[var(MP4_C * 10, "Nm", absTol=5), var(MP4_C * 1000, "daNmm", absTol=500)]),
-           f"<i>M</i><sub>B</sub>({V('P', '4')}) = −3 840 daN·m",
-           eq(f"<i>M</i><sub>B</sub>({V('P', '4')}) = 1,28 × (−3 000) = <b>−3 840 daN·m</b>") +
-           "<p>La porte, lourde et éloignée de l'axe des gonds, produit presque tout le moment.</p>"),
-         Q("q3_3", "Écrire l'équation des moments en B et en déduire <i>X</i><sub>A</sub>.", H_C_SIGNE,
-           num(XA_C, "daN", relTol=0.001, variants=[var(XA_C * 10, "N", relTol=0.001), var(XA_C / 100, "kN", relTol=0.001)]),
-           f"<i>X</i><sub>A</sub> ≈ {fr(XA_C)} daN",
-           f"<p>Moment de {V('A', '1/3')} en B : A(0 ; 2,1) et {V('A', '1/3')} (<i>X</i><sub>A</sub> ; 0), donc "
-           "<i>M</i><sub>B</sub> = 0 × 0 − 2,1 × <i>X</i><sub>A</sub> = −2,1 <i>X</i><sub>A</sub>.</p>" +
-           eq("Σ<i>N</i><sub>B</sub> = 0 ⇒ −2,1 <i>X</i><sub>A</sub> − 400 − 3 840 = 0") +
-           eq("<i>X</i><sub>A</sub> = " + frac("−4 240", "2,1") + f" ≈ <b>{fr(XA_C)} daN</b>") +
-           "<p>Le signe moins indique que l'action du gond (1) sur le bras est dirigée vers les <var>x</var> "
-           "négatifs : le gond <strong>retient</strong> le haut du bras, que le poids de la porte tend à faire "
-           "basculer vers la droite.</p>"),
-         QBAR("Q3.4 – Q3.9", ["DT1"]),
-         Q("q3_4", "Écrire l'équation de la résultante selon <var>x</var> et en déduire <i>X</i><sub>B</sub>.",
-           H_C_SIGNE, num(XB_C, "daN", relTol=0.001, variants=[var(XB_C * 10, "N", relTol=0.001), var(XB_C / 100, "kN", relTol=0.001)]),
-           f"<i>X</i><sub>B</sub> ≈ {fr(XB_C)} daN",
-           eq("Σ<i>X</i> = 0 ⇒ <i>X</i><sub>A</sub> + <i>X</i><sub>B</sub> = 0 ⇒ <i>X</i><sub>B</sub> = "
-              f"−<i>X</i><sub>A</sub> ≈ <b>{fr(XB_C)} daN</b>") +
-           "<p>Les deux gonds forment un <strong>couple</strong> de forces horizontales opposées qui équilibre le "
-           "couple dû aux poids : le gond du haut tire, celui du bas pousse.</p>"),
-         Q("q3_5", "Écrire l'équation de la résultante selon <var>y</var> et en déduire <i>Y</i><sub>B</sub>.",
-           H_C_SIGNE, num(YB_C, "daN", absTol=0.006, variants=[var(YB_C * 10, "N", absTol=0.06), var(YB_C / 100, "kN", absTol=0.00006)]),
-           "<i>Y</i><sub>B</sub> = 4 000 daN",
-           eq("Σ<i>Y</i> = 0 ⇒ 0 + <i>Y</i><sub>B</sub> − 1 000 − 3 000 = 0 ⇒ <i>Y</i><sub>B</sub> = "
-              "<b>4 000 daN</b>") +
-           "<p><i>Y</i><sub>A</sub> étant nul, le gond B porte <strong>tout le poids</strong> de l'ensemble.</p>"),
-         Q("q3_6", f"Donner la norme ‖{V('A', '1/3')}‖.", H_C,
-           num(abs(XA_C), "daN", relTol=0.001, variants=[var(abs(XA_C) * 10, "N", relTol=0.001), var(abs(XA_C) / 100, "kN", relTol=0.001)]),
-           f"‖{V('A', '1/3')}‖ ≈ {fr(abs(XA_C))} daN",
-           f"<p>{V('A', '1/3')} n'a qu'une composante : sa norme est la valeur absolue de <i>X</i><sub>A</sub>, "
-           f"soit <b>{fr(abs(XA_C))} daN</b> (une norme est toujours positive).</p>"),
-         Q("q3_7", f"Calculer la norme ‖{V('B', '2/3')}‖.", H_D,
+         QBAR("Q3.1 – Q3.4", ["DT1"]),
+         GRP("q3_1", "Écrire les quatre torseurs au point B (forces en daN, moments en daN·m).", H_TZ_B,
+             [TZ("1→3", "B", sym("X_A"), z(), lin(["X_A"], -YA_C, 0.006, 1)),
+              TZ("2→3", "B", sym("X_B"), sym("Y_B"), z()),
+              TZ("P3", "B", z(), val(-P3_C, 0, 0, 0.5), val(MP3_C, 0, 0, 0.5)),
+              TZ("P4", "B", z(), val(-P4_C, 0, 0, 0.5), val(MP4_C, 0, 0, 0.5))],
+             "<p>La résultante ne change pas ; le moment en B vaut <i>M</i><sub>B</sub> = <i>x</i>·<i>F</i><sub>y</sub> − "
+             "<i>y</i>·<i>F</i><sub>x</sub> avec (<i>x</i> ; <i>y</i>) les coordonnées du point d'application :</p>" +
+             eq("<i>N</i><sub>B</sub>(A) = 0 × 0 − 2,1 × <i>X</i><sub>A</sub> = −2,1 <i>X</i><sub>A</sub> ; "
+                "<i>N</i><sub>B</sub>(P3) = 0,4 × (−1 000) = −400 ; <i>N</i><sub>B</sub>(P4) = 1,28 × (−3 000) = −3 840")),
+         GRP("q3_2", "Résoudre le PFS et donner les actions mécaniques en A et en B.", H_RES,
+             [VEC(V("A", "1/3"), [("X", *val(XA_C, 2, 0.001)), ("Y", *val(0, 0, 0, 0.5))], "daN"),
+              VEC(V("B", "2/3"), [("X", *val(XB_C, 2, 0.001)), ("Y", *val(YB_C, 0, 0.001))], "daN")],
+             eq("Σ<i>N</i><sub>B</sub> = 0 : −2,1 <i>X</i><sub>A</sub> − 400 − 3 840 = 0 ⇒ <i>X</i><sub>A</sub> = " +
+                frac("−4 240", "2,1") + f" ≈ <b>{fr(XA_C)} daN</b>") +
+             eq(f"Σ<i>X</i> = 0 : <i>X</i><sub>A</sub> + <i>X</i><sub>B</sub> = 0 ⇒ <i>X</i><sub>B</sub> ≈ <b>{fr(XB_C)} daN</b>") +
+             eq("Σ<i>Y</i> = 0 : <i>Y</i><sub>B</sub> − 1 000 − 3 000 = 0 ⇒ <i>Y</i><sub>B</sub> = <b>4 000 daN</b>") +
+             "<p>Les gonds forment un couple de forces horizontales : le gond du haut retient le bras (vers les "
+             "<var>x</var> négatifs), celui du bas le pousse.</p>"),
+         Q("q3_3", f"Calculer la norme ‖{V('B', '2/3')}‖.", H_D,
            num(NB_C, "daN", relTol=0.001, variants=[var(NB_C * 10, "N", relTol=0.001), var(NB_C / 100, "kN", relTol=0.001)]),
            f"‖{V('B', '2/3')}‖ ≈ {fr(NB_C, 1)} daN",
-           eq(f"‖{V('B', '2/3')}‖ = " + sqrt("<i>X</i><sub>B</sub>² + <i>Y</i><sub>B</sub>²") + " = " +
-              sqrt(f"{fr(XB_C)}² + 4 000²") + f" ≈ <b>{fr(NB_C, 1)} daN</b>") +
-           f"<p>Résultats : {V('A', '1/3')} ({fr(XA_C)} ; 0) daN et {V('B', '2/3')} ({fr(XB_C)} ; 4 000) daN.</p>"),
-         Q("q3_8", "Lequel des deux gonds porte le poids de la porte et du bras ?",
+           eq(f"‖{V('B', '2/3')}‖ = " + sqrt("<i>X</i><sub>B</sub>² + <i>Y</i><sub>B</sub>²") + f" ≈ <b>{fr(NB_C, 1)} daN</b>")),
+         Q("q3_4", "Lequel des deux gonds porte le poids de la porte et du bras ?",
            "Réponds par le point (A ou B) ou par le numéro du gond.",
            CODE(equals=["b", "2", "gondb", "gond2", "legondb", "legond2", "enb", "gondenb", "legondenb", "pointb",
-                        "gond2enb", "legond2enb", "legondeb", "legondenb", "gondinferieur", "legondinferieur",
-                        "gondinferieurb", "legondinferieurb", "legondinferieur2"]),
+                        "gond2enb", "legond2enb", "gondinferieur", "legondinferieur", "legondinferieur2"]),
            "le gond (2), en B",
-           "<p><i>Y</i><sub>A</sub> = 0 : seul le gond (2), en B, reprend la charge verticale de 4 000 daN. Le gond "
-           "(1), en A, ne fait que retenir le bras horizontalement. C'est pourquoi le gond inférieur est conçu comme "
-           "une butée (rotule) et le gond supérieur comme un simple guidage (linéaire annulaire).</p>"),
-         Q("q3_9", "On écarte la porte de l'axe des gonds (la cote <i>a</i> augmente), sans changer les poids. "
-           "L'intensité de l'action du gond A augmente-t-elle ?", H_OUINON, YES,
-           "oui : |<i>X</i><sub>A</sub>| = (0,4 × 1 000 + <i>x</i><sub>G4</sub> × 3 000) / 2,1 croît avec <i>a</i>",
-           "<p>L'équation des moments donne |<i>X</i><sub>A</sub>| = (400 + 3 000 · <i>x</i><sub>G4</sub>) / 2,1 : "
-           "plus la porte est loin de l'axe, plus son moment est grand, et plus les gonds doivent réagir. "
-           "Augmenter l'écart AB entre les gonds réduirait au contraire cet effort.</p>"),
+           "<p><i>Y</i><sub>A</sub> = 0 : seul le gond B reprend la charge verticale de 4 000 daN ; le gond A ne fait que "
+           "retenir le bras horizontalement.</p>"),
      ]},
 ]
 
@@ -473,176 +425,97 @@ S_E = math.pi * 100 ** 2 / 4
 FN_E = F_E * 10
 PR_E = FN_E / S_E
 
+UX_E, UY_E = -math.cos(ALPHA), math.sin(ALPHA)
+
 PARTS_ECHELLE = [
-    {"num": "1", "minutes": 15, "title": "Isolement du vérin (4 + 5)",
+    {"num": "1", "minutes": 10, "title": "Isolement du vérin (4 + 5)",
      "intro": [
          "<p>Une échelle de pompier <strong>(3)</strong> est articulée en A (pivot d'axe (A, <var>z</var>)) sur une "
-         "tourelle <strong>(2)</strong>, qui peut pivoter autour de l'axe (D, <var>y</var>) par rapport au châssis du "
-         "camion <strong>(1)</strong>. Le levage est réalisé par un vérin hydraulique <strong>4 + 5</strong> "
-         "(4 = tige, 5 = corps) articulé en B sur l'échelle et en C sur la tourelle par deux "
-         "<strong>liaisons rotules</strong> de centres B et C.</p><p>L'étude est menée dans le plan (<var>x</var>, "
-         f"<var>y</var>) ; l'ensemble est en équilibre. {V('P', '3')} (5 000 daN) schématise le poids de "
+         "tourelle <strong>(2)</strong>, qui peut pivoter autour de (D, <var>y</var>) par rapport au châssis "
+         "<strong>(1)</strong>. Le levage est réalisé par un vérin hydraulique <strong>4 + 5</strong> articulé en B sur "
+         "l'échelle et en C sur la tourelle par deux <strong>liaisons rotules</strong>. Étude dans le plan "
+         f"(<var>x</var>, <var>y</var>), ensemble en équilibre ; {V('P', '3')} (5 000 daN) schématise le poids de "
          "l'échelle ; le poids du vérin est négligé.</p>",
          figure("n3-echelle", "Échelle 3 articulée en A sur la tourelle 2, vérin 4 + 5 entre B et C incliné de 70°, "
-                "échelle inclinée de 30°, poids P3 de 5 000 daN en G3", "Figure 1 — Échelle de pompier.", 440),
+                "poids P3 de 5 000 daN en G3", "Figure 1 — Échelle de pompier.", 440),
      ],
      "blocks": [
-         QBAR("Q1.1 – Q1.5", ["DP1", "DT1"]),
-         Q("q1_1", "On isole le vérin (4 + 5). À combien d'actions mécaniques extérieures est-il soumis ?",
-           H_ENTIER, ENTIER(2), "2 actions : en B (échelle) et en C (tourelle)",
-           "<p>Son poids est négligé ; il ne reste que les deux actions des rotules : "
-           f"{V('B', '3/4')} exercée par l'échelle sur la tige et {V('C', '2/5')} exercée par la tourelle sur le "
-           "corps. Les actions entre tige et corps (et la pression de l'huile) sont <strong>intérieures</strong> au "
-           "vérin isolé.</p>"),
-         Q("q1_2", "Compléter : un solide soumis à deux forces est en équilibre si ces deux forces ont la même droite "
-           "d'action, la même intensité et des sens …", "Réponds en un mot.", SENS_OPPOSES, "contraires (opposés)",
-           "<p>C'est le cas particulier du PFS pour <strong>deux forces</strong> : même droite d'action, même "
-           "intensité, sens contraires. Leur somme est nulle et leurs moments se compensent en tout point.</p>"),
-         Q("q1_3", "En déduire la droite d'action des actions qui s'exercent sur le vérin.", H_DROITE, DROITE("B", "C"),
-           "la droite (BC), axe du vérin",
-           "<p>Les deux forces passent par leurs points d'application B et C (centres des rotules) et ont la même "
-           "droite d'action : c'est la droite <strong>(BC)</strong>, axe du vérin. On connaît donc la "
-           f"<strong>direction</strong> de {V('B', '4/3')} avant tout calcul : il ne restera que son intensité à "
-           "déterminer.</p>"),
-         Q("q1_4", "Quel angle la droite (BC) fait-elle avec l'axe <var>x</var> ?", "Valeur lue sur la figure, en "
-           "degrés. " + UNITE, num(70, "deg", absTol=0.5), "70°",
-           "<p>Lecture directe sur la figure : la droite (BC) est inclinée de <strong>70°</strong> par rapport à "
-           f"l'horizontale. Un vecteur unitaire dirigé de C vers B s'écrit (−cos 70° ; sin 70°) : B est au-dessus "
-           "et à gauche de C.</p>"),
-         Q("q1_5", "Le vérin est-il comprimé ou tendu ?", "Réponds en un mot.", COMPRIME, "comprimé",
-           "<p>Le vérin soutient l'échelle par en dessous : sa tige <strong>pousse</strong> sur l'échelle en B, et "
-           "l'échelle repousse la tige. Les deux actions sont dirigées vers l'intérieur du vérin : il travaille en "
-           "<strong>compression</strong>. C'est aussi pour cela que l'huile doit être sous pression côté fond du "
-           "piston (partie 4).</p>"),
+         QBAR("Q1.1 – Q1.2", ["DP1", "DT1"]),
+         Q("q1_1", "Isoler le vérin (4 + 5) : quelle est la droite d'action des actions mécaniques qui agissent sur lui ?",
+           H_DROITE, DROITE("B", "C"), "la droite (BC)",
+           "<p>Le vérin, de poids négligé, n'est lié qu'en B et en C : solide soumis à deux forces, de même droite "
+           "d'action <strong>(BC)</strong>, même intensité, sens contraires. La direction de l'action en B est donc "
+           "connue : il ne restera que son intensité.</p>"),
+         Q("q1_2", "Le vérin est-il comprimé ou tendu ?", "Réponds en un mot.", COMPRIME, "comprimé",
+           "<p>Le vérin pousse l'échelle par en dessous : il travaille en compression.</p>"),
      ]},
     {"num": "2", "minutes": 20, "title": "Isolement de l'échelle (3) : bilan des actions",
      "intro": [
-         "<p>On isole l'échelle (3). Les coordonnées sont données dans le repère (A, <var>x</var>, <var>y</var>) "
-         "de la figure ci-dessous.</p>",
-         '<div class="n3-split">' +
+         "<p>On isole l'échelle (3). Repère (A, <var>x</var>, <var>y</var>) de la figure 2. On note <i>F</i> "
+         "l'intensité (inconnue) de l'action du vérin.</p>",
          figure("n3-echelle-iso", "Échelle isolée : A à l'origine, B à 2,85 m en x et 1,65 m en y, droite BC à 70°, "
-                "poids P3 de 5 000 daN à 6 m de A", "Figure 2 — Échelle (3) isolée.", 400) +
-         data_box(["Repère (A, <var>x</var>, <var>y</var>) : <var>x</var> horizontal, <var>y</var> vertical vers le "
-                   "haut.", "B (2,85 ; 1,65) m.", f"{V('P', '3')} = 5 000 daN, vertical vers le bas, sa droite "
-                   "d'action est à 6 m de A (<i>x</i> = 6 m).",
-                   "Droite (BC) inclinée de 70° sur l'axe <var>x</var>.",
-                   "Le vérin pousse : " + V('B', '4/3') + " = <i>F</i> · (−cos 70° ; sin 70°), avec <i>F</i> &gt; 0."]) +
-         "</div>",
+                "poids P3 de 5 000 daN à 6 m de A", "Figure 2 — Échelle (3) isolée.", 400),
      ],
      "blocks": [
-         QBAR("Q2.1 – Q2.6", ["DT1"]),
-         Q("q2_1", "Combien d'actions mécaniques extérieures s'exercent sur l'échelle (3) ?", H_ENTIER, ENTIER(3),
-           f"3 actions : {V('A', '2/3')}, {V('B', '4/3')} et {V('P', '3')}",
-           f"<p>{V('A', '2/3')} (pivot en A, tourelle), {V('B', '4/3')} (rotule en B, tige du vérin) et le poids "
-           f"{V('P', '3')}.</p>"),
-         Q("q2_2", "Combien d'inconnues comporte, dans le plan, l'action du pivot d'axe (A, <var>z</var>) ?",
-           H_ENTIER, ENTIER(2), "2 inconnues : <i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub>",
-           "<p>Le pivot d'axe <var>z</var> laisse seulement la rotation autour de <var>z</var> : <i>N</i><sub>A</sub> "
-           "= 0. Dans le plan, il reste deux inconnues :</p>" +
-           eq(tzp("2→3", "A", "<i>X</i><sub>A</sub>", "<i>Y</i><sub>A</sub>", "0"))),
-         Q("q2_3", f"Combien d'inconnues reste-t-il pour {V('B', '4/3')}, une fois sa direction connue grâce à "
-           "l'isolement du vérin ?", H_ENTIER, ENTIER(1), "1 inconnue : l'intensité <i>F</i>",
-           "<p>Une rotule transmet a priori deux inconnues (<i>X</i><sub>B</sub>, <i>Y</i><sub>B</sub>), mais la "
-           "direction (BC) les lie : <i>X</i><sub>B</sub> = −<i>F</i> cos 70° et <i>Y</i><sub>B</sub> = <i>F</i> "
-           "sin 70°. Il ne reste qu'<strong>une</strong> inconnue, <i>F</i>.</p>" +
-           eq(tzp("4→3", "B", "−<i>F</i> cos 70°", "<i>F</i> sin 70°", "0"))),
-         Q("q2_4", "Avec 3 inconnues au total, le problème plan est-il résoluble ?", H_OUINON, YES,
-           "oui : 3 inconnues (<i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub>, <i>F</i>) pour 3 équations",
-           "<p>Sans l'isolement préalable du vérin, on aurait 4 inconnues pour 3 équations : le problème serait "
-           "insoluble. Isoler d'abord le solide soumis à deux forces est la clé de la résolution.</p>"),
-         Q("q2_5", f"Calculer le rapport <i>Y</i><sub>B</sub> / <i>X</i><sub>B</sub> des composantes de "
-           f"{V('B', '4/3')}.", H_SANS, num(-math.tan(ALPHA), absTol=0.006), "<i>Y</i><sub>B</sub> / "
-           "<i>X</i><sub>B</sub> = −tan 70° ≈ −2,75",
-           eq(frac("<i>Y</i><sub>B</sub>", "<i>X</i><sub>B</sub>") + " = " + frac("<i>F</i> sin 70°",
-              "−<i>F</i> cos 70°") + " = −tan 70° ≈ <b>−2,75</b>") +
-           "<p>La composante verticale est presque trois fois plus grande que l'horizontale : le vérin est proche "
-           "de la verticale.</p>"),
-         Q("q2_6", "En quel point faut-il écrire l'équation des moments pour obtenir directement <i>F</i> ?",
-           H_POINT, POINT("A"), "au point A",
-           "<p>En A, l'action du pivot (2 inconnues) a un moment nul : l'équation des moments ne contient plus que "
-           "<i>F</i>.</p>"),
+         QBAR("Q2.1 – Q2.2", ["DT1"]),
+         GRP("q2_1", "Donner les coordonnées de B (en m) et les composantes du vecteur unitaire <i>u</i> porté par (BC), "
+             "orienté de C vers B.", "Coordonnées au centième, composantes de <i>u</i> au millième.",
+             [VEC("B", [("x", *val(XB_E, 2, 0, 0.005)), ("y", *val(YB_E, 2, 0, 0.005))], "m"),
+              VEC("<i>u</i>", [("x", *val(UX_E, 3, 0, 0.003)), ("y", *val(UY_E, 3, 0, 0.003))])],
+             "<p>B est lu sur la figure : 2,85 m et 1,65 m. La droite (CB) fait 70° avec <var>x</var>, B étant au-dessus "
+             "et à gauche de C : <i>u</i> = (−cos 70° ; sin 70°) ≈ (−0,342 ; 0,940).</p>"),
+         GRP("q2_2", "Écrire, en leur point d'application, les torseurs des actions mécaniques extérieures sur "
+             "l'échelle (forces en daN).",
+             "Inconnues : X_A, Y_A et F. Une composante de l'action du vérin s'écrit coefficient × F (ex. −0,5F) ; "
+             "une composante nulle s'écrit 0.",
+             [TZ("2→3", "A", sym("X_A"), sym("Y_A"), z()),
+              TZ("4→3", "B", lin(["F"], UX_E, 0.003), lin(["F"], UY_E, 0.003), z()),
+              TZ("P3", "G3", z(), val(-P_E, 0, 0, 0.5), z())],
+             "<p>Pivot d'axe (A, <var>z</var>) : <i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub>, moment nul. Rotule en B, "
+             "direction connue : <i>F</i> · <i>u</i>, une seule inconnue. Poids vertical. 3 inconnues "
+             "(<i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub>, <i>F</i>) pour 3 équations : sans l'isolement du vérin, on en "
+             "aurait 4.</p>"),
      ]},
-    {"num": "3", "minutes": 25, "title": "PFS appliqué à l'échelle",
-     "intro": ["<p>Convention : moment positif dans le sens trigonométrique, <i>M</i><sub>A</sub>(<span "
-               "class=\"vec\">F</span>) = <i>x</i> · <i>F</i><sub>y</sub> − <i>y</i> · <i>F</i><sub>x</sub>.</p>"],
+    {"num": "3", "minutes": 30, "title": "PFS au point A et résultats",
+     "intro": [],
      "blocks": [
-         QBAR("Q3.1 – Q3.3", ["DT1"]),
-         Q("q3_1", f"Calculer le moment en A du poids {V('P', '3')}.", H_EX_SIGNE,
-           num(MP_E, "daNm", absTol=0.5, variants=[var(MP_E * 10, "Nm", absTol=5), var(MP_E / 100, "kN", absTol=0.005)]),
-           f"<i>M</i><sub>A</sub>({V('P', '3')}) = −30 000 daN·m",
-           eq(f"<i>M</i><sub>A</sub>({V('P', '3')}) = 6 × (−5 000) = <b>−30 000 daN·m</b>") +
-           "<p>Seule l'abscisse de G3 compte pour une force verticale : sa hauteur n'intervient pas.</p>"),
-         Q("q3_2", f"Le moment de {V('B', '4/3')} en A s'écrit <i>M</i><sub>A</sub> = 2,85 · <i>F</i> sin 70° − "
-           "1,65 · (−<i>F</i> cos 70°) = <i>F</i> · <i>d</i>. Calculer <i>d</i>.", H_C,
-           num(D_E, "m", absTol=0.006, variants=[var(D_E * 1000, "mm", absTol=6)]),
-           f"<i>d</i> ≈ {fr(D_E)} m",
-           eq(f"<i>d</i> = 2,85 × sin 70° + 1,65 × cos 70° = 2,678 + 0,564 ≈ <b>{fr(D_E)} m</b>") +
-           "<p><i>d</i> est la <strong>distance du point A à la droite (BC)</strong> : le bras de levier du vérin. "
-           "Plus le vérin est ancré loin de l'articulation A, plus il est efficace.</p>"),
-         Q("q3_3", f"Écrire l'équation des moments en A et en déduire l'intensité <i>F</i> = ‖{V('B', '4/3')}‖.", H_U,
+         QBAR("Q3.1 – Q3.4", ["DT1"]),
+         GRP("q3_1", "Écrire les trois torseurs au point A (forces en daN, moments en daN·m).",
+             "Moments positifs dans le sens trigonométrique ; un moment inconnu s'écrit coefficient × F (au centième).",
+             [TZ("2→3", "A", sym("X_A"), sym("Y_A"), z()),
+              TZ("4→3", "A", lin(["F"], UX_E, 0.003), lin(["F"], UY_E, 0.003), lin(["F"], D_E, 0.008, 2)),
+              TZ("P3", "A", z(), val(-P_E, 0, 0, 0.5), val(MP_E, 0, 0, 0.5))],
+             eq("<i>N</i><sub>A</sub>(B) = 2,85 × 0,940 <i>F</i> − 1,65 × (−0,342 <i>F</i>) ≈ <b>3,24 <i>F</i></b> ; "
+                "<i>N</i><sub>A</sub>(P3) = 6 × (−5 000) = <b>−30 000</b>") +
+             "<p>3,24 m est la distance de A à la droite (BC) : le bras de levier du vérin.</p>"),
+         Q("q3_2", "Écrire l'équation des moments en A et en déduire l'intensité <i>F</i> de l'action du vérin.", H_U,
            num(F_E, "daN", relTol=0.002, variants=[var(FN_E, "N", relTol=0.002), var(FN_E / 1000, "kN", relTol=0.002)]),
            f"<i>F</i> ≈ {fr(F_E, 0)} daN",
-           eq("Σ<i>N</i><sub>A</sub> = 0 ⇒ <i>F</i> · <i>d</i> − 30 000 = 0 ⇒ <i>F</i> = " + frac("30 000", fr(D_E, 3)) +
-              f" ≈ <b>{fr(F_E, 0)} daN</b>") +
-           "<p>Le vérin pousse avec près de deux fois le poids de l'échelle : son bras de levier (3,24 m) est bien plus "
-           "court que celui du poids (6 m).</p>"),
-         QBAR("Q3.4 – Q3.8", ["DT1"]),
-         Q("q3_4", "En déduire <i>X</i><sub>B</sub>.", H_U_SIGNE,
-           num(BX_E, "daN", relTol=0.003, variants=[var(BX_E * 10, "N", relTol=0.003)]),
-           f"<i>X</i><sub>B</sub> ≈ {fr(BX_E, 0)} daN",
-           eq(f"<i>X</i><sub>B</sub> = −<i>F</i> cos 70° = −{fr(F_E, 0)} × 0,342 ≈ <b>{fr(BX_E, 0)} daN</b>")),
-         Q("q3_5", "En déduire <i>Y</i><sub>B</sub>.", H_U_SIGNE,
-           num(BY_E, "daN", relTol=0.002, variants=[var(BY_E * 10, "N", relTol=0.002)]),
-           f"<i>Y</i><sub>B</sub> ≈ {fr(BY_E, 0)} daN",
-           eq(f"<i>Y</i><sub>B</sub> = <i>F</i> sin 70° = {fr(F_E, 0)} × 0,940 ≈ <b>{fr(BY_E, 0)} daN</b>")),
-         Q("q3_6", "Écrire l'équation de la résultante selon <var>x</var> et en déduire <i>X</i><sub>A</sub>.",
-           H_U_SIGNE, num(AX_E, "daN", relTol=0.003, variants=[var(AX_E * 10, "N", relTol=0.003)]),
-           f"<i>X</i><sub>A</sub> ≈ {fr(AX_E, 0)} daN",
-           eq(f"Σ<i>X</i> = 0 ⇒ <i>X</i><sub>A</sub> + <i>X</i><sub>B</sub> = 0 ⇒ <i>X</i><sub>A</sub> ≈ "
-              f"<b>{fr(AX_E, 0)} daN</b>")),
-         Q("q3_7", "Écrire l'équation de la résultante selon <var>y</var> et en déduire <i>Y</i><sub>A</sub>.",
-           H_U_SIGNE, num(AY_E, "daN", relTol=0.003, variants=[var(AY_E * 10, "N", relTol=0.003)]),
-           f"<i>Y</i><sub>A</sub> ≈ {fr(AY_E, 0)} daN",
-           eq(f"Σ<i>Y</i> = 0 ⇒ <i>Y</i><sub>A</sub> + <i>Y</i><sub>B</sub> − 5 000 = 0 ⇒ <i>Y</i><sub>A</sub> = "
-              f"5 000 − {fr(BY_E, 0)} ≈ <b>{fr(AY_E, 0)} daN</b>") +
-           "<p>Négatif : la tourelle <strong>retient</strong> l'échelle vers le bas en A. Le vérin pousse plus fort "
-           "que le poids ; l'articulation A empêche l'échelle de se soulever.</p>"),
-         Q("q3_8", f"Calculer la norme ‖{V('A', '2/3')}‖.", H_U,
-           num(NA_E, "daN", relTol=0.003, variants=[var(NA_E * 10, "N", relTol=0.003)]),
-           f"‖{V('A', '2/3')}‖ ≈ {fr(NA_E, 0)} daN",
-           eq(f"‖{V('A', '2/3')}‖ = " + sqrt(f"{fr(AX_E, 0)}² + ({fr(AY_E, 0)})²") + f" ≈ <b>{fr(NA_E, 0)} daN</b>") +
-           f"<p>Bilan : {V('A', '2/3')} ({fr(AX_E, 0)} ; {fr(AY_E, 0)}) daN, {V('B', '4/3')} ({fr(BX_E, 0)} ; "
-           f"{fr(BY_E, 0)}) daN, d'intensité {fr(F_E, 0)} daN.</p>"),
+           eq("3,24 <i>F</i> − 30 000 = 0 ⇒ <i>F</i> = " + frac("30 000", fr(D_E, 3)) + f" ≈ <b>{fr(F_E, 0)} daN</b>")),
+         GRP("q3_3", "Donner les actions mécaniques en A et en B.", "Composantes algébriques, arrondies à l'unité, en daN.",
+             [VEC(V("A", "2/3"), [("X", *val(AX_E, 0, 0.003)), ("Y", *val(AY_E, 0, 0.003))], "daN"),
+              VEC(V("B", "4/3"), [("X", *val(BX_E, 0, 0.003)), ("Y", *val(BY_E, 0, 0.003))], "daN")],
+             eq(f"<i>X</i><sub>B</sub> = −0,342 <i>F</i> ≈ {fr(BX_E, 0)} ; <i>Y</i><sub>B</sub> = 0,940 <i>F</i> ≈ {fr(BY_E, 0)}") +
+             eq(f"Σ<i>X</i> = 0 ⇒ <i>X</i><sub>A</sub> ≈ {fr(AX_E, 0)} ; Σ<i>Y</i> = 0 ⇒ <i>Y</i><sub>A</sub> = 5 000 − "
+                f"{fr(BY_E, 0)} ≈ {fr(AY_E, 0)}") +
+             "<p><i>Y</i><sub>A</sub> &lt; 0 : la tourelle retient l'échelle vers le bas, le vérin poussant plus fort "
+             "que le poids.</p>"),
+         Q("q3_4", f"Calculer la norme ‖{V('A', '2/3')}‖.", H_U,
+           num(NA_E, "daN", relTol=0.003, variants=[var(NA_E * 10, "N", relTol=0.003)]), f"≈ {fr(NA_E, 0)} daN",
+           eq(f"‖{V('A', '2/3')}‖ = " + sqrt(f"{fr(AX_E, 0)}² + ({fr(AY_E, 0)})²") + f" ≈ <b>{fr(NA_E, 0)} daN</b>")),
      ]},
-    {"num": "4", "minutes": 15, "title": "Pression d'alimentation du vérin",
-     "intro": ["<p>Le diamètre du piston du vérin est de 100 mm. L'huile agit sur toute la surface du piston "
-               "(côté fond) pour pousser la tige.</p>"],
+    {"num": "4", "minutes": 10, "title": "Pression d'alimentation du vérin",
+     "intro": ["<p>Le diamètre du piston du vérin est de 100 mm ; l'huile agit sur toute la surface du piston.</p>"],
      "blocks": [
-         QBAR("Q4.1 – Q4.5", ["DT1"]),
+         QBAR("Q4.1 – Q4.2", ["DT1"]),
          Q("q4_1", "Calculer la surface <i>S</i> du piston.", H_C,
-           num(S_E, "mm2", relTol=0.001, variants=[var(S_E / 100, "cm2", relTol=0.001)]),
-           f"<i>S</i> ≈ {fr(S_E)} mm²",
-           eq("<i>S</i> = " + frac("π · <i>D</i>²", "4") + " = " + frac("π × 100²", "4") + f" ≈ <b>{fr(S_E)} mm²</b>")),
-         Q("q4_2", "Convertir l'effort <i>F</i> du vérin en newtons.", H_U,
-           num(FN_E, "N", relTol=0.002, variants=[var(F_E, "daN", relTol=0.002), var(FN_E / 1000, "kN", relTol=0.002)]),
-           f"<i>F</i> ≈ {fr(FN_E, 0)} N",
-           eq(f"1 daN = 10 N ⇒ <i>F</i> ≈ {fr(F_E, 0)} × 10 ≈ <b>{fr(FN_E, 0)} N</b>") +
-           "<p>Indispensable pour obtenir la pression en MPa avec une surface en mm².</p>"),
-         Q("q4_3", "Calculer la pression d'alimentation <i>p</i> nécessaire.", H_C,
+           num(S_E, "mm2", relTol=0.001, variants=[var(S_E / 100, "cm2", relTol=0.001)]), f"<i>S</i> ≈ {fr(S_E)} mm²",
+           eq("<i>S</i> = " + frac("π × 100²", "4") + f" ≈ <b>{fr(S_E)} mm²</b>")),
+         Q("q4_2", "Calculer la pression d'alimentation <i>p</i> nécessaire.", H_C,
            num(PR_E, "MPa", relTol=0.003, variants=[var(PR_E * 10, "bar", relTol=0.003), var(PR_E * 1e6, "Pa", relTol=0.003)]),
-           f"<i>p</i> ≈ {fr(PR_E)} MPa",
-           eq("<i>p</i> = " + frac("<i>F</i>", "<i>S</i>") + " = " + frac(fr(FN_E, 0), fr(S_E)) +
-              f" ≈ <b>{fr(PR_E)} MPa</b>") + "<p>N / mm² = MPa.</p>"),
-         Q("q4_4", "Exprimer cette pression en bar.", H_D,
-           num(PR_E * 10, "bar", relTol=0.003, variants=[var(PR_E, "MPa", relTol=0.003)]),
-           f"<i>p</i> ≈ {fr(PR_E * 10, 1)} bar",
-           eq(f"1 MPa = 10 bar ⇒ <i>p</i> ≈ <b>{fr(PR_E * 10, 1)} bar</b>") +
-           "<p>Une pression courante pour un circuit hydraulique mobile (souvent 150 à 250 bar).</p>"),
-         Q("q4_5", "Un équipement plus lourd est ajouté en bout d'échelle : G3 s'éloigne de A. La pression "
-           "nécessaire augmente-t-elle ?", H_OUINON, YES, "oui : <i>F</i> = <i>P</i><sub>3</sub> · <i>x</i><sub>G3</sub> / <i>d</i> augmente",
-           "<p>L'équation des moments donne <i>F</i> = <i>P</i><sub>3</sub> · <i>x</i><sub>G3</sub> / <i>d</i>. Le "
-           "moment du poids augmente, le bras de levier <i>d</i> du vérin ne change pas : <i>F</i>, donc "
-           "<i>p</i> = <i>F</i> / <i>S</i>, augmente.</p>"),
+           f"<i>p</i> ≈ {fr(PR_E)} MPa (≈ {fr(PR_E * 10, 1)} bar)",
+           eq("<i>p</i> = " + frac("<i>F</i>", "<i>S</i>") + " = " + frac(fr(FN_E, 0) + " N", fr(S_E) + " mm²") +
+              f" ≈ <b>{fr(PR_E)} MPa</b> ≈ {fr(PR_E * 10, 1)} bar") + "<p>Attention : <i>F</i> en newtons (1 daN = 10 N).</p>"),
      ]},
 ]
 
@@ -662,178 +535,107 @@ E_V = -MC_V / D_V
 AX_V = E_V * math.cos(BETA)
 AY_V = C_V - E_V * math.sin(BETA)
 
+CB_V, SB_V = math.cos(BETA), math.sin(BETA)
+NE_A_V = (XE_V - XA_V) * (-SB_V) - YE_V * (-CB_V)     # moment en A de E3/2 = coefficient × E
+
 PARTS_VELO = [
     {"num": "1", "minutes": 15, "title": "Graphe des liaisons",
      "intro": [
-         "<p>Le cadre d'un vélo tout terrain est réalisé en deux parties <strong>(1)</strong> (cadre avant) et "
-         "<strong>(2)</strong> (bras oscillant arrière), articulées en A par une liaison pivot d'axe (A, "
-         "<var>z</var>). Un amortisseur <strong>(3)</strong> relie les deux parties : il est articulé en E sur (2) et "
-         f"en F sur (1). Le poids {V('P')} = 1 000 N du cycliste, vertical, est supposé entièrement appliqué en D. "
-         f"{V('B')} et {V('C')} sont les actions des roues avant et arrière sur le cadre ; les autres poids et "
-         "actions du cycliste (guidon, pédales) sont négligés.</p>",
+         "<p>Le cadre d'un vélo tout terrain est réalisé en deux parties <strong>(1)</strong> et <strong>(2)</strong> "
+         "articulées en A (pivot d'axe (A, <var>z</var>)). Un amortisseur <strong>(3)</strong> est articulé en E sur "
+         f"(2) et en F sur (1). Le poids {V('P')} = 1 000 N du cycliste, vertical, est supposé appliqué en D. "
+         f"{V('B')} et {V('C')} sont les actions des roues sur le cadre ; les autres poids et actions sont négligés.</p>",
          figure("n3-velo-cadre", "Cadre de VTT : cadre avant 1, bras arrière 2, amortisseur 3 entre E et F ; poids "
                 "P de 1 000 N en D, actions verticales B et C des roues ; cotes 242, 188 et 672 mm ; droite CEF à "
                 "35,5°", "Figure 1 — Cadre de vélo tout terrain (cotes en mm).", 760),
      ],
      "blocks": [
-         QBAR("Q1.1 – Q1.2", ["DP1", "DT1"]),
-         Q("q1_1", "Quelle liaison relie le cadre avant (1) au bras arrière (2) en A ?", H_MOT, LIAISON_PIVOT,
-           "liaison pivot d'axe (A, <var>z</var>)",
-           "<p>L'énoncé le précise : le bras arrière oscille autour d'un axe perpendiculaire au plan du vélo, en A. "
-           "Un seul mouvement possible, la rotation autour de <var>z</var> : <strong>liaison pivot</strong>.</p>"),
-         Q("q1_2", "L'amortisseur (3) est articulé en E sur (2) et en F sur (1). Dans le plan, quelle liaison "
-           "modélise chacune de ces articulations ?", H_MOT,
-           KW([["pivot"]], [["rotule"]], [["spherique"]], [["articulation"]], forbid=["glissant", "glissiere", "encastrement"]),
-           "liaison pivot d'axe (E, <var>z</var>) et pivot d'axe (F, <var>z</var>) (une rotule est aussi acceptée)",
-           "<p>Les œillets de l'amortisseur tournent autour d'axes parallèles à <var>z</var> : <strong>pivots</strong> "
-           "d'axes (E, <var>z</var>) et (F, <var>z</var>). Des rotules (silentblocs) conduiraient au même modèle "
-           "dans le plan : une force passant par le centre, sans moment.</p>"),
-         QBAR("Q1.3", ["DP1"], ans="sur la figure"),
-         SK("sk_q1_3", "Q1.3", "GRAPHE_VELO",
-            "Compléter le graphe des liaisons des solides (1), (2) et (3). Les actions extérieures (cycliste, roues) "
-            "sont déjà placées.",
+         QBAR("Q1.1", ["DP1"], ans="sur la figure"),
+         SK("sk_q1_1", "Q1.1", "GRAPHE_VELO",
+            "Réaliser le graphe des liaisons des solides (1), (2) et (3) et nommer chaque liaison. Les actions "
+            "extérieures (cycliste, roues) sont déjà placées.",
             ["Trois liaisons sont tracées : 1–2, 2–3 et 3–1 (le graphe forme une boucle fermée).",
              "La liaison 1–2 est nommée « pivot d'axe (A, z) ».",
              "La liaison 2–3 est nommée « pivot (ou rotule) en E ».",
              "La liaison 3–1 est nommée « pivot (ou rotule) en F »."],
-            "<p>Outils : <b>Ligne</b> pour relier deux solides, <b>Texte</b> pour nommer la liaison et son centre. "
-            "L'amortisseur (3) est considéré comme un seul solide.</p>" +
+            "<p>Outils : <b>Ligne</b> pour relier deux solides, <b>Texte</b> pour nommer la liaison et son centre.</p>" +
             figure("n3-velo-amortisseur", "Amortisseur 3 articulé en E et F, incliné de 35,5°", "L'amortisseur (3).", 200),
-            "<p>Trois liaisons, qui forment une <strong>boucle fermée</strong> 1 → 2 → 3 → 1 :</p><ul>"
-            "<li>1–2 : <strong>pivot d'axe (A, <var>z</var>)</strong> ;</li>"
-            "<li>2–3 : <strong>pivot d'axe (E, <var>z</var>)</strong> ;</li>"
-            "<li>3–1 : <strong>pivot d'axe (F, <var>z</var>)</strong>.</li></ul>"
-            "<p>Les actions extérieures s'appliquent sur (1) (cycliste en D, roue avant en B) et sur (2) (roue arrière "
-            "en C). C'est l'amortisseur, en se comprimant, qui laisse osciller le bras arrière autour de A.</p>"),
+            "<p>Trois liaisons en boucle fermée : 1–2 <strong>pivot d'axe (A, <var>z</var>)</strong>, 2–3 <strong>pivot "
+            "d'axe (E, <var>z</var>)</strong>, 3–1 <strong>pivot d'axe (F, <var>z</var>)</strong>.</p>"),
      ]},
     {"num": "2", "minutes": 20, "title": "Isolement du cadre complet (1 + 2 + 3)",
-     "intro": [
-         "<p>On isole l'ensemble du cadre {1 + 2 + 3}. Repère (C, <var>x</var>, <var>y</var>) : origine C (contact de "
-         "la roue arrière), <var>x</var> horizontal vers l'avant, <var>y</var> vertical vers le haut.</p>",
-         data_box(["C, A et B sont sur l'axe <var>x</var> : CA = 242 + 188 mm, AB = 672 mm.",
-                   f"{V('P')} = 1 000 N, vertical vers le bas, appliqué en D, à 242 mm de C selon <var>x</var>.",
-                   f"{V('B')} et {V('C')} sont verticales (vers le haut).",
-                   "Convention : moment positif dans le sens trigonométrique, <i>M</i><sub>C</sub> = <i>x</i> · "
-                   "<i>F</i><sub>y</sub> − <i>y</i> · <i>F</i><sub>x</sub>."], cols=True),
-     ],
+     "intro": ["<p>On isole le cadre complet. Repère (C, <var>x</var>, <var>y</var>) : origine C, <var>x</var> "
+               "horizontal vers l'avant, <var>y</var> vertical vers le haut. C, A et B sont sur l'axe <var>x</var>. "
+               f"On note <i>Y</i><sub>B</sub> et <i>Y</i><sub>C</sub> les composantes de {V('B')} et {V('C')}.</p>"],
      "blocks": [
-         QBAR("Q2.1 – Q2.6", ["DP1", "DT1"]),
-         Q("q2_1", "Combien d'actions mécaniques extérieures s'exercent sur le cadre complet ?", H_ENTIER, ENTIER(3),
-           f"3 actions : {V('P')}, {V('B')} et {V('C')}",
-           f"<p>Le poids du cycliste {V('P')} et les actions des deux roues {V('B')} et {V('C')}. Toutes trois sont "
-           "verticales : le cadre est soumis à trois <strong>forces parallèles</strong>.</p>"),
-         Q("q2_2", "Les actions de l'amortisseur (3) sur les cadres (1) et (2) interviennent-elles dans ce bilan ?",
-           H_OUINON, NO, "non : elles sont intérieures à l'ensemble isolé",
-           "<p>L'amortisseur fait partie de l'ensemble isolé : ses actions sur (1) et (2) sont intérieures, comme "
-           "celles du pivot A. C'est tout l'intérêt de cet isolement : il donne B et C sans rien connaître de la "
-           "suspension.</p>"),
-         Q("q2_3", "Quelle est l'abscisse <i>x</i><sub>B</sub> du point B ?", H_EX,
-           num(XB_V, "mm", absTol=0.5, variants=[var(XB_V / 1000, "m", absTol=0.0005), var(XB_V / 10, "cm", absTol=0.05)]),
-           "<i>x</i><sub>B</sub> = 1 102 mm",
-           eq("<i>x</i><sub>B</sub> = 242 + 188 + 672 = <b>1 102 mm</b>")),
-         Q("q2_4", f"Calculer le moment en C du poids {V('P')}.", H_EX_SIGNE,
-           num(MP_V, "Nmm", absTol=0.5, variants=[var(MP_V / 1000, "Nm", absTol=0.0005)]),
-           f"<i>M</i><sub>C</sub>({V('P')}) = −242 000 N·mm = −242 N·m",
-           eq(f"<i>M</i><sub>C</sub>({V('P')}) = 242 × (−1 000) = <b>−242 000 N·mm</b> = −242 N·m")),
-         Q("q2_5", f"Écrire l'équation des moments en C et en déduire l'intensité de {V('B')}.", H_C,
-           num(B_V, "N", absTol=0.006, variants=[var(B_V / 10, "daN", absTol=0.0006)]),
-           f"<i>B</i> ≈ {fr(B_V)} N",
-           eq("Σ<i>N</i><sub>C</sub> = 0 ⇒ 1 102 · <i>B</i> − 242 000 = 0 ⇒ <i>B</i> = " + frac("242 000", "1 102") +
-              f" ≈ <b>{fr(B_V)} N</b>") +
-           f"<p>{V('C')} passe par C : son moment y est nul. On a écrit les moments au point qui élimine une "
-           "inconnue.</p>"),
-         Q("q2_6", f"En déduire l'intensité de {V('C')}.", H_C,
-           num(C_V, "N", absTol=0.006, variants=[var(C_V / 10, "daN", absTol=0.0006)]),
-           f"<i>C</i> ≈ {fr(C_V)} N",
-           eq(f"Σ<i>Y</i> = 0 ⇒ <i>B</i> + <i>C</i> − 1 000 = 0 ⇒ <i>C</i> = 1 000 − {fr(B_V)} ≈ <b>{fr(C_V)} N</b>") +
-           "<p>La roue arrière porte 78 % du poids : la selle D est bien plus proche de C que de B.</p>"),
+         QBAR("Q2.1 – Q2.3", ["DP1", "DT1"]),
+         GRP("q2_1", "Écrire, en leur point d'application, les torseurs des actions extérieures sur le cadre complet "
+             "(forces en N).", H_TZ.replace("X_A, Y_B…", "Y_B, Y_C…"),
+             [TZ("P", "D", z(), val(-P_V, 0, 0, 0.5), z()),
+              TZ("roue AV→1", "B", z(), sym("Y_B"), z()),
+              TZ("roue AR→2", "C", z(), sym("Y_C"), z())],
+             "<p>Trois forces verticales. Les actions de l'amortisseur et du pivot A sont intérieures au cadre "
+             "complet : elles n'apparaissent pas. 2 inconnues, et l'équation Σ<i>X</i> = 0 est toujours vérifiée.</p>"),
+         GRP("q2_2", "Écrire ces trois torseurs au point C (forces en N, moments en N·mm).",
+             "Moments positifs dans le sens trigonométrique ; un moment inconnu s'écrit coefficient × inconnue (ex. 500Y_B).",
+             [TZ("P", "C", z(), val(-P_V, 0, 0, 0.5), val(MP_V, 0, 0, 0.5)),
+              TZ("roue AV→1", "C", z(), sym("Y_B"), lin(["Y_B", "B"], XB_V, 0.5, 0)),
+              TZ("roue AR→2", "C", z(), sym("Y_C"), z())],
+             eq("<i>N</i><sub>C</sub>(P) = 242 × (−1 000) = −242 000 ; <i>N</i><sub>C</sub>(B) = 1 102 <i>Y</i><sub>B</sub> "
+                "(<i>x</i><sub>B</sub> = 242 + 188 + 672 = 1 102 mm) ; <i>N</i><sub>C</sub>(C) = 0")),
+         GRP("q2_3", "Résoudre et donner les actions des roues.", "Valeurs arrondies au centième, en N.",
+             [VEC("Composantes", [("Y<sub>B</sub>", *val(B_V, 2, 0, 0.006)), ("Y<sub>C</sub>", *val(C_V, 2, 0, 0.006))], "N")],
+             eq("1 102 <i>Y</i><sub>B</sub> − 242 000 = 0 ⇒ <i>Y</i><sub>B</sub> = " + frac("242 000", "1 102") +
+                f" ≈ <b>{fr(B_V)} N</b> ; <i>Y</i><sub>C</sub> = 1 000 − {fr(B_V)} ≈ <b>{fr(C_V)} N</b>")),
      ]},
     {"num": "3", "minutes": 10, "title": "Isolement de l'amortisseur (3)",
-     "intro": ["<p>On isole l'amortisseur (3), dont le poids est négligé. C, E et F sont alignés ; la droite (CEF) "
-               "fait 35,5° avec l'axe <var>x</var>.</p>",
-               figure("n3-velo-amortisseur", "Amortisseur 3 entre E et F, incliné de 35,5° sur l'horizontale",
+     "intro": [figure("n3-velo-amortisseur", "Amortisseur 3 entre E et F, incliné de 35,5° sur l'horizontale",
                       "Figure 2 — Amortisseur (3).", 240)],
      "blocks": [
-         QBAR("Q3.1 – Q3.4", ["DP1", "DT1"]),
-         Q("q3_1", "À combien d'actions mécaniques extérieures l'amortisseur est-il soumis ?", H_ENTIER, ENTIER(2),
-           "2 actions : en E (cadre 2) et en F (cadre 1)",
-           f"<p>{V('E', '2/3')} et {V('F', '1/3')}, exercées par les articulations ; aucune autre action.</p>"),
-         Q("q3_2", "En déduire la droite d'action de l'action mécanique en E.", H_DROITE, DROITE("E", "F"),
-           "la droite (EF), axe de l'amortisseur",
-           "<p>Solide soumis à deux forces : elles sont portées par la droite qui joint leurs points d'application, "
-           "<strong>(EF)</strong>, avec même intensité et sens contraires.</p>"),
-         Q("q3_3", "Cette droite passe par un autre point remarquable du vélo. Lequel ?", H_POINT, POINT("C"), "le point C",
-           "<p>La figure l'indique : <strong>C, E et F sont alignés</strong>. La droite d'action de l'amortisseur "
-           "passe par C, le contact de la roue arrière. Cette remarque va beaucoup simplifier le calcul suivant.</p>"),
-         Q("q3_4", "Sous le poids du cycliste, l'amortisseur est-il comprimé ?", H_OUINON, YES,
-           "oui : il est comprimé",
-           "<p>La roue arrière pousse le bras (2) vers le haut ; le bras tourne autour de A et rapproche E de F : "
-           "l'amortisseur est <strong>comprimé</strong>. Le calcul de la partie 4 le confirmera (intensité positive "
-           "dans le sens choisi).</p>"),
+         QBAR("Q3.1 – Q3.2", ["DP1", "DT1"]),
+         Q("q3_1", "Isoler l'amortisseur (3) : quelle est la droite d'action de l'action mécanique en E ?", H_DROITE,
+           DROITE("E", "F"), "la droite (EF)",
+           "<p>Deux forces seulement (poids négligé) : droite d'action <strong>(EF)</strong>, inclinée de 35,5°.</p>"),
+         Q("q3_2", "Cette droite passe par un autre point remarquable du vélo. Lequel ?", H_POINT, POINT("C"), "le point C",
+           "<p>C, E et F sont alignés : l'action de l'amortisseur sur le bras arrière passe par C.</p>"),
      ]},
     {"num": "4", "minutes": 25, "title": "Isolement du bras arrière (2)",
      "intro": [
-         "<p>On isole le bras arrière (2). Repère (C, <var>x</var>, <var>y</var>).</p>",
          '<div class="n3-split">' +
          figure("n3-velo-arriere", "Bras arrière 2 isolé : C, A à 430 mm sur l'axe x, E à 393 mm de C en x, sur la "
                 "droite CEF à 35,5°", "Figure 3 — Bras arrière (2) isolé.", 340) +
-         data_box([f"{V('C')} : vertical vers le haut, intensité trouvée en Q2.6.",
-                   "A (430 ; 0) mm ; E (393 ; <i>y</i><sub>E</sub>) mm, sur la droite (CE) inclinée de 35,5°.",
-                   f"L'amortisseur comprimé pousse le bras : {V('E', '3/2')} = <i>E</i> · (−cos 35,5° ; −sin 35,5°), "
-                   "dirigée de F vers C, avec <i>E</i> &gt; 0.",
-                   f"{V('A', '1/2')} (<i>X</i><sub>A</sub> ; <i>Y</i><sub>A</sub>)."]) + "</div>",
+         "<p>On isole le bras arrière (2), repère (C, <var>x</var>, <var>y</var>). L'amortisseur, comprimé, pousse "
+         "le bras en E vers C ; on note <i>E</i> l'intensité de cette action et <i>X</i><sub>A</sub>, "
+         "<i>Y</i><sub>A</sub> les composantes de l'action du cadre (1) en A.</p></div>",
      ],
      "blocks": [
-         QBAR("Q4.1 – Q4.4", ["DT1"]),
-         Q("q4_1", "Combien d'inconnues compte le problème, en tenant compte de la direction connue de l'action en E ?",
-           H_ENTIER, ENTIER(3), "3 inconnues : <i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub> et <i>E</i>",
-           "<p>2 inconnues au pivot A, 1 inconnue (l'intensité) en E ; " + V('C') + " est connue. 3 inconnues pour 3 "
-           "équations : le problème est résoluble.</p>" +
-           eq(tzp("1→2", "A", "<i>X</i><sub>A</sub>", "<i>Y</i><sub>A</sub>", "0") + " &nbsp; " +
-              tzp("3→2", "E", "−<i>E</i> cos 35,5°", "−<i>E</i> sin 35,5°", "0"))),
-         Q("q4_2", "Calculer l'ordonnée <i>y</i><sub>E</sub> du point E.", H_C,
-           num(YE_V, "mm", absTol=0.02, variants=[var(YE_V / 1000, "m", absTol=0.00002)]),
-           f"<i>y</i><sub>E</sub> ≈ {fr(YE_V)} mm",
-           eq(f"<i>y</i><sub>E</sub> = 393 × tan 35,5° ≈ <b>{fr(YE_V)} mm</b>")),
-         Q("q4_3", f"Calculer le moment en A de l'action {V('C')}.", H_U_SIGNE,
-           num(MC_V, "Nmm", relTol=0.001, variants=[var(MC_V / 1000, "Nm", relTol=0.001)]),
-           f"<i>M</i><sub>A</sub>({V('C')}) ≈ {fr(MC_V, 0)} N·mm",
-           f"<p>C est à 430 mm à gauche de A : <span class=\"vec\">AC</span> (−430 ; 0) et {V('C')} (0 ; {fr(C_V)}).</p>" +
-           eq(f"<i>M</i><sub>A</sub>({V('C')}) = −430 × {fr(C_V)} ≈ <b>{fr(MC_V, 0)} N·mm</b>")),
-         Q("q4_4", f"La droite d'action de {V('E', '3/2')} passe par C. En déduire la distance <i>d</i> du point A à "
-           "cette droite.", H_C, num(D_V, "mm", absTol=0.02, variants=[var(D_V / 1000, "m", absTol=0.00002)]),
-           f"<i>d</i> ≈ {fr(D_V)} mm",
-           eq(f"<i>d</i> = AC · sin 35,5° = 430 × sin 35,5° ≈ <b>{fr(D_V)} mm</b>") +
-           "<p>Le triangle formé par A, C et le pied de la perpendiculaire est rectangle : la droite fait 35,5° avec "
-           "(CA).</p>"),
-         QBAR("Q4.5 – Q4.8", ["DT1"]),
-         Q("q4_5", "Écrire l'équation des moments en A et en déduire l'effort de compression <i>E</i> dans "
-           "l'amortisseur.", H_D, num(E_V, "N", relTol=0.002, variants=[var(E_V / 10, "daN", relTol=0.002)]),
-           f"<i>E</i> ≈ {fr(E_V, 1)} N",
-           "<p>Le moment de " + V('E', '3/2') + " en A vaut +<i>E</i> · <i>d</i> (il fait tourner le bras dans le "
-           "sens trigonométrique, à l'inverse de " + V('C') + ").</p>" +
-           eq("Σ<i>N</i><sub>A</sub> = 0 ⇒ <i>E</i> · <i>d</i> − 430 · <i>C</i> = 0 ⇒ <i>E</i> = " +
-              frac("<i>C</i>", "sin 35,5°") + " = " + frac(fr(C_V), "0,5807") + f" ≈ <b>{fr(E_V, 1)} N</b>") +
-           "<p>L'amortisseur est comprimé par une force supérieure au poids du cycliste.</p>"),
-         Q("q4_6", "En déduire <i>X</i><sub>A</sub>.", H_D.replace("Arrondir au dixième.", "Arrondir au dixième. Composante "
-           "algébrique : n'oublie pas le signe."),
-           num(AX_V, "N", relTol=0.002, variants=[var(AX_V / 10, "daN", relTol=0.002)]),
-           f"<i>X</i><sub>A</sub> ≈ {fr(AX_V, 1)} N",
-           eq(f"Σ<i>X</i> = 0 ⇒ <i>X</i><sub>A</sub> − <i>E</i> cos 35,5° = 0 ⇒ <i>X</i><sub>A</sub> = "
-              f"{fr(E_V, 1)} × 0,8141 ≈ <b>{fr(AX_V, 1)} N</b>")),
-         Q("q4_7", "En déduire <i>Y</i><sub>A</sub>.", "Composante algébrique : n'oublie pas le signe. " + UNITE,
-           num(0.0, "N", absTol=1.0, variants=[var(0.0, "daN", absTol=0.1)]),
-           "<i>Y</i><sub>A</sub> = 0 N",
-           eq(f"Σ<i>Y</i> = 0 ⇒ <i>Y</i><sub>A</sub> + <i>C</i> − <i>E</i> sin 35,5° = 0 ⇒ <i>Y</i><sub>A</sub> = "
-              f"{fr(C_V)} − {fr(C_V)} = <b>0</b>") +
-           "<p>Ce n'est pas un hasard : <i>E</i> sin 35,5° = <i>C</i> exactement (question Q4.5).</p>"),
-         Q("q4_8", f"L'action {V('A', '1/2')} est-elle portée par la droite (AC) ?", H_OUINON, YES,
-           "oui : les trois forces sont concourantes en C",
-           "<p>Le bras (2) est soumis à <strong>trois forces non parallèles</strong> : elles sont "
-           f"<strong>concourantes</strong>. {V('C')} et {V('E', '3/2')} passent toutes deux par C, donc "
-           f"{V('A', '1/2')} passe aussi par C : elle est portée par (AC), horizontale. D'où <i>Y</i><sub>A</sub> = 0 "
-           "et <i>X</i><sub>A</sub> = <i>C</i> / tan 35,5°. Le théorème des trois forces permet de vérifier le "
-           "résultat analytique.</p>"),
+         QBAR("Q4.1 – Q4.5", ["DT1"]),
+         GRP("q4_1", "Donner les coordonnées de A et de E (en mm) et le vecteur unitaire <i>u</i> de l'action de "
+             "l'amortisseur sur le bras (dirigé de F vers C).", "Coordonnées au centième, composantes de <i>u</i> au millième.",
+             [VEC("A", [("x", *val(XA_V, 2, 0, 0.05)), ("y", *val(0, 0, 0, 0.05))], "mm"),
+              VEC("E", [("x", *val(XE_V, 2, 0, 0.05)), ("y", *val(YE_V, 2, 0, 0.03))], "mm"),
+              VEC("<i>u</i>", [("x", *val(-CB_V, 3, 0, 0.003)), ("y", *val(-SB_V, 3, 0, 0.003))])],
+             f"<p>A (430 ; 0) ; E (393 ; 393 × tan 35,5° ≈ {fr(YE_V)}) ; <i>u</i> = (−cos 35,5° ; −sin 35,5°) ≈ "
+             f"({fr(-CB_V, 3)} ; {fr(-SB_V, 3)}).</p>"),
+         GRP("q4_2", "Écrire les trois torseurs au point A (forces en N, moments en N·mm).",
+             "Inconnues : X_A, Y_A et E ; une composante de l'action de l'amortisseur s'écrit coefficient × E (au millième "
+             "pour les forces, au dixième pour le moment). La valeur de Y_C est celle de Q2.3.",
+             [TZ("roue AR→2", "A", z(), val(C_V, 2, 0, 0.06), val(MC_V, 0, 0.002)),
+              TZ("1→2", "A", sym("X_A"), sym("Y_A"), z()),
+              TZ("3→2", "A", lin(["E"], -CB_V, 0.003), lin(["E"], -SB_V, 0.003), lin(["E"], NE_A_V, 0.6, 1))],
+             "<p>Avec <span class=\"vec\">AC</span> (−430 ; 0) et <span class=\"vec\">AE</span> (−37 ; 280,32) :</p>" +
+             eq(f"<i>N</i><sub>A</sub>(C) = −430 × {fr(C_V)} ≈ {fr(MC_V, 0)} ; <i>N</i><sub>A</sub>(E) = (−37)(−0,581 <i>E</i>) − "
+                f"280,32 × (−0,814 <i>E</i>) ≈ <b>{fr(NE_A_V, 1)} <i>E</i></b>") +
+             "<p>249,7 mm est la distance de A à la droite (CE) : 430 × sin 35,5°.</p>"),
+         Q("q4_3", "En déduire l'intensité <i>E</i> de l'effort de compression dans l'amortisseur.", H_D,
+           num(E_V, "N", relTol=0.002, variants=[var(E_V / 10, "daN", relTol=0.002)]), f"<i>E</i> ≈ {fr(E_V, 1)} N",
+           eq(f"Σ<i>N</i><sub>A</sub> = 0 : {fr(NE_A_V, 1)} <i>E</i> + ({fr(MC_V, 0)}) = 0 ⇒ <i>E</i> ≈ <b>{fr(E_V, 1)} N</b>")),
+         GRP("q4_4", "Donner l'action du cadre (1) sur le bras (2) en A.", "Composantes algébriques au dixième, en N.",
+             [VEC(V("A", "1/2"), [("X", *val(AX_V, 1, 0.002)), ("Y", *val(0, 0, 0, 1.0))], "N")],
+             eq(f"Σ<i>X</i> = 0 : <i>X</i><sub>A</sub> − 0,814 <i>E</i> = 0 ⇒ <i>X</i><sub>A</sub> ≈ <b>{fr(AX_V, 1)} N</b>") +
+             eq(f"Σ<i>Y</i> = 0 : <i>Y</i><sub>A</sub> + {fr(C_V)} − 0,581 <i>E</i> = 0 ⇒ <i>Y</i><sub>A</sub> = <b>0</b>") +
+             "<p>Vérification : trois forces non parallèles sont concourantes ; C et E passent par C, donc A aussi : "
+             "l'action en A est portée par (AC), horizontale.</p>"),
      ]},
 ]
 
@@ -895,8 +697,8 @@ DECOR = {
       }
     }""",
 }
-DR_NAMES = {"GRAPHE_COFFRE": ("DR1", "Q1.5", "Graphe des liaisons de la porte de coffre-fort"),
-            "GRAPHE_VELO": ("DR1", "Q1.3", "Graphe des liaisons du cadre de vélo")}
+DR_NAMES = {"GRAPHE_COFFRE": ("DR1", "Q1.1", "Graphe des liaisons de la porte de coffre-fort"),
+            "GRAPHE_VELO": ("DR1", "Q1.1", "Graphe des liaisons du cadre de vélo")}
 
 
 # ============================================================ DOCUMENTS (DP1 propres, DT1 commun)
@@ -1059,7 +861,7 @@ def render_sk(s, part, total_pts):
               <div class="sk-print-wrap print-only"><p>Tracé de l'élève</p><img class="sk-print sk-print-student" alt="Tracé de l'élève">
                 <p>Correction superposée à la figure</p><img class="sk-print sk-print-corr" alt="Correction du tracé"></div>
               <div class="selfeval" hidden>
-                <p class="se-title">Auto-évaluation — {n} points sur les {total_pts} de la partie {part['num']}</p>
+                <p class="se-title">Auto-évaluation — {n} points sur les {fpts(total_pts)} de la partie {part['num']}</p>
                 <p class="se-lead">Compare ton tracé à la correction ci-dessus, puis coche uniquement ce que ton tracé comporte réellement. Sois honnête : c'est toi qui repères ce qu'il te reste à travailler.</p>
                 {crit}
                 <div class="se-foot"><button type="button" class="btn btn-self">Valider mon auto-évaluation</button>
@@ -1075,8 +877,83 @@ def render_sk(s, part, total_pts):
         </div>"""
 
 
+def grp_cells(b):
+    """Cases d'un groupe : (identifiant, nom affiché, grader, texte attendu)."""
+    out, k = [], 0
+    for it in b["items"]:
+        for lab, g, txt in it["cells"]:
+            k += 1
+            out.append((f"{b['id']}_{k}", f"{it['nom']} {lab}", g, txt))
+    return out
+
+
+def block_points(b):
+    if b["kind"] == "q":
+        return 1
+    if b["kind"] == "sk":
+        return len(b["criteria"])
+    if b["kind"] == "grp":
+        return b["pts"] * len(grp_cells(b))
+    return 0
+
+
 def part_points(p):
-    return sum(1 if b["kind"] == "q" else len(b["criteria"]) for b in p["blocks"] if b["kind"] in ("q", "sk"))
+    t = sum(block_points(b) for b in p["blocks"])
+    return int(t) if t == int(t) else t
+
+
+def fpts(x):
+    """Nombre de points à la française : 19, 7,5."""
+    return str(int(x)) if x == int(x) else fr(x, 1)
+
+
+def _tz_html(nom, point, cells, unite=""):
+    """Torseur plan affiché : cellules X, Y (résultante) et N (moment) ; les autres sont des tirets."""
+    c = {lab: html_ for lab, html_ in cells}
+    rows = [(c["X"], "—"), (c["Y"], "—"), ("—", c["N"])]
+    body = "".join(f"<tr><td>{a}</td><td>{b}</td></tr>" for a, b in rows)
+    return (f'<span class="torseur tzq-t"><span class="tz-n">{{<i>T</i><sub>{nom}</sub>}}<sub>{point}</sub> =</span>'
+            f'<span class="tz-b"><table>{body}</table></span><span class="tz-r">({point}, x, y, z){unite}</span></span>')
+
+
+def _vec_html(nom, cells, unite=""):
+    inner = " ; ".join(f'<span class="vc"><span class="vc-l">{lab}</span>{h}</span>' for lab, h in cells)
+    return f'<span class="vecq"><span class="vecq-n">{nom}</span> = ( {inner} ){(" " + unite) if unite else ""}</span>'
+
+
+def render_grp(b):
+    cells = grp_cells(b)
+    by_item, k = [], 0
+    for it in b["items"]:
+        row = []
+        for lab, g, txt in it["cells"]:
+            cid, clab = cells[k][0], cells[k][1]
+            k += 1
+            inp = (f'<span class="sol"><input type="text" data-q="{cid}" aria-label="{esc(b["label"] + " " + clab)}" '
+                   f'autocomplete="off" autocapitalize="off" spellcheck="false"><span class="mark"></span></span>')
+            row.append((lab, inp))
+        if it["kind"] == "tz":
+            by_item.append(_tz_html(it["nom"], it["point"], row))
+        else:
+            by_item.append(_vec_html(it["nom"], row, it.get("unite", "")))
+    attendu = []
+    for it in b["items"]:
+        row = [(lab, txt) for lab, g, txt in it["cells"]]
+        attendu.append(_tz_html(it["nom"], it["point"], row) if it["kind"] == "tz" else
+                       _vec_html(it["nom"], row, it.get("unite", "")))
+    n = len(cells)
+    return f"""
+        <div class="fast-q tzq" id="{b['id']}">
+          <p class="q-stem"><span class="q-num">{b['label']}</span> <strong>{b['stem']}</strong></p>
+          <p class="q-hint">{b['hint']}</p>
+          <div class="tzq-items">{"".join(f'<div class="tzq-item">{h}</div>' for h in by_item)}</div>
+          <div class="fast-foot"><button type="button" class="btn btn-fast" data-done="Saisie validée">Valider les {n} cases</button>
+            <span class="q-status" aria-live="polite"></span></div>
+          <p class="q-msg" role="alert"></p>
+          <div class="q-expl" hidden><p class="q-expected"><span>Réponse attendue :</span></p>
+            <div class="tzq-items tzq-att">{"".join(f'<div class="tzq-item">{h}</div>' for h in attendu)}</div>
+            <div class="q-why">{b['why']}</div></div>
+        </div>"""
 
 
 def hm(minutes):
@@ -1094,13 +971,15 @@ def render_part(p, total_min):
             blocks.append(render_qbar(b))
         elif b["kind"] == "sk":
             blocks.append(render_sk(b, p, pts))
+        elif b["kind"] == "grp":
+            blocks.append(render_grp(b))
     n = p["num"]
     pct = fr(p["minutes"] / total_min * 100, 1)
     return f"""
   <section class="part" id="partie-{n}" aria-labelledby="t-partie-{n}">
     <header class="part-head"><div class="part-num" aria-hidden="true">{n}</div>
       <div><h2 id="t-partie-{n}"><span class="sr-only">Partie {n} : </span>{p['title']}</h2>
-        <div class="duree">Durée conseillée : {hm(p['minutes'])} · Barème : {pts} points, soit {pct} % de la note</div></div></header>
+        <div class="duree">Durée conseillée : {hm(p['minutes'])} · Barème : {fpts(pts)} points, soit {pct} % de la note</div></div></header>
     <div class="part-body">
       {"".join(p["intro"])}{"".join(blocks)}
     </div>
@@ -1112,13 +991,69 @@ def check_parts(parts):
     seen = set()
     for p in parts:
         for b in p["blocks"]:
-            if b["kind"] in ("q", "sk"):
+            if b["kind"] in ("q", "sk", "grp"):
                 qid = b["id"][3:] if b["kind"] == "sk" else b["id"]
                 assert qid not in seen, f"identifiant en double : {qid}"
                 seen.add(qid)
                 assert qid.startswith(f"q{p['num']}_"), f"{qid} rangé dans la partie {p['num']}"
                 b["label"] = label_of(qid)
 
+
+TZ_JS = r"""<script>/* Correcteur « expression linéaire » (coefficient × inconnue) des cases de torseurs : il s'ajoute aux types
+   du moteur Grading sans le modifier. Accepte −2,1X_A, -2.1*XA, XA×(-2,1), 3,24 F… */
+(function () {
+  "use strict";
+  if (typeof Grading === "undefined" || Grading.__lin) return;
+  var base = Grading.grade;
+  function norm(s) {
+    return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\u2212\u2013\u2014]/g, "-").replace(/,/g, ".").replace(/[\s\u00a0\u202f×*·⋅_()]/g, "");
+  }
+  function gradeLin(ans, g) {
+    var s = norm(ans), m, sign = 1, k = null, v = null;
+    if ((m = s.match(/^([+-]?)(\d*\.?\d*)([a-z]+)$/))) { sign = m[1] === "-" ? -1 : 1; k = m[2]; v = m[3]; }
+    else if ((m = s.match(/^([+-]?)([a-z]+)([+-]?\d*\.?\d+)$/))) { sign = m[1] === "-" ? -1 : 1; v = m[2]; k = m[3]; }
+    else return { ok: false };
+    if (g.vars.indexOf(v) < 0) return { ok: false };
+    var c = k === "" || k === "." ? 1 : parseFloat(k);
+    if (!isFinite(c)) return { ok: false };
+    c *= sign;
+    return { ok: Math.abs(c - g.coef) <= (g.absTol || 0) + 1e-9 };
+  }
+  Grading.grade = function (ans, g) {
+    if (g && g.type === "lin") {
+      if (ans == null || !String(ans).trim()) return { ok: false, score: 0, invalid: "Saisis une réponse avant de valider." };
+      var r = gradeLin(ans, g); r.score = r.ok ? 1 : 0; return r;
+    }
+    return base(ans, g);
+  };
+  Grading.__lin = true;
+})();
+</script>"""
+
+TZ_CSS = """
+/* ---------- torseurs et vecteurs à compléter ---------- */
+.tzq{margin:14px 0 6px; padding:10px 0 12px 14px; border-left:3px solid var(--trait)}
+.tzq.is-ok{border-left-color:var(--vert)}
+.tzq-items{display:flex; flex-wrap:wrap; gap:14px 26px; align-items:center; margin:8px 0}
+.tzq-item{max-width:100%; overflow-x:auto}
+.tzq .tz-b td{padding:2px 6px; vertical-align:top}
+.tzq .sol{display:inline-flex; flex-direction:column; align-items:center}
+.tzq .sol input{width:7.6em; border:1.5px dashed var(--encre-2); padding:5px 6px; background:#fff; font:600 .95rem var(--f-texte); text-align:center}
+.tzq .sol.is-ok input{border:2px solid var(--vert); background:var(--vert-pale)}
+.tzq .sol.is-ko input{border:2px solid var(--rouge); background:var(--rouge-pale)}
+.tzq .sol input:disabled{color:var(--encre); -webkit-text-fill-color:var(--encre)}
+.tzq .sol .mark{display:block; font-size:.72rem; font-weight:700; min-height:1em}
+.tzq .sol.is-ok .mark{color:var(--vert)} .tzq .sol.is-ko .mark{color:var(--rouge)}
+.vecq{display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:1.02rem}
+.vecq-n{font-weight:700}
+.vc{display:inline-flex; flex-direction:column; align-items:center; gap:1px}
+.vc-l{font-size:.75rem; color:var(--encre-2)}
+.tzq-att .vc-l{display:none}
+.tzq-att{background:#fff; border:1px solid var(--trait-fin); padding:6px 10px}
+.tzq .q-status{font-weight:700}
+@media print{ .tzq .sol input{border:1px solid #555!important} }
+"""
 
 CONTENT_CSS = """<style>
 /* ---------- compléments de contenu (hors gabarit) : calculs, torseurs, retour à l'accueil ---------- */
@@ -1153,6 +1088,7 @@ body:not(.no-mode) .home-back{display:none}
 .home-head .mc-tag{vertical-align:middle}
 .recap-foot a.btn{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
 .recap-foot a.btn svg{width:18px; height:18px}
+__TZ_CSS__
 @media print{
   .c-top,.home-back{display:none!important}
   /* correctif repris du dépôt RDM : la correction des tracés ne doit pas s'imprimer avant la remise en mode examen */
@@ -1177,7 +1113,8 @@ def build_exo(e, g):
     CTX["sk_bg"], CTX["toolbar"] = e.get("sk_bg"), e.get("toolbar")
     decor_src, drn_src = e.get("decor", DECOR), e.get("dr_names", DR_NAMES)
     total = sum(p["minutes"] for p in parts)
-    n_q = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "q")
+    n_q = sum(1 for p in parts for b in p["blocks"] if b["kind"] in ("q", "grp"))
+    n_grp = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "grp")
     n_sk = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "sk")
     s0 = g.index("<style>:root{")
     style = g[s0:g.index("</style>", s0) + len("</style>")]
@@ -1200,6 +1137,9 @@ def build_exo(e, g):
     app = sub_once(app, r"  var DECOR = \{\n.*?\n  \};\n", decor, re.S)
     app = sub_once(app, r"  var DR_NAMES = \{\n.*?\n  \};\n", drn, re.S)
     app = sub_once(app, r"Quatre pages, une par document", "Une page par document réponse")
+    # le libellé du bouton d'une question groupée validée dépend du sujet (torseurs, vecteurs, diagramme)
+    app = sub_once(app, r'btn\.textContent = "Diagramme validé";',
+                   'btn.textContent = btn.getAttribute("data-done") || "Diagramme validé";')
 
     parts_cfg, qcfg, skcfg = [], {}, {}
     for p in parts:
@@ -1208,6 +1148,10 @@ def build_exo(e, g):
         for b in p["blocks"]:
             if b["kind"] == "q":
                 qcfg[b["id"]] = {"label": b["label"], "part": p["num"], "pts": 1, "grader": b["grader"]}
+            elif b["kind"] == "grp":
+                for cid, clab, gr, _t in grp_cells(b):
+                    qcfg[cid] = {"label": f"{b['label']} ({re.sub(r'<[^>]+>', '', clab)})", "part": p["num"],
+                                 "pts": b["pts"], "grader": gr}
             elif b["kind"] == "sk":
                 skcfg[b["id"]] = {"bg": b["bg"], "deps": b["deps"], "label": b["label"], "part": p["num"],
                                   "pts": len(b["criteria"]), "criteria": [re.sub(r"<[^>]+>", "", c) for c in b["criteria"]]}
@@ -1238,7 +1182,8 @@ def build_exo(e, g):
     sk_fact = (f'<div><b>{n_sk} tracé{"s" if n_sk > 1 else ""}</b><span>{e.get("sk_fact", "graphe des liaisons, auto-évalué")}</span></div>'
                if n_sk else '<div><b>Unités</b><span>notées (demi-point)</span></div>')
     parts_html = "".join(render_part(p, total) for p in parts)
-    cartouche = (f"{n_q} questions notées (unités comprises)" +
+    cartouche = (f"{n_q} questions notées" + (f", dont {n_grp} torseurs et vecteurs à compléter case par case" if n_grp else
+                                                " (unités comprises)") +
                  (f" et {n_sk} tracé auto-évalué" if n_sk else "") +
                  f", répartis en {len(parts)} parties pondérées par leur durée.")
     page = f"""<!DOCTYPE html>
@@ -1250,7 +1195,7 @@ def build_exo(e, g):
 <title>{e['title']} — Statique — exercice interactif</title>
 <meta name="description" content="{esc(e['desc'])}">
 {style}
-{CONTENT_CSS}
+{CONTENT_CSS.replace("__TZ_CSS__", TZ_CSS)}
 {e.get("extra_css", "")}
 </head>
 <body class="no-mode">
@@ -1380,6 +1325,7 @@ def build_exo(e, g):
 {config}
 {grading}
 {app}
+{TZ_JS}
 {e.get("extra_js", "")}
 </body>
 </html>

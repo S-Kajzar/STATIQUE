@@ -240,7 +240,7 @@ def build():
         out, st = niveau3.build_exo(e, g)
         (ROOT / e["page"]).write_text(out, encoding="utf-8")
         print(f"{e['page']} : {len(out.encode('utf-8')) / 1024:.0f} Kio — {st['parts']} parties, {st['n_q']} questions, "
-              f"{st['n_sk']} tracé(s), {st['points']} points, {niveau3.hm(st['minutes'])}")
+              f"{st['n_sk']} tracé(s), {niveau3.fpts(st['points'])} points, {niveau3.hm(st['minutes'])}")
 
 
 if __name__ == "__main__":
