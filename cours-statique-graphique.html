@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Fichier généré par src/generer.py (contenu : src/cours1.py) : ne pas modifier à la main. -->
+<title>Statique graphique — cours — Statique</title>
+<meta name="description" content="Cours interactif de statique graphique (niveau 1) : isoler un solide, PFS, solide soumis à deux et à trois forces, point de concours, dynamique des forces, quiz.">
+<style>:root{
+  --beton:#E3E5E0; --papier:#FFFFFF; --encre:#1C2530; --encre-2:#46525C;
+  --trait:#A5ADAA; --trait-fin:#D3D8D5;
+  --jaune:#F2B705; --jaune-pale:#FFF3C4;
+  --bleu:#1F5FA8; --bleu-pale:#E6EEF8;
+  --vert:#1B7A43; --vert-pale:#E2F1E7; --rouge:#B42318; --rouge-pale:#FBE6E4;
+  --orange:#B26A00; --orange-pale:#FCEFD8;
+  --f-titre:"Bahnschrift","DIN Alternate","DIN Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  --f-texte:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --rail:58px; --panel:min(900px, 47vw); --banner:58px;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:16px; scroll-padding-bottom:calc(var(--banner) + 16px)}
+body{margin:0; background:var(--beton); color:var(--encre); font:16px/1.55 var(--f-texte);
+  font-variant-numeric:tabular-nums; padding-bottom:calc(var(--banner) + 40px)}
+img{max-width:100%; height:auto}
+sub,sup{line-height:0}
+button,input{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--bleu); outline-offset:2px}
+.small{font-size:.9rem; color:var(--encre-2)}
+.print-only{display:none}
+
+/* ---------- mise en page ---------- */
+.page{max-width:900px; margin:0 auto; padding:28px 22px 0; transition:margin .25s ease}
+body.panel-open .page{margin-right:calc(var(--panel) + var(--rail) + 24px); margin-left:24px}
+@media (max-width:1180px){ body.panel-open .page{margin:0 auto} }
+
+/* ---------- cartouche ---------- */
+.cartouche{background:var(--papier); border:2px solid var(--encre); display:grid;
+  grid-template-columns:1fr; margin-bottom:26px}
+.cartouche>div{border-right:1px solid var(--encre); border-bottom:1px solid var(--encre); padding:8px 12px}
+.cartouche>div:nth-child(3n){border-right:0}
+.cartouche .k{display:block; font:600 .72rem/1.2 var(--f-titre); letter-spacing:.02em; color:var(--encre-2)}
+.cartouche .v{font:600 1rem/1.3 var(--f-titre)}
+.cartouche .title{grid-column:1/-1; border-right:0; padding:18px 16px 16px}
+.cartouche h1{margin-top:0}
+.cartouche h1{font:700 clamp(1.6rem,3.6vw,2.35rem)/1.08 var(--f-titre); margin:2px 0 6px; letter-spacing:-.01em}
+.cartouche .title p{margin:0; color:var(--encre-2)}
+.cartouche .nom{grid-column:1/-1; border-bottom:0; display:flex; gap:10px; align-items:center}
+.cartouche .nom label{font:600 .9rem var(--f-titre)}
+.cartouche .nom input{flex:1; border:0; border-bottom:1px dashed var(--trait); padding:4px 2px; background:transparent}
+
+
+.consignes{background:var(--papier); border-left:6px solid var(--jaune); padding:12px 16px; margin:0 0 30px}
+.consignes p{margin:.2rem 0}
+
+/* ---------- parties ---------- */
+.part{background:var(--papier); margin:0 0 34px; padding:0 0 22px; border:1px solid var(--trait-fin)}
+.part-head{display:grid; grid-template-columns:64px 1fr; border-bottom:2px solid var(--encre)}
+.part-num{background:var(--encre); color:var(--jaune); font:700 2.3rem/1 var(--f-titre);
+  display:flex; align-items:center; justify-content:center}
+.part-head h2{font:700 1.45rem/1.15 var(--f-titre); margin:0; padding:12px 16px 2px}
+.part-head .duree{padding:0 16px 10px; font-size:.9rem; color:var(--encre-2)}
+.part-body{padding:4px 22px 0}
+.part-body>p,.part-body>ul{max-width:72ch}
+h4.sub{font:700 1.1rem var(--f-titre); margin:26px 0 6px; padding-top:10px; border-top:1px dashed var(--trait)}
+
+/* barre de question (reprend l'en-tête du questionnaire) */
+.qbar{display:grid; grid-template-columns:auto 1fr auto; align-items:stretch; margin:30px 0 10px;
+  border:1.5px solid var(--encre); font:500 .95rem/1.2 var(--f-titre)}
+.qbar>*{padding:7px 10px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.qbar .qb-num{background:var(--jaune); font-weight:700; font-size:1.1rem; border-right:1.5px solid var(--encre); min-width:64px; justify-content:center}
+.qbar .qb-ans{border-left:1.5px solid var(--encre)}
+.qbar .qb-title{grid-column:1/-1; border-top:1px solid var(--encre); font-weight:700; font-style:italic}
+@media (max-width:640px){ .qbar{grid-template-columns:auto 1fr} .qbar .qb-ans{grid-column:1/-1; border-left:0; border-top:1px solid var(--encre)} }
+.doc-chip{border:1.5px solid var(--encre); background:var(--papier); padding:2px 8px; font:700 .88rem var(--f-titre);
+  cursor:pointer; border-radius:2px}
+.doc-chip:hover{background:var(--jaune-pale)}
+.doc-chip[aria-pressed="true"]{background:var(--jaune)}
+
+/* données */
+.data{border:1px solid var(--encre); padding:8px 14px; margin:12px 0; max-width:72ch; background:#FBFBF9}
+.data p{margin:.25rem 0}
+.data .data-title{font:700 .95rem var(--f-titre); text-decoration:underline; text-underline-offset:3px}
+.data ul{margin:.2rem 0; padding-left:1.1rem}
+.data ul.cols{columns:2; column-gap:28px}
+@media (max-width:560px){ .data ul.cols{columns:1} }
+
+figure{margin:14px 0}
+.fig img,.fig svg{display:block; width:100%; height:auto; border:1px solid var(--trait-fin); background:#fff}
+figcaption{font-size:.85rem; color:var(--encre-2); margin-top:4px}
+.fig1 .lead line{stroke:#6B7580; stroke-width:1}
+.fig1 .lab text{font:600 15px var(--f-titre); fill:var(--encre)}
+.fig1 .dir{stroke:var(--encre); stroke-width:3; fill:none}
+.fig1 .dirhead{fill:var(--encre)}
+.split{display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap}
+.small-fig{width:220px; margin:0}
+
+.chain{display:flex; align-items:center; flex-wrap:wrap; gap:0; margin:18px 0 8px}
+.chain-box{border:2px solid var(--encre); padding:8px 10px; min-width:130px; text-align:center; background:#fff}
+.chain-box span{display:block; font-size:.9rem}
+.chain-box b{font:700 .95rem var(--f-titre)}
+.chain-arrow{width:34px; height:2px; background:var(--encre); position:relative; margin:0 2px}
+.chain-arrow::after{content:""; position:absolute; right:-1px; top:-5px; border:6px solid transparent; border-left:9px solid var(--encre); border-right:0}
+.chain figcaption{flex-basis:100%}
+
+table.t{border-collapse:collapse; margin:10px 0; font-size:.93rem; width:100%}
+table.t th,table.t td{border:1px solid var(--trait); padding:4px 8px; text-align:left; vertical-align:top}
+table.t th{background:#EEF0EC; font:600 .88rem var(--f-titre)}
+table.nomencl{width:auto; min-width:210px}
+table.nomencl td:first-child{font-weight:700; text-align:center}
+
+.vec{position:relative; display:inline-block; font-style:italic}
+.vec::before{content:""; position:absolute; left:0; right:-1px; top:-.12em; height:1.2px; background:currentColor}
+.vec::after{content:""; position:absolute; right:-3px; top:-.32em; border:.2em solid transparent; border-left:.36em solid currentColor; border-right:0}
+
+/* ---------- questions ---------- */
+.q{margin:14px 0 6px; padding:10px 0 12px 14px; border-left:3px solid var(--trait-fin)}
+.q.is-ok{border-left-color:var(--vert)} .q.is-ko{border-left-color:var(--rouge)} .q.is-half{border-left-color:var(--orange)}
+.q-stem{margin:0 0 3px; max-width:74ch}
+.q-num{display:inline-block; font:700 .92rem var(--f-titre); background:var(--encre); color:#fff; padding:1px 7px; margin-right:6px; border-radius:2px}
+.q-hint{margin:0 0 8px; font-size:.88rem; color:var(--encre-2); max-width:74ch}
+.q-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.q-input{flex:1 1 240px; max-width:420px; border:1.5px solid var(--encre-2); background:#fff; padding:7px 10px; border-radius:2px}
+.q-input:disabled{background:#F2F3F1; color:var(--encre); -webkit-text-fill-color:var(--encre)}
+.is-ok .q-input{border-color:var(--vert); background:var(--vert-pale)}
+.is-half .q-input{border-color:var(--orange); background:var(--orange-pale)}
+.is-ko .q-input{border-color:var(--rouge); background:var(--rouge-pale)}
+.btn{border:1.5px solid var(--encre); background:var(--encre); color:#fff; padding:7px 14px; border-radius:2px; cursor:pointer; font-weight:600}
+.btn:hover{background:#2E3B47}
+.btn:disabled{background:#9AA2A8; border-color:#9AA2A8; cursor:not-allowed}
+.btn.ghost{background:#fff; color:var(--encre)}
+.btn.ghost:hover{background:var(--jaune-pale)}
+.q-status{font-weight:700; font-size:.95rem}
+.is-ok .q-status{color:var(--vert)} .is-ko .q-status{color:var(--rouge)} .is-half .q-status{color:var(--orange)}
+.q-msg{margin:4px 0 0; font-size:.88rem; color:var(--rouge); min-height:0}
+.q-msg:empty{display:none}
+.q-expl{margin-top:10px; background:#F6F7F4; border:1px solid var(--trait-fin); padding:8px 14px; max-width:78ch}
+.is-ok .q-expl{border-top:3px solid var(--vert)} .is-ko .q-expl{border-top:3px solid var(--rouge)} .is-half .q-expl{border-top:3px solid var(--orange)}
+.q-unit-msg{margin:.1rem 0 .4rem; font-weight:600; color:var(--orange)}
+.q-unit-msg[hidden]{display:none}
+.q-expl p{margin:.35rem 0}
+.q-expected span,.q-yours span.lab{font:700 .9rem var(--f-titre)}
+.q-expl ul,.q-expl ol{padding-left:1.2rem; margin:.3rem 0}
+.q-expl li{margin:.2rem 0}
+.cor-imgs{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px}
+.cor-imgs figure{margin:0; flex:1 1 260px}
+.cor-imgs img{border:1px solid var(--trait-fin); background:#fff; display:block}
+.reveal{animation:reveal .35s ease-out}
+@keyframes reveal{from{opacity:0; transform:translateY(-4px)}to{opacity:1; transform:none}}
+
+/* ---------- FAST ---------- */
+.fast-wrap{overflow-x:auto; padding:6px 0 4px}
+.fast{display:grid; min-width:720px; grid-template-columns:138px 24px 112px 24px minmax(180px,1fr) 18px 178px; grid-auto-rows:minmax(64px,auto);
+  font-size:.84rem; line-height:1.25}
+.fast .box{border:1.5px solid var(--encre); background:#fff; padding:6px 8px; align-self:center}
+.fast .fp{grid-column:1; grid-row:1/9; font-weight:700}
+.fast .ft{grid-column:3}
+.fast .ft2{grid-column:5}
+.fast .sol{grid-column:7; align-self:center}
+.fast .sol input{width:100%; border:1.5px dashed var(--encre-2); padding:9px 8px; background:#fff; border-radius:0; font-size:.9rem}
+.fast .sol.is-ok input{border:2px solid var(--vert); background:var(--vert-pale)}
+.fast .sol.is-ko input{border:2px solid var(--rouge); background:var(--rouge-pale)}
+.fast .sol .mark{display:block; font-size:.78rem; font-weight:700; margin-top:2px; min-height:1em}
+.fast .sol.is-ok .mark{color:var(--vert)} .fast .sol.is-ko .mark{color:var(--rouge)}
+.fast .cn{position:relative}
+.fast .cn::before{content:""; position:absolute; left:0; right:0; top:50%; border-top:1.5px solid var(--encre)}
+.fast .bus{position:relative}
+.fast .bus::before{content:""; position:absolute; left:0; right:0; top:50%; border-top:1.5px solid var(--encre)}
+.fast .bus::after{content:""; position:absolute; left:0; top:0; bottom:0; border-left:1.5px solid var(--encre)}
+.fast .bus.first::after{top:50%} .fast .bus.last::after{bottom:50%}
+.fast .bus.mid::before{display:none}
+.fast .ft.grp{position:relative}
+.fast .ft.grp::before{content:""; position:absolute; right:100%; width:24px; top:50%; border-top:1.5px solid var(--encre)}
+.fast .dash::before{border-top-style:dashed}
+.fast .note{grid-column:5/8; align-self:center; color:var(--encre-2); font-style:italic; padding-left:8px}
+.fast-foot{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap}
+
+/* ---------- tracés ---------- */
+.sketch{margin:14px 0 6px; padding:10px 0 12px 14px; border-left:3px dashed var(--bleu)}
+.sk-layout{display:flex; flex-direction:column-reverse; gap:8px}
+.sk-main{min-width:0}
+.sk-side{max-width:78ch}
+.sk-side p,.sk-side ul{margin:.2rem 0}
+.nomencl-grid{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); border:1px solid var(--trait); font-size:.85rem; margin:2px 0 4px}
+.nomencl-grid span{padding:3px 8px; border-right:1px solid var(--trait-fin); border-bottom:1px solid var(--trait-fin)}
+.nomencl-grid b{font-family:var(--f-titre); margin-right:6px}
+@media (max-width:640px){ .nomencl-grid{grid-template-columns:repeat(2, minmax(0,1fr))} }
+.sk-toolbar{display:flex; flex-wrap:wrap; gap:4px; align-items:center; background:#EEF1F4; border:1px solid var(--trait); border-bottom:0; padding:5px}
+.sk-toolbar button{border:1px solid var(--trait); background:#fff; padding:4px 9px; font-size:.86rem; cursor:pointer; border-radius:2px; line-height:1.2}
+.sk-toolbar button[aria-pressed="true"]{background:var(--bleu); color:#fff; border-color:var(--bleu)}
+.sk-toolbar button:disabled{opacity:.45; cursor:not-allowed}
+.sk-toolbar .sep{width:1px; align-self:stretch; background:var(--trait); margin:0 4px}
+.sk-toolbar .tb-group{display:inline-flex; align-items:center; gap:4px; white-space:nowrap}
+.sk-toolbar .tb-lab{font:600 .78rem var(--f-titre); color:var(--encre-2); padding:0 2px}
+.sk-toolbar .zoom-val{font:600 .82rem var(--f-titre); min-width:3.6em; text-align:center}
+.sk-toolbar .btn-drprint{font-weight:600; border-color:var(--encre)}
+.sk-toolbar .btn-drprint:hover{background:var(--jaune-pale)}
+.sk-toolbar .sw{width:24px; height:24px; padding:0; border-radius:50%; border:2px solid #fff; outline:1px solid var(--trait)}
+.sk-toolbar .sw[aria-pressed="true"]{outline:2px solid var(--encre)}
+.sk-toolbar .spacer{flex:1}
+.sk-stage{position:relative; border:1px solid var(--trait); background:#fff; line-height:0; overflow:hidden}
+.sk-stage.zoomed{overflow:auto; max-height:min(72vh,640px)}
+/* au zoom, seule la largeur pilote la taille : la hauteur suit, sinon l'image est écrasée */
+.sk-stage.zoomed canvas{max-width:none!important; max-height:none!important; height:auto!important}
+.sk-stage canvas{display:block; width:100%; height:auto; touch-action:none; cursor:crosshair}
+.sketch.locked .sk-stage canvas{cursor:default; touch-action:auto}
+.sketch.tool-erase .sk-stage canvas{cursor:cell}
+.sk-toolbar button[data-tool="erase"][aria-pressed="true"]{background:var(--rouge); border-color:var(--rouge)}
+.sk-text{position:absolute; line-height:1.2; font:600 15px var(--f-texte); border:1.5px solid var(--bleu); padding:1px 4px; min-width:90px; background:#fff; z-index:2}
+.sk-foot{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px}
+.sk-meas{font-size:.85rem; color:var(--bleu); font-weight:600}
+.sk-corr-toggle{display:none; align-items:center; gap:6px; font-size:.92rem; cursor:pointer}
+.sketch.revealed .sk-corr-toggle{display:inline-flex}
+.sk-note{font-size:.86rem; color:var(--encre-2)}
+.sketch.is-full{position:fixed; inset:0; z-index:60; background:var(--beton); margin:0; padding:10px; border:0; overflow:auto; display:flex; flex-direction:column}
+.sketch.is-full .sk-side,.sketch.is-full .q-stem,.sketch.is-full .q-expl,.sketch.is-full .sk-note-wrap{display:none}
+.sketch.is-full .sk-layout{flex:1; min-height:0}
+.sketch.is-full .sk-main{display:flex; flex-direction:column; align-items:center; height:100%}
+.sketch.is-full .sk-toolbar{width:100%}
+.sketch.is-full .sk-stage{max-width:100%}
+.sketch.is-full .sk-stage.zoomed{max-height:calc(100vh - 150px); width:100%; align-self:stretch}
+.sketch.is-full .sk-stage canvas{width:auto; max-width:100%; max-height:calc(100vh - 120px)}
+body.sk-full-open{overflow:hidden}
+body.sk-full-open .banner,body.sk-full-open .rail{display:none}
+
+/* ---------- rail d'onglets ---------- */
+.rail{position:fixed; right:0; top:0; bottom:var(--banner); width:var(--rail); z-index:40; display:flex; flex-direction:column;
+  justify-content:center; gap:3px; padding:8px 0}
+.rail .grp{height:14px}
+.tab{display:block; width:100%; border:1.5px solid var(--encre); border-right:0; background:var(--papier); color:var(--encre);
+  font:700 .9rem/1 var(--f-titre); padding:10px 0 10px 4px; cursor:pointer; border-radius:4px 0 0 4px; text-align:center;
+  transform:translateX(6px); transition:transform .15s ease, background .15s}
+.tab.dt{background:var(--jaune)}
+.tab:hover{transform:translateX(0)}
+.tab[aria-selected="true"]{transform:translateX(0); background:var(--encre); color:var(--jaune)}
+@media (max-width:760px){ .rail{display:none} }
+
+/* ---------- panneau documents ---------- */
+#docpanel{position:fixed; top:0; bottom:var(--banner); right:var(--rail); width:var(--panel); z-index:45; background:var(--papier);
+  border-left:2px solid var(--encre); box-shadow:-10px 0 28px rgba(28,37,48,.18); display:flex; flex-direction:column;
+  transform:translateX(calc(100% + var(--rail) + 20px)); transition:transform .25s ease; visibility:hidden}
+body.panel-open #docpanel{transform:none; visibility:visible}
+@media (max-width:1180px){ :root{--panel:min(720px, calc(100vw - var(--rail) - 40px))} }
+@media (max-width:760px){ #docpanel{right:0; width:100vw} }
+.dp-head{display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1.5px solid var(--encre); background:#F4F5F2; flex-wrap:wrap}
+.dp-head h3{margin:0; font:700 1.05rem/1.2 var(--f-titre); flex:1; min-width:180px}
+.dp-head h3 small{display:block; font:500 .78rem var(--f-titre); color:var(--encre-2)}
+.dp-head button{border:1px solid var(--trait); background:#fff; padding:4px 9px; cursor:pointer; border-radius:2px}
+.dp-tabs{display:flex; gap:3px; padding:6px 10px; border-bottom:1px solid var(--trait-fin); overflow-x:auto}
+.dp-tabs button{border:1px solid var(--trait); background:#fff; font:700 .82rem var(--f-titre); padding:3px 8px; cursor:pointer; white-space:nowrap; border-radius:2px}
+.dp-tabs button[aria-selected="true"]{background:var(--encre); color:var(--jaune); border-color:var(--encre)}
+.dp-body{flex:1; overflow:auto; padding:12px; --z:1; background:#E9EBE7}
+.doc{display:none}
+.doc.active{display:block}
+.doc .doc-img{display:block; width:calc(var(--z) * 100%); max-width:none; background:#fff; border:1px solid var(--trait-fin); margin:0 auto 8px}
+.doc .doc-text{background:#fff; padding:6px 16px; width:calc(var(--z) * 100%); margin:0 auto 8px; font-size:calc(var(--z) * .95rem)}
+.doc .doc-text h3{font:700 1.1rem var(--f-titre)}
+.doc .doc-cap{width:calc(var(--z) * 100%); margin:-2px auto 10px; font-size:.85rem; color:var(--encre-2); background:#fff; padding:4px 10px}
+dl.steps dt{font:700 .98rem var(--f-titre); margin-top:10px}
+dl.steps dd{margin:2px 0 0 0}
+
+/* ---------- bandeau de note ---------- */
+.banner{position:fixed; left:0; right:0; bottom:0; height:var(--banner); z-index:50; background:var(--encre); color:#fff;
+  display:flex; align-items:center; gap:18px; padding:0 calc(var(--rail) + 14px) 0 18px; border-top:3px solid var(--jaune)}
+.banner .score{font:700 1.7rem/1 var(--f-titre); color:var(--jaune); min-width:5.5ch; white-space:nowrap}
+.banner .score small{font-size:.95rem; color:#fff}
+.banner .lab{font:600 .8rem/1.15 var(--f-titre); color:#C9D1D8}
+.banner .count{font-size:.9rem; color:#E7EBEE}
+.banner .spacer{flex:1}
+.banner .btn-docs{display:none; background:var(--jaune); color:var(--encre); border:0; padding:8px 12px; font:700 .9rem var(--f-titre); border-radius:2px; cursor:pointer}
+@media (max-width:760px){ .banner{padding:0 12px; gap:10px} .banner .btn-docs{display:block} .banner .count{font-size:.78rem} }
+
+/* ---------- auto-évaluation des tracés ---------- */
+.selfeval{margin:12px 0 4px; border:1.5px solid var(--bleu); background:var(--bleu-pale); padding:10px 14px; max-width:78ch}
+.selfeval[hidden]{display:none}
+.se-title{margin:0 0 2px; font:700 1rem var(--f-titre)}
+.se-lead{margin:0 0 8px; font-size:.9rem; color:var(--encre-2)}
+.se-item{display:flex; gap:8px; align-items:flex-start; padding:4px 0; border-top:1px solid rgba(31,95,168,.18); cursor:pointer; font-size:.94rem}
+.se-item input{margin-top:.25rem; width:17px; height:17px; flex:0 0 auto; accent-color:var(--bleu)}
+.se-item input:disabled{cursor:default}
+.se-foot{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px}
+.se-score{font-weight:700; color:var(--bleu)}
+.sketch.is-ok{border-left-color:var(--vert)} .sketch.is-half{border-left-color:var(--orange)} .sketch.is-ko{border-left-color:var(--rouge)}
+
+/* ---------- récapitulatif ---------- */
+.recap{background:var(--papier); border:2px solid var(--encre); margin:0 0 36px; padding:0 0 18px}
+.recap-head{border-bottom:2px solid var(--encre); padding:14px 20px 12px; background:#F4F5F2}
+.recap-head h2{margin:0 0 4px; font:700 1.5rem var(--f-titre)}
+.recap-head p{margin:0; max-width:74ch}
+.recap-wrap{overflow-x:auto; padding:14px 20px 0}
+.recap-table{min-width:620px}
+.recap-table th[scope="row"]{font-weight:600; text-align:left}
+.recap-table td,.recap-table th{vertical-align:middle}
+.recap-table .rc-note{font:700 1.05rem var(--f-titre); text-align:right; white-space:nowrap}
+.recap-table thead th{white-space:nowrap}
+.recap-table td:nth-child(2),.recap-table td:nth-child(3),.recap-table td:nth-child(6){white-space:nowrap}
+.recap-table th[scope="row"]{width:38%}
+.recap-table tfoot th{background:var(--encre); color:#fff; font:700 1.1rem var(--f-titre); border-color:var(--encre)}
+.recap-table tfoot th.final-note{color:var(--jaune); text-align:right; white-space:nowrap}
+.recap .final-detail{padding:8px 20px 0; margin:0; max-width:80ch}
+.recap-foot{display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:14px 20px 0}
+.recap-foot .btn{padding:10px 18px; font-size:1.02rem}
+
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+/* ---------- impression ---------- */
+@media print{
+  @page{size:A4; margin:12mm}
+  :root{--banner:0px}
+  body{background:#fff; padding:0; font-size:10.5pt}
+  .rail,#docpanel,.banner,.btn,.sk-toolbar,.sk-stage,.sk-foot,.fast-foot button,.se-foot,.no-print,.q-msg,.sk-corr-toggle{display:none!important}
+  .print-only{display:block!important}
+  span.print-only{display:inline!important}
+  .page{max-width:none; margin:0!important; padding:0}
+  .part{border:0; margin:0 0 8mm; break-before:auto}
+  .part-head{break-after:avoid}
+  .qbar{break-after:avoid}
+  .q{break-inside:avoid}
+  .q-row .q-status{display:none!important}
+  .q-expl,.q-expl[hidden],.sketch .q-expl[hidden]{display:block!important; background:#fff}
+  .q-unit-msg[hidden]{display:none!important}
+  .q-input{border:1px solid #555!important}
+  .fast-wrap{overflow:visible}
+  .fast{min-width:0; grid-template-columns:120px 16px 100px 16px 1fr 12px 160px; font-size:8pt}
+  .sk-print{display:block!important; width:auto; max-width:100%; max-height:115mm; border:1px solid #999; margin:2px 0 6px; break-inside:avoid}
+  .sk-print:not([src]),.sk-print[src=""]{display:none!important}
+  .sk-print-wrap{display:grid!important; grid-template-columns:1fr; gap:4px}
+  .sk-print-wrap p{margin:2px 0; font:600 9pt var(--f-titre); break-after:avoid}
+  .cor-imgs img{max-height:120mm; width:auto}
+  .print-summary{border:2px solid #000; padding:6px 10px; margin:0 0 6mm}
+  .print-summary strong{font-size:14pt}
+  .selfeval{background:#fff!important; border:1px solid #666; break-inside:avoid}
+  .se-lead{display:none}
+  .recap{break-before:page; border:1.5px solid #000}
+  .recap-head{background:#fff}
+  .recap-wrap{overflow:visible; padding:8px 10px 0}
+  .recap-table{min-width:0; font-size:9.5pt}
+  .recap-table tfoot th{background:#000!important; color:#fff!important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .recap-foot{display:none}
+  a{color:inherit}
+}
+
+
+/* ==================== PAGE D'ACCUEIL ==================== */
+body.no-mode .page,body.no-mode .rail,body.no-mode .banner,body.no-mode #docpanel{display:none!important}
+body.no-mode{padding-bottom:0}
+body:not(.no-mode) #home{display:none}
+#home{min-height:100vh; padding:32px 20px 48px}
+.home-inner{max-width:1040px; margin:0 auto}
+.home-head{background:var(--papier); border:2px solid var(--encre); border-left:10px solid var(--jaune); padding:20px 24px}
+#home h1{margin:0 0 8px; font:700 clamp(1.7rem,4vw,2.6rem)/1.06 var(--f-titre); letter-spacing:-.01em}
+.home-sub{margin:0; max-width:78ch; color:var(--encre-2)}
+.home-hero{margin:18px 0 0; background:var(--papier); border:1px solid var(--trait); padding:10px}
+.home-hero img{display:block; width:100%; height:auto}
+.home-hero figcaption{margin-top:6px; padding:0 4px}
+.home-facts{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0 26px}
+.home-facts div{background:var(--encre); color:#fff; padding:10px 14px}
+.home-facts b{display:block; font:700 1.25rem var(--f-titre); color:var(--jaune)}
+.home-facts span{font-size:.85rem; color:#D7DDE2}
+@media (max-width:820px){ .home-facts{grid-template-columns:repeat(2,1fr)} }
+.home-choose{font:700 1.4rem var(--f-titre); margin:0 0 12px}
+.modes{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+@media (max-width:820px){ .modes{grid-template-columns:1fr} }
+.mode-card{background:var(--papier); border:2px solid var(--encre); padding:18px 20px 20px; display:flex; flex-direction:column}
+.mode-card.exam{border-color:var(--bleu)}
+.mc-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px}
+.mc-tag{font:700 .74rem var(--f-titre); background:var(--jaune); padding:2px 8px; letter-spacing:.04em}
+.mode-card.exam .mc-tag{background:var(--bleu); color:#fff}
+.mode-card h3{margin:0; font:700 1.35rem var(--f-titre)}
+.mc-lead{margin:2px 0 8px; font-weight:600; color:var(--encre-2)}
+.mode-card ul{margin:0 0 16px; padding-left:1.1rem}
+.mode-card li{margin:.3rem 0}
+.mode-card .btn{margin-top:auto; align-self:flex-start; padding:11px 18px; font-size:1.02rem}
+.mode-card.exam .btn{background:var(--bleu); border-color:var(--bleu)}
+.mode-card.exam .btn:hover{background:#17508F}
+.home-note{margin:18px 0 0}
+
+/* ==================== MODES ==================== */
+body:not(.mode-training) .only-training,body:not(.mode-exam) .only-exam{display:none}
+.print-nograde{display:none}
+.mode-exam .btn-validate,.mode-exam .btn-fast,.mode-exam .btn-sketch,
+.mode-exam:not(.graded) .exam-only-hide{display:none!important}
+.mode-exam:not(.graded) .score-block,.mode-training .exam-block,.mode-exam.graded .exam-block{display:none}
+.mode-exam:not(.graded) #recap-graded,.mode-exam:not(.graded) #recap-foot,
+.mode-exam.graded #exam-submit-wrap,.mode-training #exam-submit-wrap{display:none}
+.banner .exam-state{font:700 1.05rem var(--f-titre); color:var(--jaune)}
+#exam-submit-wrap{padding:16px 20px 4px}
+.es-lead{margin:0 0 10px; max-width:74ch}
+.btn-exam{background:var(--bleu); border-color:var(--bleu); padding:12px 20px; font-size:1.05rem}
+.btn-exam:hover{background:#17508F}
+.es-warn{margin:8px 0 0; color:var(--rouge); font-weight:600}
+.es-warn:empty{display:none}
+
+/* ==================== CHRONOMÈTRE ==================== */
+.timer-block{padding-left:4px}
+.banner .timer{font:700 1.3rem/1 var(--f-titre); color:#fff; font-variant-numeric:tabular-nums}
+.banner .timer.over{color:var(--jaune)}
+@media (max-width:760px){ .banner .count{display:none} }
+
+@media print{
+  #home{display:none!important}
+  body:not(.corrections-open) .print-note-line{display:none!important}
+  body:not(.corrections-open) .print-nograde{display:block!important; font-weight:600}
+  .banner{display:none!important}
+  body:not(.corrections-open) .q-expl,body:not(.corrections-open) .selfeval,
+  body:not(.corrections-open) .sk-print-corr{display:none!important}
+  body:not(.corrections-open) #recap-graded{display:none!important}
+  #exam-submit-wrap{display:none!important}
+}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+<style>
+/* ---------- accueil en cartes (repris du dépôt « Chaîne fonctionnelle ») ---------- */
+a.btn{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
+a.btn svg,.c-top svg{width:18px; height:18px; flex:0 0 auto}
+.tab-home{display:flex; align-items:center; justify-content:center; padding:8px 0 8px 4px; background:var(--encre); color:var(--jaune); text-decoration:none}
+.tab-home svg{width:22px; height:22px; display:block}
+.tab-home:hover{background:#2E3B47}
+.c-top{margin:0 0 12px}
+.c-top a{display:inline-flex; align-items:center; gap:6px; font:600 .95rem var(--f-titre); color:var(--encre); text-decoration:none; border:1.5px solid var(--encre); background:var(--papier); padding:5px 12px 5px 10px}
+.c-top a:hover{background:var(--jaune-pale)}
+#home{padding:20px 20px 32px}
+.home-top{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:14px; align-items:stretch; margin:0 0 14px}
+.home-top-single{grid-template-columns:1fr}
+.home-top-l{display:flex; flex-direction:column; gap:10px; min-width:0}
+.home-top .home-head{padding:14px 20px; flex:1}
+.home-top .home-head h1{margin:6px 0 6px; font-size:clamp(1.4rem,2.4vw,1.85rem)}
+.home-top .home-sub{font-size:.95rem}
+.home-top .home-hero{margin:0; padding:8px; display:flex; flex-direction:column; justify-content:center; min-width:0}
+.home-top .home-hero img{width:auto!important; max-width:100%; max-height:160px; margin:0 auto}
+body.hub .home-top .home-hero img{max-height:210px}
+.home-top .home-hero figcaption{font-size:.78rem; line-height:1.3; margin-top:4px}
+.home-top .home-facts{grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0}
+.home-top .home-facts div{padding:6px 10px}
+.home-top .home-facts b{font-size:1.02rem}
+.home-top .home-facts span{font-size:.76rem; line-height:1.3; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+@media (max-width:980px){ .home-top .home-facts{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:820px){ .home-top{grid-template-columns:1fr} }
+#home .home-choose{margin:18px 0 8px; font-size:1.25rem}
+#home .mode-card{padding:12px 18px 14px}
+#home .mode-card .mc-lead{margin:2px 0 4px; font-size:.92rem}
+#home .mode-card ul{margin:0 0 10px; font-size:.9rem; line-height:1.45}
+#home .mode-card li{margin:.15rem 0}
+#home .mode-card .btn{padding:9px 16px}
+#home .home-note{margin:10px 0 0}
+.home-back{margin:12px 0 0}
+.ex-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px}
+.ex-grid .mode-card p{margin:4px 0 8px; font-size:.95rem}
+.ex-grid .mode-card .ex-meta{margin:0 0 12px; font-size:.85rem}
+.ex-grid .mode-card h3{font-size:1.2rem}
+.ex-grid .mc-head{flex-direction:column; align-items:flex-start; gap:6px}
+.ex-grid .mode-card .btn{margin-top:auto; align-self:flex-start}
+.ex-grid .en-edition{border-style:dashed; border-color:var(--trait)}
+.ex-grid .en-edition h3,.ex-grid .en-edition p{color:var(--encre-2)}
+.ex-grid .etat{font-weight:700; color:var(--orange)}
+/* cartes de l'accueil : image, titre, mots-clés ; toutes de la même taille, dans toutes les rubriques */
+body.hub .ex-grid{grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); grid-auto-rows:1fr}
+.carte-v{display:grid; grid-template-rows:auto auto 62px 46px; gap:8px; padding:0 0 16px!important; overflow:hidden; height:100%}
+body.hub .carte-v>*:not(.cv-img){margin-left:18px; margin-right:18px}
+.carte-v .cv-img{display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; background:#fff; border-bottom:2px solid var(--encre); margin:0}
+.carte-v .cv-vide{background:repeating-linear-gradient(135deg,#F4F5F2 0 12px,#ECEEEA 12px 24px)}
+.carte-v .mc-head{margin:6px 18px 0}
+.carte-v h3{margin:0; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2}
+#home .carte-v .cv-mots{display:flex; flex-wrap:wrap; align-content:flex-start; gap:5px; list-style:none; margin:0 18px; padding:0}
+#home .carte-v .cv-mots li{margin:0}
+body.hub .carte-v .btn,body.hub .carte-v .etat{align-self:end; justify-self:start; margin-top:0; margin-bottom:0}
+.cv-mots li{font:600 .8rem var(--f-titre); background:var(--bleu-pale); color:var(--encre); border:1px solid #C9D8EC; padding:2px 8px; border-radius:12px; white-space:nowrap}
+.en-edition .cv-img{filter:grayscale(1) opacity(.55)}
+.en-edition .cv-mots li{background:#F4F5F2; border-color:var(--trait-fin); color:var(--encre-2)}
+.pastille{display:inline-block; font:700 .72rem var(--f-titre); letter-spacing:.03em; background:var(--vert); color:#fff; padding:2px 8px; margin-left:6px; vertical-align:middle}
+.pastille.n2{background:var(--bleu)}
+.pastille.n3{background:#7B3FA0}
+.mc-tag .pastille{margin-left:8px; font-size:.68rem; padding:1px 6px}
+.ex-grid .en-edition{opacity:.62}
+body.hub #home{min-height:0}
+</style>
+<style>
+/* ---------- cours interactif (d'après les cours du dépôt RDM) ---------- */
+.pastille.n3{background:#7B3FA0}
+.cours .part{margin-bottom:22px}
+.cours .part-body h3{font:700 1.12rem var(--f-titre); margin:16px 0 6px}
+.cours-nav{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 16px}
+.cours-nav a{font:600 .92rem var(--f-titre); color:var(--encre); background:var(--papier); border:1.5px solid var(--encre); padding:5px 12px; text-decoration:none}
+.cours-nav a:hover{background:var(--jaune-pale)}
+.cours-split{display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap}
+.cours-split>div{flex:1 1 300px; min-width:0}
+.cours-split>.fig{flex:0 1 auto; margin:0}
+.cours-defi{font-weight:700; color:var(--bleu)}
+.enonce{border:2px solid var(--encre); background:#fff; padding:10px 16px; margin:10px 0; font-weight:700; text-align:center; max-width:640px}
+.formule{display:flex; flex-wrap:wrap; gap:14px 28px; align-items:center; border:2px solid var(--rouge); background:#fff; padding:10px 18px; margin:12px 0; max-width:680px}
+.formule .f-main{font:700 1.35rem var(--f-titre); line-height:2}
+.formule .f-units{font-size:.9rem; color:var(--encre-2)}
+.exemple{background:#F6F7F4; border:1px solid var(--trait-fin); padding:6px 16px; margin-top:12px}
+.simu{border:2px solid var(--bleu); background:var(--bleu-pale); padding:12px 16px; margin:14px 0}
+.simu h3{margin:0 0 8px!important; font:700 1.15rem var(--f-titre); color:var(--bleu)}
+.simu-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 18px; margin:8px 0}
+.simu-grid.k3-col{grid-template-columns:1fr; align-content:start}
+@media (max-width:640px){ .simu-grid{grid-template-columns:1fr} }
+.simu-grid label{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem}
+.simu-grid output{font:700 1rem var(--f-titre); color:var(--bleu)}
+.simu-grid input[type=range]{width:100%; accent-color:var(--bleu)}
+.simu-out{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0 8px}
+.simu-out div{background:var(--encre); color:#fff; padding:6px 10px}
+.simu-out span{display:block; font-size:.78rem; color:#D7DDE2}
+.simu-out b{font:700 1.05rem var(--f-titre); color:var(--jaune)}
+@media (max-width:640px){ .simu-out{grid-template-columns:1fr} }
+.simu-verdict{font-weight:700; margin:8px 0 4px}
+.simu-defi{margin-top:8px; background:#fff; border:1px dashed var(--bleu); padding:6px 10px}
+.simu-defi summary{cursor:pointer; font-weight:600}
+.jeu{border:2px dashed var(--encre-2); background:#fff; padding:10px 16px; margin:14px 0}
+.jeu h3{margin:0 0 8px!important}
+.jeu-l{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid var(--trait-fin)}
+.jeu-l>span:first-child{flex:1 1 220px; font-weight:600}
+.jeu-l .btn{padding:4px 12px; min-width:2.6em}
+.jeu-l.is-ok{background:var(--vert-pale)} .jeu-l.is-ko{background:var(--rouge-pale)}
+.jeu-fb{min-width:1.6em}
+.jeu-score{font:700 1.1rem var(--f-titre); margin:8px 0 0}
+.k3-jp-why{flex-basis:100%; font-size:.88rem; color:var(--encre-2)}
+.quiz{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px}
+.quiz-q{border:1.5px solid var(--encre); background:#fff; padding:8px 14px 10px; margin:0}
+.quiz-q legend{font-weight:700; padding:0 4px}
+.quiz-q label{display:block; padding:3px 0; cursor:pointer}
+.quiz-q.is-ok{border-color:var(--vert); background:var(--vert-pale)}
+.quiz-q.is-ko{border-color:var(--rouge); background:var(--rouge-pale)}
+.quiz-q label.good{font-weight:700; color:var(--vert)}
+.quiz-fb{margin:4px 0 0; font-weight:700}
+.quiz-q.is-ok .quiz-fb{color:var(--vert)} .quiz-q.is-ko .quiz-fb{color:var(--rouge)}
+.quiz-why{margin:2px 0 0; font-size:.9rem}
+.quiz-score{display:flex; align-items:center; gap:14px; margin:14px 0 0; font:700 1.3rem var(--f-titre)}
+#qz-stars{color:var(--jaune); font-size:1.6rem; letter-spacing:2px}
+.cours-foot{display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 0}
+.cours-foot .small{align-self:center}
+.k3-obj{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 14px}
+.k3-obj>div{background:var(--papier); border:1px solid var(--trait-fin); border-top:4px solid #7B3FA0; padding:6px 16px}
+.k3-obj h3{margin:4px 0; font:700 1.05rem var(--f-titre)}
+.k3-obj ul{margin:4px 0 6px; padding-left:1.2rem}
+@media (max-width:640px){ .k3-obj{grid-template-columns:1fr} }
+/* balance */
+.bal{flex:0 1 300px!important}
+.bal-svg{width:100%; max-width:300px; background:#fff; border:1px solid var(--trait-fin)}
+.bal-l{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem; margin-top:6px}
+.bal-l input{accent-color:var(--bleu)}
+.bal-out{font-size:1.05rem}
+.lab-b,.lab-r,.lab-g,.lab-v{font:italic 700 17px var(--f-texte)}
+.pou-svg .lab-b,.pou-svg .lab-g{font-size:14px; font-style:normal}
+.lab-b{fill:#1F5FA8} .lab-r{fill:#C62828} .lab-g{fill:#1B7A43} .lab-v{fill:#7B3FA0}
+.pt{font:700 15px var(--f-titre); fill:var(--encre)}
+.ax{font:600 13px var(--f-texte); fill:var(--encre-2)}
+/* cartes à retourner */
+.k3-cartes{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin:8px 0 14px}
+.k3-carte{display:flex; flex-direction:column; gap:6px; align-items:flex-start; text-align:left; min-height:110px; padding:12px 14px; border:2px solid var(--encre); background:var(--jaune-pale); font:inherit; cursor:pointer; transition:background .2s}
+.k3-carte b{font:700 1.1rem var(--f-titre)}
+.k3-carte .k3-dos{display:none}
+.k3-carte[aria-expanded="true"]{background:#fff; border-color:#7B3FA0}
+.k3-carte[aria-expanded="true"] .k3-dos{display:block; animation:reveal .25s ease}
+.k3-carte[aria-expanded="true"] .k3-q{color:var(--encre-2); font-size:.85rem}
+.k3-carte[aria-expanded="false"]::after{content:"Clique pour retourner"; font-size:.8rem; color:var(--encre-2)}
+/* jeu deux forces */
+.deux-g{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px}
+.deux-c{border:1.5px solid var(--encre); background:#fff; padding:8px 12px}
+.deux-c p{margin:4px 0; font-size:.92rem}
+.deux-svg{width:100%; height:auto; max-height:100px}
+.deux-b{display:flex; gap:6px; flex-wrap:wrap}
+.deux-b .btn{padding:4px 10px; font-size:.88rem}
+.deux-c.is-ok{background:var(--vert-pale); border-color:var(--vert)} .deux-c.is-ko{background:var(--rouge-pale); border-color:var(--rouge)}
+.deux-fb{font-weight:700}
+/* atelier des liaisons */
+.regle{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0}
+.regle>div{background:#fff; border-left:5px solid var(--vert); padding:8px 12px}
+.regle>div+div{border-left-color:var(--rouge)}
+.regle>div>b{display:block; font:700 1.05rem var(--f-titre)}
+@media (max-width:640px){ .regle{grid-template-columns:1fr} }
+.k3-lias{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px}
+.k3-lia{border:1.5px solid var(--encre); background:var(--papier); padding:5px 10px; font:600 .88rem var(--f-titre); cursor:pointer}
+.k3-lia[aria-pressed="true"]{background:var(--encre); color:var(--jaune)}
+.k3-lia.fait::after{content:" ✔"; color:var(--vert)}
+.k3-lia[aria-pressed="true"].fait::after{color:var(--jaune)}
+.k3-desc{font-style:italic; margin:0 0 8px}
+.k3-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:16px; align-items:start}
+@media (max-width:760px){ .k3-grid{grid-template-columns:1fr} }
+.k3-lab{font-weight:700; font-size:.9rem; margin:0 0 4px}
+.k3-ddl{background:#fff}
+.k3-ddl td{text-align:center; font:700 1.1rem var(--f-titre); width:3.2em}
+.k3-ddl td.libre{background:var(--vert-pale); color:var(--vert)}
+.k3-ddl td.bloque{background:#F4F5F2; color:var(--encre-2)}
+.k3-tor{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.k3-brace{font:300 4.4rem/1 var(--f-texte); color:var(--encre)}
+.k3-cells{display:grid; grid-template-columns:repeat(2,64px); grid-auto-flow:column; grid-template-rows:repeat(3,40px); gap:4px}
+.k3-c{border:1.5px solid var(--encre); background:#fff; font:italic 700 1.15rem var(--f-texte); cursor:pointer}
+.k3-c.on{background:var(--jaune-pale)}
+.k3-c.ok{background:var(--vert-pale); border-color:var(--vert)} .k3-c.ko{background:var(--rouge-pale); border-color:var(--rouge)}
+.k3-c.barre{text-decoration:line-through; opacity:.4}
+.k3-base{font-size:.85rem; color:var(--encre-2)}
+.k3-plan-l{display:block; margin-top:8px; font-weight:600; font-size:.92rem}
+.k3-foot{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:10px 0 4px}
+#k3-fb.ok{color:var(--vert)} #k3-fb.ko{color:var(--rouge)}
+.k3-ex{background:#fff; border:1px solid var(--trait); padding:6px 12px; margin:6px 0}
+.k3-ex summary{cursor:pointer; font-weight:700}
+.torseur{display:inline-flex; align-items:center; gap:6px; margin:4px 0; flex-wrap:wrap; vertical-align:middle}
+.tz-b{display:inline-block; border-left:2px solid currentColor; border-right:2px solid currentColor; border-radius:10px; padding:2px 6px}
+.tz-b table{border-collapse:collapse} .tz-b td{padding:1px 10px; text-align:center; min-width:3em; line-height:1.5}
+.tz-r{font-size:.8rem; color:var(--encre-2)}
+.formule .torseur{font-size:1.1rem}
+.eq{margin:.35rem 0 .55rem; overflow-x:auto; line-height:2.1}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 .12em; line-height:1.25}
+.frac>span{padding:0 .25em; white-space:nowrap}
+.frac>span:first-child{border-bottom:1px solid currentColor}
+/* calculateur de moment */
+.k3-mom-g{display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:14px; align-items:start}
+@media (max-width:760px){ .k3-mom-g{grid-template-columns:1fr} }
+.mom-svg{width:100%; height:auto; background:#fff; border:1px solid var(--trait-fin)}
+.mom-svg .axe{stroke:#46525C; stroke-width:1.5}
+.mom-svg .grille line{stroke:#ECEEEA; stroke-width:1}
+.mom-svg .ligne-action{stroke:#C62828; stroke-width:1.3; stroke-dasharray:6 5; opacity:.7}
+.mom-svg .bras{stroke:#7B3FA0; stroke-width:2.5; stroke-dasharray:4 3}
+.mom-svg .ap{stroke:#46525C; stroke-width:1.3; stroke-dasharray:2 4}
+#mr-v.pos{color:var(--vert)} #mr-v.neg{color:var(--rouge)} #mr-v.nul{color:var(--encre-2)}
+/* méthode et poutre */
+.k3-steps{list-style:none; padding:0; margin:6px 0 12px; display:grid; gap:8px}
+.k3-step{display:grid; grid-template-columns:44px 1fr; gap:10px; background:#fff; border:1px solid var(--trait-fin); padding:8px 12px; transition:background .2s, border-color .2s}
+.k3-step p{margin:2px 0 0}
+.k3-sn{display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%; background:var(--encre); color:var(--jaune); font:700 1.3rem var(--f-titre)}
+.k3-step.on{background:var(--jaune-pale); border-color:var(--jaune)}
+.pou-svg{display:block; width:100%; max-width:660px; height:auto; background:#fff; border:1px solid var(--trait-fin); margin:6px auto}
+.k3-etapes{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+@media (max-width:760px){ .k3-etapes{grid-template-columns:1fr} }
+.k3-et{background:#fff; border:1.5px solid var(--trait); padding:8px 12px; min-height:70px}
+.k3-et>div{display:none; font-size:.92rem; margin-top:4px}
+.k3-et.vu{border-color:var(--bleu)}
+.k3-et.vu>div{display:block; animation:reveal .25s ease}
+.k3-et .torseur{font-size:.85rem}
+.k3-et .eqs p{margin:2px 0}
+.k3-defis li{margin:4px 0}
+.k3-defis b{color:var(--vert)}
+@media print{
+  body.cours-page #home{display:block!important; padding:0}
+  .no-print,.cours-nav,.cours-foot,.k3-foot,.simu-defi{display:none!important}
+  .k3-carte .k3-dos,.quiz-why[hidden],.deux-why[hidden],.k3-jp-why[hidden],.k3-et>div{display:block!important}
+  .k3-ex{display:block} .k3-ex>div{display:block!important}
+}
+</style>
+<style>
+.lv-t{font:700 13px var(--f-texte)}
+.tab-wrap{overflow-x:auto; max-width:100%}
+.k1-ex-g>div{min-width:0}
+.k1-ex-g{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:16px; align-items:start; margin:6px 0 14px}
+@media (max-width:760px){ .k1-ex-g{grid-template-columns:1fr} }
+.lev-svg{width:100%; max-width:430px; height:auto; background:#fff; border:1px solid var(--trait-fin)}
+.lev-svg .lv{opacity:0; transition:opacity .35s}
+.lev-svg .lv.on{opacity:1}
+.k1-steps .k3-step{opacity:.45} .k1-steps .k3-step.vu{opacity:1}
+.k1-tab td.ev{color:transparent; background:repeating-linear-gradient(135deg,#F4F5F2 0 8px,#ECEEEA 8px 16px)}
+.k1-tab td.ev.on{color:inherit; background:var(--vert-pale)}
+.k1-dyn-box{opacity:.15; transition:opacity .35s} .k1-dyn-box.on{opacity:1}
+.dyn-svg{width:100%; max-width:320px; height:auto; background:#fff; border:1px solid var(--trait-fin)}
+.biel-svg,.tri-svg{width:100%; height:auto; background:#fff; border:1px solid var(--trait-fin)}
+.k1-biel{display:block}
+.iso{display:grid; gap:4px}
+.iso-l{display:flex; gap:8px; align-items:center; background:#fff; border:1px solid var(--trait-fin); padding:5px 8px; cursor:pointer}
+.iso-l.ok{background:var(--vert-pale); border-color:var(--vert)} .iso-l.ko{background:var(--rouge-pale); border-color:var(--rouge)}
+.iso-fb{margin-left:auto; font-weight:700}
+#iso-fb.ok{color:var(--vert)} #iso-fb.ko{color:var(--rouge)}
+@media print{ .lev-svg .lv,.k1-dyn-box{opacity:1!important} .k1-tab td.ev{color:inherit!important; background:none!important} }
+</style>
+</head>
+<body class="no-mode hub cours-page">
+<section id="home" aria-labelledby="home-title"><div class="home-inner"><div class="cours" id="cours-1">
+<nav class="c-top no-print" aria-label="Navigation"><a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg> Accueil</a></nav>
+<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head"><span class="mc-tag">Cours 1.1</span> <span class="pastille">Niveau 1</span>
+<h1 id="home-title">Statique graphique</h1><p class="home-sub">Isoler un solide, appliquer le principe fondamental de la statique et
+le traduire graphiquement : solide soumis à deux forces, solide soumis à trois forces, point de concours et dynamique des
+forces. Environ 45 minutes, avec un jeu d'isolement, une bielle animée, un exemple résolu pas à pas, un dynamique
+interactif et un quiz.</p></header></div></div>
+<nav class="cours-nav no-print" aria-label="Étapes du cours"><a href="#k1-fct">1. Isoler</a><a href="#k1-pfs">2. PFS</a><a href="#k1-deux">3. Deux forces</a><a href="#k1-trois">4. Trois forces</a><a href="#k1-ex">5. Exemple résolu</a><a href="#k1-dyn">6. Dynamique</a><a href="#k1-meth">7. Méthode</a><a href="#k1-quiz">8. Quiz</a></nav>
+<section class="part cours-sec" id="k1-fct" aria-labelledby="k1-fct-t"><header class="part-head"><div class="part-num" aria-hidden="true">1</div><div><h2 id="k1-fct-t" style="padding:14px 16px">Fonction du PFS et isolement d'un solide</h2></div></header><div class="part-body"><p>Le <b>principe fondamental de la statique</b> (PFS) permet de déterminer les efforts dans un système : on en a besoin pour choisir un vérin, dimensionner un axe, vérifier une pièce.</p><p>En physique, il faut d'abord bien définir le système étudié : on dit qu'on <b>isole</b> le système. Isoler, c'est l'imaginer seul et <b>recenser les efforts extérieurs</b> qui s'exercent sur lui.</p><div class="cours-split"><figure class="fig" style="max-width:340px"><img src="data:image/png;base64,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" width="500" height="380" alt="Bride de serrage hydraulique : corps 1, piston, levier, biellette 6, vis de serrage"><figcaption>Bride de serrage : le levier pivote en B sur le corps, la biellette 6 le relie en E, la vis serre la pièce en F.</figcaption></figure><div class="jeu"><h3>Jeu : on isole le levier de la bride</h3><p>Coche les actions <b>extérieures au levier</b> qui font partie de son bilan (poids négligé).</p><div class="iso"><label class="iso-l" data-ok="1"><input type="checkbox"> Action de la pièce serrée sur le levier, en F<span class="iso-fb"></span></label><label class="iso-l" data-ok="1"><input type="checkbox"> Action de la biellette 6 sur le levier, en E<span class="iso-fb"></span></label><label class="iso-l" data-ok="1"><input type="checkbox"> Action du corps 1 sur le levier, en B (articulation)<span class="iso-fb"></span></label><label class="iso-l" data-ok="0"><input type="checkbox"> Poids du levier<span class="iso-fb"></span></label><label class="iso-l" data-ok="0"><input type="checkbox"> Action du levier sur la pièce serrée<span class="iso-fb"></span></label><label class="iso-l" data-ok="0"><input type="checkbox"> Action de l'huile sur le piston 3<span class="iso-fb"></span></label></div><p class="k3-foot"><button type="button" class="btn" id="iso-ok">Vérifier</button> <b id="iso-fb" aria-live="polite"></b></p></div></div></div></section><section class="part cours-sec" id="k1-pfs" aria-labelledby="k1-pfs-t"><header class="part-head"><div class="part-num" aria-hidden="true">2</div><div><h2 id="k1-pfs-t" style="padding:14px 16px">Le principe fondamental de la statique</h2></div></header><div class="part-body"><p>Un solide indéformable en équilibre sous l'action de <i>n</i> forces extérieures reste en équilibre si deux conditions sont réunies :</p><p class="cours-defi">À toi : réponds dans ta tête, puis retourne les cartes.</p><div class="k3-cartes"><button type="button" class="k3-carte" aria-expanded="false"><b>Condition 1</b><span class="k3-q">Que vaut la somme vectorielle des forces extérieures ?</span><span class="k3-dos">Elle est <b>nulle</b> : <span class="vec">F</span><sub>1</sub> + <span class="vec">F</span><sub>2</sub> + <span class="vec">F</span><sub>3</sub> + … = <span class="vec">0</span></span></button><button type="button" class="k3-carte" aria-expanded="false"><b>Condition 2</b><span class="k3-q">Que vaut la somme des moments en un point A ?</span><span class="k3-dos">Elle est <b>nulle</b>, en n'importe quel point A : M<sub>A</sub>(F<sub>1</sub>) + M<sub>A</sub>(F<sub>2</sub>) + … = 0</span></button></div><h3>Hypothèses de travail</h3><ul><li>le <b>poids</b> des pièces peut être négligé (devant les efforts transmis) ;</li><li>les solides sont supposés <b>indéformables</b> ;</li><li>on néglige, lorsque c'est possible, les <b>frottements</b> entre les pièces.</li></ul></div></section><section class="part cours-sec" id="k1-deux" aria-labelledby="k1-deux-t"><header class="part-head"><div class="part-num" aria-hidden="true">3</div><div><h2 id="k1-deux-t" style="padding:14px 16px">Solide soumis à l'action de deux forces</h2></div></header><div class="part-body"><div class="cours-split"><div><div class="enonce">Les deux forces ont la <b>même direction</b>, un <b>sens contraire</b> et la <b>même intensité</b>.</div><p>La direction commune est la droite qui joint les deux points d'application. Exemple : une <b>bielle</b> articulée en A et B, de poids négligé.</p><div class="tab-wrap"><table class="t"><thead><tr><th>Vecteur</th><th>Origine</th><th>Droite d'action</th><th>Sens</th><th>Norme</th></tr></thead><tbody><tr><td>F<sub>1 ext/bielle</sub></td><td>A</td><td>(AB)</td><td>de B vers A</td><td>1 000 N</td></tr><tr><td>F<sub>2 ext/bielle</sub></td><td>B</td><td>(AB)</td><td>de A vers B</td><td>1 000 N</td></tr></tbody></table></div></div><div class="simu k1-biel"><h3>La bielle tourne, les forces suivent</h3><svg class="biel-svg" viewBox="0 0 320 220" role="img" aria-label="Bielle AB et ses deux forces"><defs><marker id="bi-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs><g id="biel-g"><line x1="-150" y1="0" x2="150" y2="0" stroke="#9AA2A8" stroke-dasharray="5 4"/><rect x="-80" y="-13" width="160" height="26" rx="13" fill="#D9E4F2" stroke="#1C2530" stroke-width="2"/><circle cx="70" cy="0" r="6" fill="#fff" stroke="#1C2530" stroke-width="2"/><circle cx="-70" cy="0" r="6" fill="#fff" stroke="#1C2530" stroke-width="2"/><line id="biel-f1" x1="70" y1="0" x2="140" y2="0" stroke="#1B7A43" stroke-width="4" marker-end="url(#bi-ah)"/><line id="biel-f2" x1="-70" y1="0" x2="-140" y2="0" stroke="#1B7A43" stroke-width="4" marker-end="url(#bi-ah)"/><text x="70" y="-18" class="lv-t" text-anchor="middle">A</text><text x="-70" y="-18" class="lv-t" text-anchor="middle">B</text></g></svg><div class="simu-grid k3-col"><label><span>Inclinaison de la bielle : <output id="bi-oa">20°</output></span><input type="range" id="bi-a" min="-80" max="80" step="5" value="20"></label><label><span>Effort : <output id="bi-of">1 000 N</output></span><input type="range" id="bi-f" min="200" max="1600" step="100" value="1000"></label></div><p class="small">Quelle que soit l'inclinaison, les deux forces restent portées par (AB), égales et opposées : c'est la seule façon pour la bielle de ne pas bouger.</p></div></div></div></section><section class="part cours-sec" id="k1-trois" aria-labelledby="k1-trois-t"><header class="part-head"><div class="part-num" aria-hidden="true">4</div><div><h2 id="k1-trois-t" style="padding:14px 16px">Solide soumis à l'action de trois forces</h2></div></header><div class="part-body"><p>Exemple : le <b>levier de la bride de serrage</b> isolé. Il est soumis à trois forces : l'action de la pièce serrée en F, l'action de la biellette 6 en E et l'action du corps 1 en B.</p><div class="enonce">Traduction graphique du PFS pour un solide soumis à trois forces (non parallèles) :<br>1. les <b>directions des forces se coupent en un seul et même point</b> ;<br>2. le <b>dynamique des forces</b> est fermé : les trois vecteurs mis bout à bout forment un triangle.</div><figure class="fig" style="max-width:210px"><img src="data:image/png;base64,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" width="210" height="120" alt="Pièce 6 : biellette articulée en D et E"><figcaption>La pièce 6 (biellette) est soumise à deux forces : sa direction est (DE).</figcaption></figure></div></section><section class="part cours-sec" id="k1-ex" aria-labelledby="k1-ex-t"><header class="part-head"><div class="part-num" aria-hidden="true">5</div><div><h2 id="k1-ex-t" style="padding:14px 16px">Exemple résolu pas à pas : le levier de la bride</h2></div></header><div class="part-body"><div class="k1-ex-g"><div><svg class="lev-svg" viewBox="0 0 377 439" role="img" aria-labelledby="lev-t">
+<title id="lev-t">Levier de la bride isolé : forces en F, E et B</title>
+<defs><marker id="lv-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs>
+<image href="data:image/png;base64,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" x="0" y="0" width="377" height="439"/>
+<g class="lv lv-1"><line x1="282.0" y1="352.0" x2="282.0" y2="195.0" stroke="#E67E22" stroke-width="4" marker-end="url(#lv-ah)"/>
+<text x="274.0" y="312.0" text-anchor="end" class="lv-t" fill="#E67E22">6 000 N</text></g>
+<g class="lv lv-2"><line x1="-421.0" y1="-49.3" x2="760.0" y2="163.3" stroke="#17A2B8" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="195.5" y="41.0" class="lv-t" fill="#138496">direction (DE)</text></g>
+<g class="lv lv-3"><line x1="282.0" y1="0" x2="282.0" y2="439" stroke="#E67E22" stroke-width="1.5" stroke-dasharray="4 4"/>
+<circle cx="282.0" cy="77.2" r="6" fill="#C62828"/><text x="291.0" y="69.2" class="lv-t" fill="#C62828">I</text></g>
+<g class="lv lv-4"><line x1="-359.2" y1="746.1" x2="471.2" y2="-120.1" stroke="#1B7A43" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="126.0" y="213.0" class="lv-t" fill="#1B7A43">direction (BI)</text></g>
+<g class="lv lv-5"><line x1="169.5" y1="57.0" x2="246.5" y2="70.9" stroke="#17A2B8" stroke-width="4" marker-end="url(#lv-ah)"/>
+<line x1="56.0" y1="313.0" x2="17.5" y2="353.2" stroke="#1B7A43" stroke-width="4" marker-end="url(#lv-ah)"/></g>
+</svg></div><div><ol class="k3-steps k1-steps"><li class="k3-step" data-s="0"><span class="k3-sn">1</span><div><b>Étape 1 — la force connue</b><p>On connaît la force que le levier doit exercer sur la pièce : 6 000 N. Par le principe des actions mutuelles, F<sub>pièce/levier</sub> = 6 000 N, verticale, vers le haut, appliquée en F.</p></div></li><li class="k3-step" data-s="1"><span class="k3-sn">2</span><div><b>Étape 2a — une direction par un solide à deux forces</b><p>La biellette 6 est soumise à deux forces : sa direction est (DE). Par actions mutuelles, F<sub>6/levier</sub> a la même direction, qui passe par E.</p></div></li><li class="k3-step" data-s="2"><span class="k3-sn">3</span><div><b>Étape 2b — le point de concours</b><p>La verticale de F et la direction de F<sub>6/levier</sub> se coupent en I.</p></div></li><li class="k3-step" data-s="3"><span class="k3-sn">4</span><div><b>Étape 2c — la direction inconnue</b><p>La troisième force, F<sub>1/levier</sub>, passe par B et par I : sa direction est (BI), inclinée d'environ 46°.</p></div></li><li class="k3-step" data-s="4"><span class="k3-sn">5</span><div><b>Étape 3 — le dynamique</b><p>On trace la force connue à l'échelle (1 cm ↔ 2 000 N : 3 cm pour 6 000 N), puis, par ses extrémités, les parallèles aux deux directions : elles ferment le triangle. Les vecteurs se suivent bout à bout ; on mesure : F<sub>6/levier</sub> ≈ 5 000 N, F<sub>1/levier</sub> ≈ 7 100 N.</p></div></li></ol><p class="k3-foot"><button type="button" class="btn" id="lv-next">Étape suivante</button> <button type="button" class="btn ghost" id="lv-all">Tout afficher</button> <button type="button" class="btn ghost" id="lv-reset">Recommencer</button></p></div></div><div class="k1-ex-g"><div><h3>Tableau des caractéristiques</h3><div class="tab-wrap"><table class="t k1-tab"><thead><tr><th>Vecteur</th><th>Origine</th><th>Droite d'action</th><th>Sens</th><th>Norme</th></tr></thead><tbody><tr><td>F<sub>pièce/levier</sub></td><td>F</td><td class="ev" data-e="0">verticale</td><td class="ev" data-e="0">vers le haut</td><td class="ev" data-e="0">6 000 N</td></tr><tr><td>F<sub>6/levier</sub></td><td>E</td><td class="ev" data-e="1">(DE), ≈ 10° sous l'horizontale</td><td class="ev" data-e="4">vers la droite et le bas</td><td class="ev" data-e="4">≈ 5 000 N</td></tr><tr><td>F<sub>1/levier</sub></td><td>B</td><td class="ev" data-e="3">(BI), ≈ 46°</td><td class="ev" data-e="4">vers la gauche et le bas</td><td class="ev" data-e="4">≈ 7 100 N</td></tr></tbody></table></div><p class="small">Les cases se remplissent au fil des étapes. Le cours d'origine annonce 4 600 N et 6 800 N, lus sur un tracé à la main ; la construction précise sur la figure donne les valeurs ci-dessus.</p></div><div class="k1-dyn-box ev" data-e="4"><h3>Dynamique des forces</h3><svg class="dyn-svg" viewBox="0 0 300 260" role="img" aria-labelledby="dy-t">
+<title id="dy-t">Dynamique des forces du levier : triangle fermé</title>
+<defs><marker id="dy-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs>
+<line x1="230.0" y1="235.0" x2="230.0" y2="55.0" stroke="#E67E22" stroke-width="3.5" marker-end="url(#dy-ah)"/>
+<line x1="230.0" y1="55.0" x2="82.8" y2="208.5" stroke="#1B7A43" stroke-width="3.5" marker-end="url(#dy-ah)"/>
+<line x1="82.8" y1="208.5" x2="230.0" y2="235.0" stroke="#17A2B8" stroke-width="3.5" marker-end="url(#dy-ah)"/>
+<text x="238.0" y="145.0" class="lv-t" fill="#E67E22">6 000 N</text>
+<text x="148.4" y="123.8" class="lv-t" fill="#1B7A43" text-anchor="end">F1 ≈ 7 100 N</text>
+<text x="156.4" y="243.8" text-anchor="middle" class="lv-t" fill="#138496">F6 ≈ 5 000 N</text>
+</svg></div></div></div></section><section class="part cours-sec" id="k1-dyn" aria-labelledby="k1-dyn-t"><header class="part-head"><div class="part-num" aria-hidden="true">6</div><div><h2 id="k1-dyn-t" style="padding:14px 16px">À toi : le dynamique interactif</h2></div></header><div class="part-body"><p>Une force connue <b>P</b>, verticale vers le bas, et deux directions connues. Fais varier les directions : le triangle se referme toujours, et les intensités se lisent sur ses côtés.</p><div class="simu"><div class="k3-mom-g"><svg class="tri-svg" viewBox="0 0 420 340" role="img" aria-label="Dynamique des trois forces"><defs><marker id="tr-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="context-stroke"/></marker></defs><line id="tr-p" stroke="#C62828" stroke-width="4" marker-end="url(#tr-ah)"/><line id="tr-2" stroke="#1B7A43" stroke-width="4" marker-end="url(#tr-ah)"/><line id="tr-3" stroke="#1F5FA8" stroke-width="4" marker-end="url(#tr-ah)"/><line id="tr-d2" stroke="#1B7A43" stroke-width="1" stroke-dasharray="5 4"/><line id="tr-d3" stroke="#1F5FA8" stroke-width="1" stroke-dasharray="5 4"/><text id="tr-tp" class="lv-t" fill="#C62828"></text><text id="tr-t2" class="lv-t" fill="#1B7A43"></text><text id="tr-t3" class="lv-t" fill="#1F5FA8"></text></svg><div class="simu-grid k3-col"><label><span>Intensité de P : <output id="tr-op">400 N</output></span><input type="range" id="tr-ip" min="100" max="800" step="50" value="400"></label><label><span>Direction de F<sub>2</sub> : <output id="tr-o2">20°</output></span><input type="range" id="tr-i2" min="0" max="175" step="5" value="20"></label><label><span>Direction de F<sub>3</sub> : <output id="tr-o3">120°</output></span><input type="range" id="tr-i3" min="0" max="175" step="5" value="120"></label><p class="small">Angles mesurés depuis l'horizontale. Échelle : 1 cm ↔ 100 N (1 cm = 40 px à l'écran).</p></div></div><div class="simu-out"><div><span>P (connue)</span><b id="tr-rp"></b></div><div><span>F<sub>2</sub></span><b id="tr-r2"></b></div><div><span>F<sub>3</sub></span><b id="tr-r3"></b></div></div><p class="simu-verdict" id="tr-v"></p></div></div></section><section class="part cours-sec" id="k1-meth" aria-labelledby="k1-meth-t"><header class="part-head"><div class="part-num" aria-hidden="true">7</div><div><h2 id="k1-meth-t" style="padding:14px 16px">Méthode à retenir</h2></div></header><div class="part-body"><ol class="k3-steps"><li class="k3-step"><span class="k3-sn">1</span><div><b>Isoler</b><p>Choisir le solide et faire le bilan des actions extérieures (tableau : nom, point d'application, direction, sens, intensité).</p></div></li><li class="k3-step"><span class="k3-sn">2</span><div><b>Repérer les solides à deux forces</b><p>Bielles, vérins, tirants, amortisseurs : leur direction est la droite qui joint leurs deux articulations. Reporter cette direction par actions mutuelles.</p></div></li><li class="k3-step"><span class="k3-sn">3</span><div><b>Trouver le point de concours</b><p>Prolonger deux droites d'action connues jusqu'à leur intersection I ; la troisième direction passe par I.</p></div></li><li class="k3-step"><span class="k3-sn">4</span><div><b>Tracer le dynamique</b><p>Choisir une échelle, tracer la force connue, mener par ses extrémités les parallèles aux deux autres directions, fermer le triangle bout à bout.</p></div></li><li class="k3-step"><span class="k3-sn">5</span><div><b>Conclure</b><p>Mesurer, convertir avec l'échelle, compléter le tableau, répondre à la question posée.</p></div></li></ol><p>Dans les exercices, l'<b>atelier de tracé</b> te donne les outils du dessinateur : vecteur à l'échelle, droite d'action, parallèle, point, mesure — sur le document réponse affiché en transparence.</p></div></section><section class="part cours-sec" id="k1-quiz" aria-labelledby="k1-quiz-t"><header class="part-head"><div class="part-num" aria-hidden="true">8</div><div><h2 id="k1-quiz-t" style="padding:14px 16px">Quiz : vérifie tes connaissances</h2></div></header><div class="part-body"><p>Choisis une réponse : la correction s'affiche aussitôt.</p><div class="quiz"><fieldset class="quiz-q" data-ok="0"><legend><span class="q-num">1</span> Isoler un solide, c'est…</legend><label><input type="radio" name="k1q0" value="0"> l'imaginer seul et recenser les actions extérieures</label><label><input type="radio" name="k1q0" value="1"> le peser</label><label><input type="radio" name="k1q0" value="2"> supprimer ses liaisons</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>On l'imagine seul et on fait le bilan de toutes les actions extérieures qui s'exercent sur lui.</p></fieldset><fieldset class="quiz-q" data-ok="0"><legend><span class="q-num">2</span> Un solide soumis à deux forces est en équilibre si elles ont…</legend><label><input type="radio" name="k1q1" value="0"> même direction, même intensité, sens contraires</label><label><input type="radio" name="k1q1" value="1"> même sens et même intensité</label><label><input type="radio" name="k1q1" value="2"> des directions perpendiculaires</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Les deux forces sont directement opposées, portées par la droite qui joint leurs points d'application.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">3</span> Une bielle est articulée en A et B, son poids est négligé. La droite d'action des forces est…</legend><label><input type="radio" name="k1q2" value="0"> verticale</label><label><input type="radio" name="k1q2" value="1"> (AB)</label><label><input type="radio" name="k1q2" value="2"> perpendiculaire à (AB)</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Solide soumis à deux forces : droite d'action (AB).</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">4</span> Pour un solide soumis à trois forces non parallèles, les droites d'action…</legend><label><input type="radio" name="k1q3" value="0"> sont parallèles</label><label><input type="radio" name="k1q3" value="1"> se coupent en un même point</label><label><input type="radio" name="k1q3" value="2"> sont perpendiculaires</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Elles sont concourantes : c'est ainsi qu'on trouve la direction inconnue.</p></fieldset><fieldset class="quiz-q" data-ok="0"><legend><span class="q-num">5</span> Le dynamique des forces d'un solide en équilibre sous trois forces est…</legend><label><input type="radio" name="k1q4" value="0"> un triangle fermé</label><label><input type="radio" name="k1q4" value="1"> une droite</label><label><input type="radio" name="k1q4" value="2"> un carré</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Mises bout à bout, les trois forces forment un triangle fermé.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">6</span> À l'échelle 1 cm ↔ 200 N, un vecteur de 3,5 cm représente…</legend><label><input type="radio" name="k1q5" value="0"> 57 N</label><label><input type="radio" name="k1q5" value="1"> 700 N</label><label><input type="radio" name="k1q5" value="2"> 350 N</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>3,5 × 200 = 700 N.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">7</span> L'action de A sur B et l'action de B sur A sont…</legend><label><input type="radio" name="k1q6" value="0"> égales</label><label><input type="radio" name="k1q6" value="1"> opposées</label><label><input type="radio" name="k1q6" value="2"> perpendiculaires</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>Principe des actions mutuelles : même droite d'action, même intensité, sens contraires.</p></fieldset><fieldset class="quiz-q" data-ok="1"><legend><span class="q-num">8</span> Dans le dynamique, les vecteurs se suivent…</legend><label><input type="radio" name="k1q7" value="0"> origine contre origine</label><label><input type="radio" name="k1q7" value="1"> bout à bout, dans un seul sens de parcours</label><label><input type="radio" name="k1q7" value="2"> dans n'importe quel ordre de sens</label><p class="quiz-fb" aria-live="polite"></p><p class="quiz-why" hidden>L'extrémité de l'un est l'origine du suivant : c'est ce qui donne le sens des forces inconnues.</p></fieldset></div><div class="quiz-score" aria-live="polite"><span id="qz-score">0 / 8</span><span id="qz-stars" aria-hidden="true"></span><button type="button" class="btn ghost" id="qz-reset">Recommencer</button></div></div></section>
+<div class="cours-foot no-print"><span class="small">S'entraîner :</span> <a class="btn ghost" href="panneau-solaire.html">Exercice 1.2 — Panneau solaire</a><a class="btn ghost" href="pince-kobelco.html">Exercice 1.3 — Pince</a><a class="btn ghost" href="cric-hydraulique.html">Exercice 1.4 — Cric</a><a class="btn ghost" href="suspension-vtt.html">Exercice 1.5 — Suspension de VTT</a>
+<button type="button" class="btn ghost" id="cours-print">Imprimer le cours</button>
+<a class="btn ghost" href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg> Retour à l'accueil</a></div>
+</div></div></section>
+<script>
+(function () {
+  "use strict";
+  var root = document.getElementById("cours-1");
+  function q(s) { return root.querySelector(s); }
+  function qa(s) { return Array.prototype.slice.call(root.querySelectorAll(s)); }
+  function fr(x, d) { return (Math.abs(x) < 0.5 * Math.pow(10, -d) ? 0 : x).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−"); }
+  function setLine(el, x1, y1, x2, y2) { el.setAttribute("x1", x1); el.setAttribute("y1", y1); el.setAttribute("x2", x2); el.setAttribute("y2", y2); }
+
+  // ---------- 1. isolement du levier
+  q("#iso-ok").addEventListener("click", function () {
+    var bons = 0, tot = 0;
+    qa(".iso-l").forEach(function (l) {
+      var c = l.querySelector("input").checked, ok = (l.getAttribute("data-ok") === "1") === c;
+      l.classList.toggle("ok", ok); l.classList.toggle("ko", !ok);
+      l.querySelector(".iso-fb").textContent = ok ? "✔" : (l.getAttribute("data-ok") === "1" ? "✘ à garder" : "✘ à exclure");
+      tot++; if (ok) bons++;
+    });
+    var fb = q("#iso-fb");
+    fb.className = bons === tot ? "ok" : "ko";
+    fb.textContent = bons === tot ? "✔ Bilan juste : trois actions extérieures." : bons + " / " + tot + " justes : relis l'énoncé de l'isolement.";
+  });
+
+  // ---------- 2. cartes à retourner
+  qa(".k3-carte").forEach(function (b) {
+    b.addEventListener("click", function () { b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true" ? "false" : "true"); });
+  });
+
+  // ---------- 3. bielle
+  var BA = q("#bi-a"), BF = q("#bi-f");
+  function bielle() {
+    var a = +BA.value, f = +BF.value, L = 25 + f * 0.05;
+    q("#bi-oa").textContent = a + "°"; q("#bi-of").textContent = fr(f, 0) + " N";
+    q("#biel-g").setAttribute("transform", "translate(160 110) rotate(" + (-a) + ")");
+    setLine(q("#biel-f1"), 70, 0, 70 + L, 0); setLine(q("#biel-f2"), -70, 0, -70 - L, 0);
+  }
+  [BA, BF].forEach(function (el) { el.addEventListener("input", bielle); }); bielle();
+
+  // ---------- 5. levier pas à pas
+  var lv = 0, LVMAX = 5, steps = qa(".k1-steps .k3-step");
+  function levier(n) {
+    lv = n;
+    for (var i = 1; i <= 5; i++) { var g = q(".lv-" + i); if (g) g.classList.toggle("on", n >= i); }
+    steps.forEach(function (s, i) { s.classList.toggle("vu", i < n); s.classList.toggle("on", i === n - 1); });
+    qa(".ev").forEach(function (c) { c.classList.toggle("on", n > +c.getAttribute("data-e")); });
+    q("#lv-next").disabled = n >= LVMAX;
+  }
+  q("#lv-next").addEventListener("click", function () { levier(Math.min(LVMAX, lv + 1)); });
+  q("#lv-all").addEventListener("click", function () { levier(LVMAX); });
+  q("#lv-reset").addEventListener("click", function () { levier(0); });
+  levier(0);
+
+  // ---------- 6. dynamique interactif (1 cm ↔ 100 N, 40 px/cm)
+  var IP = q("#tr-ip"), I2 = q("#tr-i2"), I3 = q("#tr-i3"), K = 0.4;
+  function tri() {
+    var P = +IP.value, a2 = +I2.value * Math.PI / 180, a3 = +I3.value * Math.PI / 180;
+    q("#tr-op").textContent = fr(P, 0) + " N"; q("#tr-o2").textContent = I2.value + "°"; q("#tr-o3").textContent = I3.value + "°";
+    var u2 = [Math.cos(a2), -Math.sin(a2)], u3 = [Math.cos(a3), -Math.sin(a3)], Fp = [0, P];
+    var d = u2[0] * u3[1] - u2[1] * u3[0], v = q("#tr-v");
+    if (Math.abs(d) < 0.02) {
+      ["#tr-2", "#tr-3", "#tr-d2", "#tr-d3"].forEach(function (s) { q(s).style.display = "none"; });
+      q("#tr-r2").textContent = "—"; q("#tr-r3").textContent = "—";
+      v.className = "simu-verdict ko"; v.textContent = "Directions parallèles : le triangle ne peut pas se fermer, il n'y a pas d'équilibre possible.";
+      return;
+    }
+    ["#tr-2", "#tr-3", "#tr-d2", "#tr-d3"].forEach(function (s) { q(s).style.display = ""; });
+    var a = (-Fp[0] * u3[1] + Fp[1] * u3[0]) / d, b = (-u2[0] * Fp[1] + u2[1] * Fp[0]) / d;
+    var S = [210, 30], T = [S[0], S[1] + P * K], Q = [T[0] + a * u2[0] * K, T[1] + a * u2[1] * K];
+    var pts = [S, T, Q], mx = Math.min(S[0], T[0], Q[0]), Mx = Math.max(S[0], T[0], Q[0]), my = Math.min(S[1], T[1], Q[1]), My = Math.max(S[1], T[1], Q[1]);
+    var dx = 210 - (mx + Mx) / 2, dy = 170 - (my + My) / 2, sc = Math.min(1, 380 / (Mx - mx + 1), 300 / (My - my + 1));
+    function t(p) { return [210 + (p[0] - (mx + Mx) / 2) * sc, 170 + (p[1] - (my + My) / 2) * sc]; }
+    var s = t(S), tt = t(T), qq = t(Q);
+    setLine(q("#tr-p"), s[0], s[1], tt[0], tt[1]); setLine(q("#tr-2"), tt[0], tt[1], qq[0], qq[1]); setLine(q("#tr-3"), qq[0], qq[1], s[0], s[1]);
+    setLine(q("#tr-d2"), tt[0] - u2[0] * 500, tt[1] - u2[1] * 500, tt[0] + u2[0] * 500, tt[1] + u2[1] * 500);
+    setLine(q("#tr-d3"), s[0] - u3[0] * 500, s[1] - u3[1] * 500, s[0] + u3[0] * 500, s[1] + u3[1] * 500);
+    function lab(id, p1, p2, txt) { var el = q(id); el.textContent = txt; el.setAttribute("x", (p1[0] + p2[0]) / 2 + 8); el.setAttribute("y", (p1[1] + p2[1]) / 2 - 6); }
+    lab("#tr-tp", s, tt, "P"); lab("#tr-t2", tt, qq, "F2"); lab("#tr-t3", qq, s, "F3");
+    q("#tr-rp").textContent = fr(P, 0) + " N"; q("#tr-r2").textContent = fr(Math.abs(a), 0) + " N"; q("#tr-r3").textContent = fr(Math.abs(b), 0) + " N";
+    v.className = "simu-verdict ok";
+    v.textContent = "Triangle fermé : F2 ≈ " + fr(Math.abs(a), 0) + " N et F3 ≈ " + fr(Math.abs(b), 0) + " N." +
+      (Math.max(Math.abs(a), Math.abs(b)) > 2 * P ? " Directions presque parallèles : les forces deviennent très grandes !" : "");
+  }
+  [IP, I2, I3].forEach(function (el) { el.addEventListener("input", tri); }); tri();
+
+  // ---------- 8. quiz
+  var qs = qa(".quiz-q");
+  function score() {
+    var n = qs.filter(function (f) { return f.classList.contains("is-ok"); }).length;
+    var done = qs.filter(function (f) { return f.classList.contains("done"); }).length;
+    var st = n === qs.length ? 3 : n >= qs.length - 2 ? 2 : n >= 2 ? 1 : 0;
+    q("#qz-score").textContent = n + " / " + qs.length;
+    q("#qz-stars").textContent = done === qs.length ? "★★★".slice(0, st) + "☆☆☆".slice(0, 3 - st) : "";
+  }
+  qs.forEach(function (fs) {
+    fs.addEventListener("change", function (e) {
+      if (fs.classList.contains("done")) return;
+      var ok = e.target.value === fs.getAttribute("data-ok");
+      fs.classList.add("done", ok ? "is-ok" : "is-ko");
+      fs.querySelector(".quiz-fb").textContent = ok ? "✔ Bonne réponse !" : "✘ Pas tout à fait.";
+      fs.querySelector(".quiz-why").hidden = false;
+      Array.prototype.forEach.call(fs.querySelectorAll("input"), function (i) {
+        i.disabled = true;
+        if (i.value === fs.getAttribute("data-ok")) i.parentNode.classList.add("good");
+      });
+      score();
+    });
+  });
+  q("#qz-reset").addEventListener("click", function () {
+    qs.forEach(function (fs) {
+      fs.classList.remove("done", "is-ok", "is-ko");
+      fs.querySelector(".quiz-fb").textContent = "";
+      fs.querySelector(".quiz-why").hidden = true;
+      Array.prototype.forEach.call(fs.querySelectorAll("input"), function (i) { i.disabled = false; i.checked = false; i.parentNode.classList.remove("good"); });
+    });
+    score();
+  });
+  score();
+  q("#cours-print").addEventListener("click", function () { window.print(); });
+})();
+</script>
+</body>
+</html>

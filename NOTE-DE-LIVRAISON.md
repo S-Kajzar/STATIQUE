@@ -1,3 +1,78 @@
+# Note de livraison — Statique graphique (Niveau 1) : cours 1.1 et exercices 1.2 à 1.5
+
+**Sources** : « Séquence : Statique — Cours » (statique graphique), « Exercice — Panneau solaire », « Activité 3 – Pince
+Kobelco », « Activité 4 – Cric hydraulique roulant », « Suspension arrière de VTT ». Nouvelle carte **Cours 1.1** (pastille
+verte Niveau 1) et nouvelle rubrique de l'accueil **« Statique graphique : exercices sur document réponse »** (exercices
+1.2 à 1.5, indépendants). La carte « Cours 1 — Principe fondamental de la statique » (en cours d'édition) est conservée.
+
+## Atelier de tracé (`src/atelier.py`)
+
+Environnement de construction graphique superposé au **document réponse affiché en légère transparence** (opacité
+réglable, 45 % par défaut ; le DR s'imprime à pleine opacité). Il est greffé sur le moteur de tracé du gabarit sans le
+modifier : un script chargé après le moteur surcharge les méthodes des seuls tracés dont le décor porte une entrée
+`graph` (correction superposée, auto-évaluation, impression, plein écran et zoom restent ceux du gabarit).
+
+| Outil | Rôle |
+|---|---|
+| Vecteur | flèche origine → extrémité ; longueur en cm du document, intensité à l'échelle et angle affichés en direct ; **intensité imposée** pour tracer une force connue exactement à l'échelle |
+| Droite d'action | droite passant par deux points, prolongée sur toute la feuille |
+| Parallèle | choisir une droite ou un vecteur de référence, puis le point de passage (remplace l'équerre) |
+| Segment, Point, Texte | traits, point de concours I, noms des vecteurs |
+| Mesurer | distance, intensité correspondante et angle, sans rien tracer |
+| Gomme, Annuler, Tout effacer | comme dans le gabarit, étendus aux nouveaux tracés |
+| Aimant | accroche aux points du DR, aux extrémités des tracés et aux **intersections** des droites (cercle bleu ou orange) |
+
+Un DR peut porter plusieurs **zones d'échelle** (cric, VTT : l'échelle est celle de la zone où commence le vecteur). Les
+barres d'échelle d'origine sont remplacées par des barres « 1 cm ↔ … » dessinées par le moteur.
+
+## Cours 1.1 — Statique graphique (`cours-statique-graphique.html`)
+
+Fonction du PFS et isolement (jeu : bilan des actions extérieures du levier de la bride), PFS (cartes à retourner),
+hypothèses, solide soumis à deux forces (bielle qu'on fait tourner), solide soumis à trois forces, **exemple de la bride
+résolu pas à pas sur la figure** (force connue, direction par la biellette 6, point I, direction (BI), dynamique), dynamique
+interactif (trois forces, directions réglables), méthode en cinq étapes, quiz de 8 questions.
+
+- Valeurs de l'exemple **recalculées sur la figure** : F6/levier ≈ 5 000 N, F1/levier ≈ 7 100 N (le cours
+  d'origine annonce 4 600 N et 6 800 N, lus sur un tracé à la main).
+- Échelle du dynamique : la source indique « 1 cm = 200 N », incompatible avec 6 000 N (30 cm) ; le cours retient
+  1 cm ↔ 2 000 N.
+
+## Exercices (solutions calculées à partir des points relevés sur les DR)
+
+**1.2 Panneau solaire** (2 parties, 9 questions, 1 tracé, 40 min) : P = 380 N ; barre (3) soumise à deux forces ⇒ D3/1
+horizontale ; I à la verticale de G et à la hauteur de D ; A2/1 portée par (AI), ≈ 55° ; dynamique
+1 cm ↔ 50 N dans une zone ajoutée à droite de la figure : **D3/1 ≈ 267 N, A2/1 ≈ 465 N** ; barre comprimée.
+
+**1.3 Pince de démolition** (3 parties, 11 questions, 2 tracés, 1 h 05) : vérin = deux forces, (AC), 2 500 kN, comprimé ;
+bloc : forces horizontales (HG). Dynamique construit à partir du vecteur Fc2/3 donné (10 cm, 1 cm ↔ 250 kN).
+Configuration 1 : **G ≈ 1 857 kN**, B ≈ 3 426 kN ; configuration 2 : **I ≈ 1 194 kN**, B ≈ 2 991 kN ⇒
+la configuration 1 (serrage près de l'articulation B) est la plus efficace.
+
+**1.4 Cric hydraulique** (3 parties, 9 questions, 1 tracé, 1 h 10) : bielle (CF), groupe hydraulique (AD). Sellette
+(1 cm ↔ 50 daN) : E2/4 ≈ 397 daN, F3/4 ≈ 29 daN. Bras (1 cm ↔ 150 daN) : **effort du vérin D1/2 ≈ 1 081 daN**,
+B0/2 ≈ 1 202 daN. Les deux constructions sont sur le même DR (comme sur la feuille), pour pouvoir reporter la
+direction de E par parallèle. Échelles changées (source : barres « 25 daN » et « 75 daN » qui donnaient un dynamique de
+16 cm pour la charge) ; question 13 de la source corrigée (« direction de l'action en B », et non en E).
+
+**1.5 Suspension de VTT** (3 parties, 11 questions, 1 tracé, 1 h 10) : bases (AB), amortisseur (FG). Haubans
+(1 cm ↔ 10 daN) : B4/3 ≈ 56 daN, D2/3 ≈ 94 daN. Basculeur (1 cm ↔ 40 daN au lieu de 20 daN, pour que le
+dynamique tienne sur la feuille) : **F1/2 ≈ 175 daN** (effort supporté par l'amortisseur, comprimé), E0/2 ≈ 254 daN.
+Question 14 de la source corrigée (dynamique du basculeur 2, et non des haubans 3).
+
+**Communs** : les tableaux d'isolement deviennent des questions (direction, nombre de forces, actions mutuelles, sens) ;
+les lectures graphiques sont notées avec une tolérance de 7 % (± 3° pour un angle, ± 7 daN pour la petite force F3/4 du
+cric) ; documents DP1 (présentation), DT1 (méthode de la statique graphique), DT2 (mode d'emploi de l'atelier). Le nom
+du site d'origine et les grilles des feuilles ne sont pas repris.
+
+## Vérifications
+
+`tests/graphique.test.js` (Playwright) : accueil, cours 1.1 (isolement, bielle, levier pas à pas, dynamique interactif,
+quiz), **construction complète du panneau solaire à la souris** avec l'aimant, l'intensité imposée et deux parallèles
+(dynamique mesuré : 380, 267 et 465 N), gomme, annulation, correction superposée ; 20/20 dans chaque exercice, lectures
+fausses refusées, mode examen, aucun débordement à 390 px. Les tests du niveau 3 passent toujours.
+
+---
+
 # Note de livraison — Niveau 3 : statique analytique
 
 **Source** : séquence « Statique analytique » (rappel du PFS, torseur d'action mécanique transmissible, hypothèse du

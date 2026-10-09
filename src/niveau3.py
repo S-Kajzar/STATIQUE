@@ -1002,20 +1002,19 @@ def render_qbar(b):
             f'<div class="qb-docs">Documents à consulter : {chips}</div><div class="qb-ans">Répondre : {b["ans"]}</div></div>')
 
 
+# Contexte de rendu de l'exercice en cours de construction (fonds de tracé, barre d'outils propre à un sujet)
+CTX = {"sk_bg": None, "toolbar": None}
+
+
 def render_sk(s, part, total_pts):
     sid, label = s["id"], s["label"]
-    src, w, h = png(SK_BG[s["bg"]])
+    src, w, h = png((CTX["sk_bg"] or SK_BG)[s["bg"]])
     crit = "".join(f'<label class="se-item"><input type="checkbox" data-crit="{i}"><span>{c}</span></label>'
                    for i, c in enumerate(s["criteria"]))
     n = len(s["criteria"])
     note = ("La correction se superposera à ton tracé une fois la question " + ", ".join(label_of(d) for d in s["deps"]) +
             " validée.") if s["deps"] else "La correction se superpose à ton tracé dès que tu le valides."
-    return f"""
-        <div class="sketch" data-sketch="{sid}" id="{sid}">
-          <p class="q-stem"><span class="q-num">{label}</span> <strong>{s['stem']}</strong></p>
-          <div class="sk-layout">
-            <div class="sk-main">
-              <div class="sk-toolbar" role="toolbar" aria-label="Outils de tracé {label}">
+    toolbar = CTX["toolbar"](s) if CTX["toolbar"] else f"""              <div class="sk-toolbar" role="toolbar" aria-label="Outils de tracé {label}">
                 <button type="button" data-tool="pen" aria-pressed="false">Crayon</button>
                 <button type="button" data-tool="line" aria-pressed="true">Ligne</button>
                 <button type="button" data-tool="arrow" aria-pressed="false">Flèche</button>
@@ -1043,8 +1042,15 @@ def render_sk(s, part, total_pts):
                 <button type="button" class="btn-drprint" data-act="drprint">Imprimer les DR</button>
                 <button type="button" data-act="full" aria-pressed="false">Plein écran</button>
               </div>
-              <div class="sk-stage"><img class="sk-bg" src="{src}" width="{w}" height="{h}" alt="" hidden>
+"""
+    return f"""
+        <div class="sketch{' gt-sketch' if CTX['toolbar'] else ''}" data-sketch="{sid}" id="{sid}">
+          <p class="q-stem"><span class="q-num">{label}</span> <strong>{s['stem']}</strong></p>
+          <div class="sk-layout">
+            <div class="sk-main">
+{toolbar}              <div class="sk-stage"><img class="sk-bg" src="{src}" width="{w}" height="{h}" alt="" hidden>
                 <canvas role="img" aria-label="Zone de tracé {label}"></canvas></div>
+              <div class="gt-status" aria-live="polite"></div>
               <div class="sk-foot">
                 <button type="button" class="btn btn-sketch">Valider mon tracé</button>
                 <label class="sk-corr-toggle"><input type="checkbox"> Superposer la correction</label>
@@ -1142,6 +1148,8 @@ body:not(.no-mode) .home-back{display:none}
 .c-top a{display:inline-flex; align-items:center; gap:6px; font:600 .95rem var(--f-titre); color:var(--encre); text-decoration:none; border:1.5px solid var(--encre); background:var(--papier); padding:5px 12px 5px 10px}
 .c-top a:hover{background:var(--jaune-pale)}
 .home-head .pastille{display:inline-block; font:700 .72rem var(--f-titre); letter-spacing:.03em; background:#7B3FA0; color:#fff; padding:2px 8px; margin-left:8px; vertical-align:middle}
+.home-head .pastille.n1{background:var(--vert)} .home-head .pastille.n2{background:var(--bleu)}
+.gt-status:empty{display:none}
 .home-head .mc-tag{vertical-align:middle}
 .recap-foot a.btn{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
 .recap-foot a.btn svg{width:18px; height:18px}
@@ -1154,10 +1162,20 @@ body:not(.no-mode) .home-back{display:none}
 </style>"""
 
 
+CONVENTIONS_N3 = ("<p><strong>Conventions.</strong> Étude dans le plan (<var>x</var>, <var>y</var>) : chaque torseur se réduit à "
+                  "<i>X</i>, <i>Y</i> et au moment <i>N</i> autour de <var>z</var>. Un moment est <strong>positif dans le "
+                  "sens trigonométrique</strong> : M<sub>A</sub>(F) = <var>x</var>·F<sub>y</sub> − <var>y</var>·F<sub>x</sub>. "
+                  "Les composantes sont algébriques : n'oublie pas le signe ; une norme est toujours positive.</p>")
+CALCULS_N3 = ("<p><strong>Calculs.</strong> Garde les valeurs non arrondies dans ta calculatrice : les tolérances couvrent les "
+              "arrondis des résultats intermédiaires demandés.</p>")
+
+
 def build_exo(e, g):
     """Page autonome d'un exercice : contenu + bloc de style, Grading et moteur applicatif du gabarit."""
     parts = e["parts"]
     check_parts(parts)
+    CTX["sk_bg"], CTX["toolbar"] = e.get("sk_bg"), e.get("toolbar")
+    decor_src, drn_src = e.get("decor", DECOR), e.get("dr_names", DR_NAMES)
     total = sum(p["minutes"] for p in parts)
     n_q = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "q")
     n_sk = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "sk")
@@ -1173,9 +1191,10 @@ def build_exo(e, g):
         return new
 
     bgs = sorted({b["bg"] for p in parts for b in p["blocks"] if b["kind"] == "sk"})
-    decor = DECOR_HELPERS + "  var DECOR = {\n" + ",\n".join(DECOR[k] for k in bgs) + "\n  };\n"
+    decor = (e.get("decor_helpers", DECOR_HELPERS) + "  var DECOR = {\n" + ",\n".join(decor_src[k] for k in bgs) +
+             "\n  };\n")
     drn = "  var DR_NAMES = {\n" + ",\n".join(
-        f'    {k}: {{ doc: "{DR_NAMES[k][0]}", q: "{DR_NAMES[k][1]}", t: "{DR_NAMES[k][2]}", scale: false }}'
+        f'    {k}: {{ doc: "{drn_src[k][0]}", q: "{drn_src[k][1]}", t: "{drn_src[k][2]}", scale: false }}'
         for k in bgs) + "\n  };\n"
     app = sub_once(app, r"var CONSEIL_MIN = \d+;", f"var CONSEIL_MIN = {total};")
     app = sub_once(app, r"  var DECOR = \{\n.*?\n  \};\n", decor, re.S)
@@ -1196,9 +1215,14 @@ def build_exo(e, g):
               f"window.__QCFG__ = {json.dumps(qcfg, ensure_ascii=False)};\n"
               f"window.__SKCFG__ = {json.dumps(skcfg, ensure_ascii=False)};</script>")
 
-    dp_title, dp_fn = e["dp"]
-    docs = [("DP1", dp_title, "Dossier présentation", False, dp_fn()),
-            ("DT1", "Formulaire de statique analytique", "Dossier technique", True, DT_FORMULAIRE)]
+    if e.get("docs"):
+        docs = e["docs"]()
+    else:
+        dp_title, dp_fn = e["dp"]
+        docs = [("DP1", dp_title, "Dossier présentation", False, dp_fn()),
+                ("DT1", "Formulaire de statique analytique", "Dossier technique", True, DT_FORMULAIRE)]
+    doc_names = [d[0] for d in docs]
+    docs_txt = ", ".join(doc_names[:-1]) + " et " + doc_names[-1] if len(doc_names) > 1 else doc_names[0]
     rail, grp = [], False
     for k, t, kind, is_dt, _c in docs:
         if is_dt and not grp:
@@ -1211,7 +1235,7 @@ def build_exo(e, g):
                      for k, t, kind, _d, c in docs)
 
     hsrc, hw, hh = png(e["hero"][0])
-    sk_fact = (f'<div><b>{n_sk} tracé{"s" if n_sk > 1 else ""}</b><span>graphe des liaisons, auto-évalué</span></div>'
+    sk_fact = (f'<div><b>{n_sk} tracé{"s" if n_sk > 1 else ""}</b><span>{e.get("sk_fact", "graphe des liaisons, auto-évalué")}</span></div>'
                if n_sk else '<div><b>Unités</b><span>notées (demi-point)</span></div>')
     parts_html = "".join(render_part(p, total) for p in parts)
     cartouche = (f"{n_q} questions notées (unités comprises)" +
@@ -1222,11 +1246,12 @@ def build_exo(e, g):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Fichier généré par src/generer.py (contenu : src/niveau3.py) à partir de src/gabarit-exercice-interactif.html : ne pas modifier à la main. -->
+<!-- Fichier généré par src/generer.py (contenu : {e.get("module", "src/niveau3.py")}) à partir de src/gabarit-exercice-interactif.html : ne pas modifier à la main. -->
 <title>{e['title']} — Statique — exercice interactif</title>
 <meta name="description" content="{esc(e['desc'])}">
 {style}
 {CONTENT_CSS}
+{e.get("extra_css", "")}
 </head>
 <body class="no-mode">
 
@@ -1251,7 +1276,7 @@ def build_exo(e, g):
 <section id="home" aria-labelledby="home-title">
   <div class="home-inner">
     <header class="home-head">
-      <span class="mc-tag">{e['tag']}</span><span class="pastille">{e['level']}</span>
+      <span class="mc-tag">{e['tag']}</span><span class="pastille {e.get("pastille", "n3")}">{e['level']}</span>
       <h1 id="home-title">{e['title']}</h1>
       <p class="home-sub">{e['sub']}</p>
     </header>
@@ -1262,7 +1287,7 @@ def build_exo(e, g):
     <div class="home-facts">
       <div><b>{len(parts)} parties</b><span>{n_q} questions, dans l'ordre de résolution</span></div>
       <div><b>{hm(total)}</b><span>durée conseillée, qui fixe la pondération</span></div>
-      <div><b>2 documents</b><span>DP1 et DT1 (formulaire) consultables</span></div>
+      <div><b>{len(docs)} documents</b><span>{docs_txt} consultables</span></div>
       {sk_fact}
     </div>
     <h2 class="home-choose">Choisis ton mode de travail</h2>
@@ -1297,7 +1322,7 @@ def build_exo(e, g):
     <p class="print-nograde">Copie non corrigée : les corrections et la note n'apparaissent qu'après la remise de la copie en mode examen.</p>
   </section>
 
-  <nav class="c-top no-print" aria-label="Navigation"><a href="index.html">{HOUSE} Accueil</a> <a href="cours-statique-analytique.html">Cours 3 — Statique analytique</a></nav>
+  <nav class="c-top no-print" aria-label="Navigation"><a href="index.html">{HOUSE} Accueil</a> <a href="{e.get("cours", ("cours-statique-analytique.html", ""))[0]}">{e.get("cours", ("", "Cours 3 — Statique analytique"))[1]}</a></nav>
 
   <header class="cartouche">
     <div class="title">
@@ -1309,10 +1334,10 @@ def build_exo(e, g):
   <div class="consignes">
     <p class="only-training"><strong>Mode entraînement.</strong> Réponds dans chaque champ puis clique sur « Valider » : une réponse validée est définitive et sa correction s'affiche aussitôt.</p>
     <p class="only-exam"><strong>Mode examen.</strong> Compose tout le sujet sans correction ni note : tes réponses restent modifiables jusqu'au bout. Le bouton « J'ai fini, je fais corriger ma copie », en fin de sujet, dévoile d'un coup les corrections, les notes par partie et la note globale.</p>
-    <p><strong>Conventions.</strong> Étude dans le plan (<var>x</var>, <var>y</var>) : chaque torseur se réduit à <i>X</i>, <i>Y</i> et au moment <i>N</i> autour de <var>z</var>. Un moment est <strong>positif dans le sens trigonométrique</strong> : M<sub>A</sub>(F) = <var>x</var>·F<sub>y</sub> − <var>y</var>·F<sub>x</sub>. Les composantes sont algébriques : n'oublie pas le signe ; une norme est toujours positive.</p>
+    {e.get("conventions", CONVENTIONS_N3)}
     <p><strong>Les unités sont notées.</strong> Pour toute question numérique, la valeur vaut la moitié des points et l'unité l'autre moitié : une valeur juste écrite sans unité, ou avec une unité fausse, ne rapporte qu'un demi-point. Une valeur convertie (N, daN, kN, mm, m) avec la bonne unité est acceptée.</p>
-    <p><strong>Calculs.</strong> Garde les valeurs non arrondies dans ta calculatrice : les tolérances couvrent les arrondis des résultats intermédiaires demandés.</p>
-    <p>Le dossier de présentation (DP1) et le formulaire (DT1) s'ouvrent avec les onglets sur le bord droit, ou avec les boutons des en-têtes de question.</p>
+    {e.get("calculs", CALCULS_N3)}
+    <p>Le dossier de présentation (DP1) et le dossier technique (DT) s'ouvrent avec les onglets sur le bord droit, ou avec les boutons des en-têtes de question.</p>
     <p><strong>Le tracé compte aussi.</strong> Quand sa correction s'affiche, tu t'attribues toi-même les points à l'aide d'une grille de critères.</p>
     <p><strong>Barème pondéré par la durée conseillée</strong> : chaque partie est notée sur 20, puis pèse au prorata de son temps. Le récapitulatif de fin de sujet donne le détail partie par partie.</p>
   </div>
@@ -1355,6 +1380,7 @@ def build_exo(e, g):
 {config}
 {grading}
 {app}
+{e.get("extra_js", "")}
 </body>
 </html>
 """

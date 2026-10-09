@@ -437,6 +437,8 @@ body:not(.no-mode) .home-back{display:none}
 .c-top a{display:inline-flex; align-items:center; gap:6px; font:600 .95rem var(--f-titre); color:var(--encre); text-decoration:none; border:1.5px solid var(--encre); background:var(--papier); padding:5px 12px 5px 10px}
 .c-top a:hover{background:var(--jaune-pale)}
 .home-head .pastille{display:inline-block; font:700 .72rem var(--f-titre); letter-spacing:.03em; background:#7B3FA0; color:#fff; padding:2px 8px; margin-left:8px; vertical-align:middle}
+.home-head .pastille.n1{background:var(--vert)} .home-head .pastille.n2{background:var(--bleu)}
+.gt-status:empty{display:none}
 .home-head .mc-tag{vertical-align:middle}
 .recap-foot a.btn{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
 .recap-foot a.btn svg{width:18px; height:18px}
@@ -447,6 +449,7 @@ body:not(.no-mode) .home-back{display:none}
   .eq{overflow:visible; line-height:1.7}
 }
 </style>
+
 </head>
 <body class="no-mode">
 
@@ -472,7 +475,7 @@ body:not(.no-mode) .home-back{display:none}
 <section id="home" aria-labelledby="home-title">
   <div class="home-inner">
     <header class="home-head">
-      <span class="mc-tag">Exercice 3.2</span><span class="pastille">Niveau 3</span>
+      <span class="mc-tag">Exercice 3.2</span><span class="pastille n3">Niveau 3</span>
       <h1 id="home-title">Échelle de pompier</h1>
       <p class="home-sub">Une échelle de 5 000 daN levée par un vérin hydraulique. L'isolement du vérin donne la direction de son action ; le PFS appliqué à l'échelle donne les efforts en A et en B, puis la pression d'alimentation nécessaire.</p>
     </header>
@@ -483,7 +486,7 @@ body:not(.no-mode) .home-back{display:none}
     <div class="home-facts">
       <div><b>4 parties</b><span>24 questions, dans l'ordre de résolution</span></div>
       <div><b>1 h 15</b><span>durée conseillée, qui fixe la pondération</span></div>
-      <div><b>2 documents</b><span>DP1 et DT1 (formulaire) consultables</span></div>
+      <div><b>2 documents</b><span>DP1 et DT1 consultables</span></div>
       <div><b>Unités</b><span>notées (demi-point)</span></div>
     </div>
     <h2 class="home-choose">Choisis ton mode de travail</h2>
@@ -533,7 +536,7 @@ body:not(.no-mode) .home-back{display:none}
     <p><strong>Conventions.</strong> Étude dans le plan (<var>x</var>, <var>y</var>) : chaque torseur se réduit à <i>X</i>, <i>Y</i> et au moment <i>N</i> autour de <var>z</var>. Un moment est <strong>positif dans le sens trigonométrique</strong> : M<sub>A</sub>(F) = <var>x</var>·F<sub>y</sub> − <var>y</var>·F<sub>x</sub>. Les composantes sont algébriques : n'oublie pas le signe ; une norme est toujours positive.</p>
     <p><strong>Les unités sont notées.</strong> Pour toute question numérique, la valeur vaut la moitié des points et l'unité l'autre moitié : une valeur juste écrite sans unité, ou avec une unité fausse, ne rapporte qu'un demi-point. Une valeur convertie (N, daN, kN, mm, m) avec la bonne unité est acceptée.</p>
     <p><strong>Calculs.</strong> Garde les valeurs non arrondies dans ta calculatrice : les tolérances couvrent les arrondis des résultats intermédiaires demandés.</p>
-    <p>Le dossier de présentation (DP1) et le formulaire (DT1) s'ouvrent avec les onglets sur le bord droit, ou avec les boutons des en-têtes de question.</p>
+    <p>Le dossier de présentation (DP1) et le dossier technique (DT) s'ouvrent avec les onglets sur le bord droit, ou avec les boutons des en-têtes de question.</p>
     <p><strong>Le tracé compte aussi.</strong> Quand sa correction s'affiche, tu t'attribues toi-même les points à l'aide d'une grille de critères.</p>
     <p><strong>Barème pondéré par la durée conseillée</strong> : chaque partie est notée sur 20, puis pèse au prorata de son temps. Le récapitulatif de fin de sujet donne le détail partie par partie.</p>
   </div>
@@ -2028,5 +2031,6 @@ if (typeof module !== "undefined") module.exports = Grading;
                      mode: function () { return MODE; }, isGraded: function () { return graded; } };
 })();
 </script>
+
 </body>
 </html>

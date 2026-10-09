@@ -24,7 +24,9 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import niveau3  # noqa: E402
+import graphique  # noqa: E402
 from cours3 import render_cours3  # noqa: E402
+from cours1 import render_cours1  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GABARIT = ROOT / "src" / "gabarit-exercice-interactif.html"
@@ -59,8 +61,14 @@ NIVEAU3 = [
      "bouton": "Lire le cours"},
 ] + [{"rubrique": "exercices", "tag": e["tag"], "level": e["level"], "title": e["title"], "mots": e["mots"],
       "vign": e["vign"], "alt": e["alt"], "page": e["page"], "exo": e} for e in niveau3.EXOS]
+# Statique graphique (Niveau 1) : exercices indépendants générés par src/graphique.py, avec l'atelier de tracé
+GRAPHIQUE = [{"rubrique": "cours", "tag": "Cours 1.1", "level": "Niveau 1", "title": "Statique graphique",
+              "mots": ["Isoler", "Deux forces", "Trois forces", "Dynamique"], "vign": "carte-cours-statique-graphique.jpg",
+              "alt": "Bride de serrage hydraulique et son levier", "page": "cours-statique-graphique.html",
+              "bouton": "Lire le cours"}] + [{"rubrique": "graphique", "tag": e["tag"], "level": e["level"], "title": e["title"], "mots": e["mots"],
+              "vign": e["vign"], "alt": e["alt"], "page": e["page"]} for e in graphique.EXOS]
 RUBRIQUES = [("cours", "Les cours"), ("formulaire", "Le formulaire"), ("exercices", "Les exercices"),
-             ("etudes", "Études de cas")]
+             ("graphique", "Statique graphique : exercices sur document réponse"), ("etudes", "Études de cas")]
 
 HOUSE = ('<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" '
          'stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/>'
@@ -98,7 +106,7 @@ def carte(tag, level, title, mots, href=None, bouton="Ouvrir l'exercice", vign=N
 
 def render_hub():
     grilles = {k: [] for k, _ in RUBRIQUES}  # (étiquette, carte) : triées par étiquette
-    for e in EXERCICES + NIVEAU3:
+    for e in EXERCICES + NIVEAU3 + GRAPHIQUE:
         grilles[e["rubrique"]].append((e["tag"], carte(e["tag"], e["level"], e["title"], e["mots"], e["page"],
                                             e.get("bouton", "Ouvrir l'exercice"), e["vign"], e["alt"])))
     for rub, tag, level, title, mots in ENCOURS:
@@ -222,10 +230,13 @@ def build():
         (ROOT / e["page"]).write_text(out, encoding="utf-8")
         print(f"{e['page']} : {len(out.encode('utf-8')) / 1024:.0f} Kio")
     # niveau 3 : cours et exercices générés sur le gabarit
+    cours1 = render_cours1(style, HUB_CSS)
+    (ROOT / "cours-statique-graphique.html").write_text(cours1, encoding="utf-8")
+    print(f"cours-statique-graphique.html : {len(cours1.encode('utf-8')) / 1024:.0f} Kio")
     cours = render_cours3(style, HUB_CSS)
     (ROOT / "cours-statique-analytique.html").write_text(cours, encoding="utf-8")
     print(f"cours-statique-analytique.html : {len(cours.encode('utf-8')) / 1024:.0f} Kio")
-    for e in niveau3.EXOS:
+    for e in niveau3.EXOS + graphique.EXOS:
         out, st = niveau3.build_exo(e, g)
         (ROOT / e["page"]).write_text(out, encoding="utf-8")
         print(f"{e['page']} : {len(out.encode('utf-8')) / 1024:.0f} Kio — {st['parts']} parties, {st['n_q']} questions, "
