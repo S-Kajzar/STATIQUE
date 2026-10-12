@@ -202,7 +202,7 @@ def page_exercice(e):
            f"{e.get('css', '')}</style>")
     i = s.index("</head>")  # la première : une autre figure dans un script (fenêtre d'impression)
     assert i < s.index("<body"), f"{e['source']} : </head> introuvable avant <body>"
-    s = s[:i] + css + "\n" + s[i:]
+    s = s[:i] + css + "\n" + niveau3.LARGEUR_CSS + "\n" + s[i:]
     anchor = e["ancre"]
     assert s.count(anchor) == 1, f"{e['source']} : ancre introuvable ou multiple"
     s = s.replace(anchor, retour + anchor if e.get("avant", True) else anchor + retour)
@@ -212,7 +212,7 @@ def page_exercice(e):
 def build():
     g = GABARIT.read_text(encoding="utf-8")
     s0 = g.index("<style>:root{")
-    style = g[s0:g.index("</style>", s0) + len("</style>")]
+    style = g[s0:g.index("</style>", s0) + len("</style>")] + "\n" + niveau3.LARGEUR_CSS
     page = f"""<!DOCTYPE html>
 <html lang="fr">
 <head>

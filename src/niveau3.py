@@ -1321,6 +1321,13 @@ CALCULS_N3 = ("<p><strong>Calculs.</strong> Garde les valeurs non arrondies dans
               "arrondis des résultats intermédiaires demandés.</p>")
 
 
+# Le gabarit limite la largeur des textes (72 à 80 caractères) : ici le texte occupe toute la zone blanche de la page.
+# Règle commune ajoutée à toutes les pages générées (accueil, cours, exercices, potence).
+LARGEUR_CSS = ("<style>/* pleine largeur : le texte occupe toute la zone blanche */\n"
+               ".part-body>p,.part-body>ul,.data,.q-stem,.q-hint,.q-expl,.sk-side,.selfeval,.recap-head p,"
+               ".recap .final-detail,.home-sub,.es-lead{max-width:none}</style>")
+
+
 def build_exo(e, g):
     """Page autonome d'un exercice : contenu + bloc de style, Grading et moteur applicatif du gabarit."""
     parts = e["parts"]
@@ -1332,7 +1339,7 @@ def build_exo(e, g):
     n_grp = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "grp")
     n_sk = sum(1 for p in parts for b in p["blocks"] if b["kind"] == "sk")
     s0 = g.index("<style>:root{")
-    style = g[s0:g.index("</style>", s0) + len("</style>")]
+    style = g[s0:g.index("</style>", s0) + len("</style>")] + "\n" + LARGEUR_CSS
     grading = re.search(r"<script>/\*GRADING-START\*/.*?</script>", g, re.S).group(0)
     app_start = g.index("<script>(function () {")
     app = g[app_start:g.rindex("</script>") + len("</script>")]
