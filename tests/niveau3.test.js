@@ -10,7 +10,7 @@ const ROOT = path.join(__dirname, "..");
 const url = (f) => "file://" + path.join(ROOT, f);
 const EXO = {
   "coffre-fort.html": { parts: 3, sketch: "sk_q1_1" },
-  "echelle-pompier.html": { parts: 4, sketch: null },
+  "echelle-pompier.html": { parts: 5, sketch: "sk_q2_1", tabs: ["DP1", "DT1", "DT2"] },
   "cadre-velo.html": { parts: 4, sketch: "sk_q1_1" },
 };
 let browser;
@@ -131,7 +131,7 @@ for (const file of Object.keys(EXO)) {
     assert.match(await text(page, ".home-facts"), new RegExp(`${X.parts} parties`));
     await page.click("[data-mode=training]");
     assert.equal(await page.locator(".part").count(), X.parts);
-    assert.deepEqual(await page.locator(".rail .tab").allInnerTexts(), ["DP1", "DT1"]);
+    assert.deepEqual(await page.locator(".rail .tab").allInnerTexts(), X.tabs || ["DP1", "DT1"]);
     const ids = await page.evaluate(() => Object.keys(window.__QCFG__));
     const attendus = Object.keys(R.q).concat(...Object.entries(R.g).map(([g, v]) => v.map((_x, i) => `${g}_${i + 1}`)));
     assert.deepEqual(ids.slice().sort(), attendus.sort());
@@ -197,3 +197,49 @@ for (const file of Object.keys(EXO)) {
     await context.close();
   });
 }
+
+test("echelle-pompier.html : résolution graphique sur le DR (point I, dynamique à l'échelle) = résultats du calcul", async () => {
+  const { context, page, errors } = await open("echelle-pompier.html");
+  await page.click("[data-mode=training]");
+  const sk = "sk_q2_1", W = 1340, H = 1060;
+  await page.locator("#" + sk).scrollIntoViewIfNeeded();
+  const pts = await page.evaluate(() => window.__app__.sketches.sk_q2_1.dec.graph.points);
+  const [G, B, C, A] = [pts.G3, pts.B, pts.C, pts.A];
+  async function xy(x, y) { const b = await page.locator(`#${sk} canvas`).boundingBox(); return [b.x + x * b.width / W, b.y + y * b.height / H]; }
+  async function drag(tool, a, c) {
+    if (tool) await page.click(`#${sk} [data-tool=${tool}]`);
+    const P = await xy(...a), Q = await xy(...c);
+    await page.mouse.move(P[0], P[1]); await page.mouse.down();
+    await page.mouse.move((P[0] + Q[0]) / 2, (P[1] + Q[1]) / 2, { steps: 3 }); await page.mouse.move(Q[0], Q[1], { steps: 3 });
+    await page.mouse.up();
+  }
+  // droites d'action : verticale par G3, (BC) ; point de concours I accroché à leur intersection
+  await drag("dir", [G[0] + 2, G[1] + 2], [G[0], G[1] + 400]);
+  await drag("dir", [B[0] + 2, B[1] + 2], [C[0] + 2, C[1] - 2]);
+  const Ith = [G[0], B[1] + (G[0] - B[0]) * (C[1] - B[1]) / (C[0] - B[0])];
+  await page.click(`#${sk} [data-tool=pt]`);
+  const Pi = await xy(Ith[0] + 4, Ith[1] - 4); await page.mouse.click(Pi[0], Pi[1]);
+  const I = await page.evaluate(() => window.__app__.sketches.sk_q2_1.strokes.find((x) => x.t === "pt"));
+  assert.ok(Math.abs(I.x - 630) < 1 && Math.abs(I.y - 960.4) < 1.5, `I accroché à l'intersection (${I.x}, ${I.y})`);
+  // dynamique : P3 imposé à 5 000 daN, puis les deux autres côtés du triangle
+  await page.fill(`#${sk} .gt-val`, "5000");
+  await drag("vec", [1200, 400], [1200, 700]);
+  assert.match(await page.locator(`#${sk} .gt-status`).innerText(), /5,00 cm → 5\s000 daN/);
+  await page.fill(`#${sk} .gt-val`, "");
+  await drag("vec", [1200, 800], [947, 105]);
+  await drag("vec", [947, 105], [1200, 400]);
+  const v = await page.evaluate(() => { const s = window.__app__.sketches.sk_q2_1; return s.strokes.filter((x) => x.t === "vec").map((x) => window.__atelier__.lenInfo(s, x.a, x.b).val); });
+  assert.equal(Math.round(v[0]), 5000);
+  assert.ok(Math.abs(v[1] - 9252) / 9252 < 0.02, `B4/3 lu ${v[1]}`);
+  assert.ok(Math.abs(v[2] - 4864) / 4864 < 0.02, `A2/3 lu ${v[2]}`);
+  // les lectures sont acceptées par le correcteur
+  for (const [id, ans] of [["q2_2", Math.round(v[1]) + " daN"], ["q2_3", Math.round(v[2]) + " daN"]]) {
+    await page.fill(`#in-${id}`, ans); await page.click(`#${id} .btn-validate`);
+    assert.match(await text(page, `#${id} .q-status`), /Juste/, ans);
+  }
+  // correction superposée et figure du manuel
+  await page.click(`#${sk} .btn-sketch`);
+  assert.ok(await page.evaluate(() => window.__app__.sketches.sk_q2_1.showCorr));
+  assert.deepEqual(errors, []);
+  await context.close();
+});

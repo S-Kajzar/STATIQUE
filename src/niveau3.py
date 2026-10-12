@@ -19,6 +19,9 @@ import pathlib
 import re
 import struct
 
+import atelier
+import echelle_dr
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 IMAGES = ROOT / "src" / "images"
 
@@ -412,6 +415,8 @@ PARTS_COFFRE = [
 
 
 # ============================================================ EXERCICE 3.2 — ÉCHELLE DE POMPIER
+# Sources : séquence « Statique analytique » (exercice 2) et manuel (statique plane, exercice résolu 1 :
+# résolution graphique et calculée, puis capacité du vérin double effet en poussant et en tirant).
 P_E = 5000.0                       # daN
 XB_E, YB_E, XG_E = 2.85, 1.65, 6.0  # m, repère (A, x, y)
 ALPHA = math.radians(70)
@@ -421,21 +426,100 @@ F_E = -MP_E / D_E
 BX_E, BY_E = -F_E * math.cos(ALPHA), F_E * math.sin(ALPHA)
 AX_E, AY_E = -BX_E, P_E - BY_E
 NA_E = math.hypot(AX_E, AY_E)
+ALPHA_A_E = math.degrees(math.atan2(AY_E, AX_E))   # direction de A2/3 par rapport à x (≈ −49,4°)
 S_E = math.pi * 100 ** 2 / 4
 FN_E = F_E * 10
 PR_E = FN_E / S_E
+P_VERIN = 15.0                                      # MPa (150 bar)
+FP_E = P_VERIN * S_E / 10                           # daN, capacité en poussant
+S2_E = math.pi * (100 ** 2 - 48 ** 2) / 4           # mm², section annulaire côté tige
+FT_E = P_VERIN * S2_E / 10                          # daN, capacité en tirant
+ECART_E = (FP_E - FT_E) / FP_E * 100
 
 UX_E, UY_E = -math.cos(ALPHA), math.sin(ALPHA)
+
+# document réponse de la résolution graphique, dessiné à l'échelle par outils/preparer-images-echelle.py
+ECH = atelier.DR("ECHELLE", "n3-echelle-dr", (echelle_dr.W, echelle_dr.H), echelle_dr.PX_CM,
+                 zones=[{"scale": 1, "unit": "m", "bar": (40, 960),
+                         "poly": [(0, 0), (echelle_dr.SEP, 0), (echelle_dr.SEP, echelle_dr.H), (0, echelle_dr.H)]},
+                        {"scale": 1000, "unit": "daN", "bar": (840, 1010)}],
+                 points=echelle_dr.POINTS, rs=1.3)
+_PB, _PC = echelle_dr.POINTS["B"], echelle_dr.POINTS["C"]
+RES_ECH = atelier.trois_forces(("P3", echelle_dr.POINTS["G3"], (0, P_E)),
+                               ("B4/3", _PB, (_PC[0] - _PB[0], _PC[1] - _PB[1])), ("A2/3", echelle_dr.POINTS["A"]))
+ECH.construire(RES_ECH, (1200, 400), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", sides=[1, -1, 1])
+NB_G, NA_G = RES_ECH["normes"]["B4/3"], RES_ECH["normes"]["A2/3"]
+ANG_A_G = atelier.angle(RES_ECH["u3"])
+TOL_G = 0.07
+
+
+def svg_verin(mode):
+    """Piston + tige isolés (vecteurs dessinés) : « poussant » (pression sur toute la face) ou « tirant » (couronne)."""
+    rouge, bleu, trait = "#C62828", "#9CC3E4", "#2B4A63"
+    ah = ('<defs><marker id="vh-{0}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" '
+          'orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="{1}"/></marker></defs>').format(mode, rouge)
+    h = [f'<svg viewBox="0 0 640 180" role="img" aria-label="Piston et tige du vérin isolés, {mode}">', ah]
+    x0 = 200 if mode == "tirant" else 150
+    h.append(f'<rect x="{x0}" y="40" width="100" height="100" fill="{bleu}" stroke="{trait}" stroke-width="2"/>')
+    tige = 250 if mode == "poussant" else 190
+    h.append(f'<rect x="{x0 + 100}" y="66" width="{tige}" height="48" fill="{bleu}" stroke="{trait}" stroke-width="2"/>')
+    ex = x0 + tige + 135
+    h.append(f'<circle cx="{ex}" cy="90" r="34" fill="{bleu}" stroke="{trait}" stroke-width="2"/>'
+             f'<circle cx="{ex}" cy="90" r="15" fill="#fff" stroke="{trait}" stroke-width="2"/>')
+    h.append(f'<line x1="{x0 - 40}" y1="90" x2="{ex + 50}" y2="90" stroke="{trait}" stroke-dasharray="14 4 3 4"/>')
+    cote = lambda x, y0, y1, t: (f'<line x1="{x}" y1="{y0}" x2="{x}" y2="{y1}" stroke="#1B7A43" stroke-width="1.5" '
+                                 f'marker-start="url(#vc-{mode})" marker-end="url(#vc-{mode})"/>'
+                                 f'<text x="{x - 6}" y="{(y0 + y1) / 2}" transform="rotate(-90 {x - 6} {(y0 + y1) / 2})" '
+                                 f'text-anchor="middle" fill="#1B7A43" font-size="13">{t}</text>')
+    h.insert(1, f'<defs><marker id="vc-{mode}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
+                'orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#1B7A43"/></marker></defs>')
+    if mode == "poussant":
+        for k in range(7):
+            y = 46 + k * 14.7
+            h.append(f'<line x1="{x0 - 44}" y1="{y}" x2="{x0 - 3}" y2="{y}" stroke="{rouge}" stroke-width="2" marker-end="url(#vh-{mode})"/>')
+        h.append(f'<text x="{x0 - 50}" y="30" fill="{rouge}" font-size="15" text-anchor="middle">p = 150 bar</text>')
+        h.append(cote(x0 + 22, 40, 140, "Ø 100 mm"))
+        h.append(f'<line x1="{ex + 80}" y1="90" x2="{ex + 4}" y2="90" stroke="{rouge}" stroke-width="3.5" marker-end="url(#vh-{mode})"/>'
+                 f'<text x="{ex + 62}" y="76" fill="{rouge}" font-size="16" font-style="italic">F<tspan baseline-shift="sub" font-size="11">p</tspan></text>')
+    else:
+        # section droite : couronne de pression S' (Ø 100 − Ø 48)
+        h.append(f'<defs><pattern id="vp-{mode}" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+                 f'<rect width="8" height="8" fill="#F6D9D9"/><line x1="0" y1="0" x2="0" y2="8" stroke="{rouge}" stroke-width="1.6"/></pattern></defs>')
+        h.append(f'<circle cx="80" cy="90" r="50" fill="url(#vp-{mode})" stroke="{trait}" stroke-width="2"/>'
+                 f'<circle cx="80" cy="90" r="24" fill="{bleu}" stroke="{trait}" stroke-width="2"/>')
+        h.append(f'<path d="M80 66H160M80 114H160" stroke="#1B7A43" stroke-width="1" stroke-dasharray="3 3"/>')
+        h.append(cote(22, 40, 140, "Ø 100") + cote(158, 66, 114, "Ø 48"))
+        h.append(f'<text x="80" y="164" text-anchor="middle" font-size="13" fill="{rouge}">S\' : couronne</text>')
+        for y in (46, 56, 124, 134):
+            h.append(f'<line x1="{x0 + 140}" y1="{y}" x2="{x0 + 103}" y2="{y}" stroke="{rouge}" stroke-width="2" marker-end="url(#vh-{mode})"/>')
+        h.append(f'<text x="{x0 + 150}" y="38" fill="{rouge}" font-size="15">p = 150 bar</text>')
+        h.append(f'<line x1="{ex + 4}" y1="90" x2="{ex + 82}" y2="90" stroke="{rouge}" stroke-width="3.5" marker-end="url(#vh-{mode})"/>'
+                 f'<text x="{ex + 56}" y="76" fill="{rouge}" font-size="16" font-style="italic">F<tspan baseline-shift="sub" font-size="11">t</tspan></text>')
+    h.append("</svg>")
+    return "".join(h)
+
+
+def fig_svg(svg, caption, maxw=620):
+    return f'<figure class="fig fig-svg" style="max-width:{maxw}px">{svg}<figcaption>{caption}</figcaption></figure>'
+
+
+BILAN_ECH = ('<table class="t res-table"><thead><tr><th>Force</th><th>Point d\'app.</th><th>Direction</th>'
+             "<th>Intensité</th></tr></thead><tbody>"
+             f"<tr><td>{V('P', '3')}</td><td>G3</td><td>verticale</td><td>5 000 daN</td></tr>"
+             f"<tr><td>{V('B', '4/3')}</td><td>B</td><td>(BC)</td><td>?</td></tr>"
+             f"<tr><td>{V('A', '2/3')}</td><td>A</td><td>?</td><td>?</td></tr></tbody></table>")
 
 PARTS_ECHELLE = [
     {"num": "1", "minutes": 10, "title": "Isolement du vérin (4 + 5)",
      "intro": [
          "<p>Une échelle de pompier <strong>(3)</strong> est articulée en A (pivot d'axe (A, <var>z</var>)) sur une "
          "tourelle <strong>(2)</strong>, qui peut pivoter autour de (D, <var>y</var>) par rapport au châssis "
-         "<strong>(1)</strong>. Le levage est réalisé par un vérin hydraulique <strong>4 + 5</strong> articulé en B sur "
-         "l'échelle et en C sur la tourelle par deux <strong>liaisons rotules</strong>. Étude dans le plan "
-         f"(<var>x</var>, <var>y</var>), ensemble en équilibre ; {V('P', '3')} (5 000 daN) schématise le poids de "
-         "l'échelle ; le poids du vérin est négligé.</p>",
+         "<strong>(1)</strong>. Le levage est réalisé par un vérin hydraulique <strong>4 + 5</strong> (4 : tige, 5 : "
+         "corps) articulé en B sur l'échelle et en C sur la tourelle par deux <strong>liaisons rotules</strong>. Étude "
+         "dans le plan de symétrie (<var>x</var>, <var>y</var>) ; l'ensemble est en équilibre, la tourelle à l'arrêt et "
+         f"le vérin bloqué en position. {V('P', '3')} (5 000 daN) schématise le poids de l'échelle ; le poids du "
+         "vérin est négligé. <strong>Objectif :</strong> déterminer les actions en A, B et C, puis vérifier que le "
+         "vérin est capable de lever l'échelle.</p>",
          figure("n3-echelle", "Échelle 3 articulée en A sur la tourelle 2, vérin 4 + 5 entre B et C incliné de 70°, "
                 "poids P3 de 5 000 daN en G3", "Figure 1 — Échelle de pompier.", 440),
      ],
@@ -443,28 +527,85 @@ PARTS_ECHELLE = [
          QBAR("Q1.1 – Q1.2", ["DP1", "DT1"]),
          Q("q1_1", "Isoler le vérin (4 + 5) : quelle est la droite d'action des actions mécaniques qui agissent sur lui ?",
            H_DROITE, DROITE("B", "C"), "la droite (BC)",
-           "<p>Le vérin, de poids négligé, n'est lié qu'en B et en C : solide soumis à deux forces, de même droite "
-           "d'action <strong>(BC)</strong>, même intensité, sens contraires. La direction de l'action en B est donc "
-           "connue : il ne restera que son intensité.</p>"),
+           "<p>Le vérin, de poids négligé, n'est soumis qu'à deux actions, en B et en C : elles sont égales et "
+           f"opposées, {V('B', '3/4')} = −{V('C', '2/5')}, de droite d'action commune <strong>(BC)</strong>. La "
+           "direction de l'action en B est donc connue : il ne restera que son intensité.</p>" +
+           figure("n3-ep-verin-isole", "Vérin 4 + 5 isolé : actions en B et en C portées par (BC), inclinée de 70° "
+                  "sur x", "Vérin isolé : deux forces directement opposées.", 340)),
          Q("q1_2", "Le vérin est-il comprimé ou tendu ?", "Réponds en un mot.", COMPRIME, "comprimé",
-           "<p>Le vérin pousse l'échelle par en dessous : il travaille en compression.</p>"),
+           "<p>Le vérin pousse l'échelle par en dessous : il travaille en compression (tige rentrée sous l'effort).</p>"),
      ]},
-    {"num": "2", "minutes": 20, "title": "Isolement de l'échelle (3) : bilan des actions",
+    {"num": "2", "minutes": 25, "title": "Résolution graphique : trois forces concourantes",
      "intro": [
-         "<p>On isole l'échelle (3). Repère (A, <var>x</var>, <var>y</var>) de la figure 2. On note <i>F</i> "
-         "l'intensité (inconnue) de l'action du vérin.</p>",
-         figure("n3-echelle-iso", "Échelle isolée : A à l'origine, B à 2,85 m en x et 1,65 m en y, droite BC à 70°, "
-                "poids P3 de 5 000 daN à 6 m de A", "Figure 2 — Échelle (3) isolée.", 400),
+         "<p>On isole l'échelle (3). D'après le principe des actions mutuelles, "
+         f"{V('B', '4/3')} = −{V('B', '3/4')} : sa droite d'action est (BC). Bilan des actions extérieures :</p>",
+         BILAN_ECH,
+         "<p>Trois forces non parallèles, trois inconnues : la résolution graphique est possible. Le document réponse "
+         "représente l'échelle isolée à l'échelle <strong>1 cm ↔ 1 m</strong> ; la zone de droite reçoit le dynamique "
+         "à l'échelle <strong>1 cm ↔ 1 000 daN</strong>.</p>",
      ],
      "blocks": [
-         QBAR("Q2.1 – Q2.2", ["DT1"]),
-         GRP("q2_1", "Donner les coordonnées de B (en m) et les composantes du vecteur unitaire <i>u</i> porté par (BC), "
+         QBAR("Q2.1", ["DT1", "DT2"], ans="sur le DR"),
+         SK("sk_q2_1", "Q2.1", "ECHELLE",
+            "Tracer les droites d'action de P3 et de B4/3, leur point de concours I et la droite d'action de A2/3, "
+            "puis le dynamique des forces à l'échelle 1 cm ↔ 1 000 daN.",
+            ["La droite d'action de P3 est verticale et passe par G3.",
+             "La droite d'action de B4/3 est (BC), prolongée jusqu'à la verticale de G3.",
+             "Le point de concours I est marqué (environ 7 m sous l'horizontale de A) ; la droite d'action de A2/3 est (AI).",
+             "P3 est tracé à l'échelle (5 cm pour 5 000 daN), vertical vers le bas.",
+             "Les parallèles à (BC) et à (AI) ferment le triangle ; les vecteurs se suivent bout à bout."],
+            atelier.AIDE + "<p>Conseil : <b>Droite d'action</b> verticale par G3, puis par B et C (l'aimant accroche les "
+            "points) ; <b>Point</b> à leur intersection I, tout en bas du DR ; <b>Droite d'action</b> de A vers I. Dans "
+            "la zone de droite : saisis 5000 dans « Intensité imposée », trace P3 vers le bas, puis <b>Parallèle</b> à "
+            "(BC) par une extrémité et à (AI) par l'autre.</p>",
+            "<p>Ordre des constructions : point de concours <strong>I</strong> de la verticale de G3 et de (BC), puis "
+            f"direction <strong>(AI)</strong> de {V('A', '2/3')}, inclinée d'environ {fr(ANG_A_G, 0)}° sur "
+            "l'horizontale ; triangle des forces avec P3 vertical (5 cm), B4/3 parallèle à (BC) et A2/3 parallèle à "
+            f"(AI). On lit B4/3 ≈ {fr(NB_G, 0)} daN et A2/3 ≈ {fr(NA_G, 0)} daN (le manuel, tracé à la main, donne "
+            "9 300 daN et 4 900 daN : la précision dépend de la qualité des constructions).</p>" +
+            figure("n3-ep-graphique", "Construction du manuel : échelle isolée, point I, triangle des forces et vérin "
+                   "isolé", "La construction du manuel.", 560)),
+         QBAR("Q2.2 – Q2.5", ["DT1"]),
+         Q("q2_2", f"Relever sur ton dynamique l'intensité de {V('B', '4/3')}.",
+           "Lecture sur ton dynamique, arrondie à la centaine ; la tolérance couvre la précision du tracé. " + UNITE,
+           num(NB_G, "daN", relTol=TOL_G, variants=[var(NB_G * 10, "N", relTol=TOL_G), var(NB_G / 100, "kN", relTol=TOL_G)]),
+           f"‖{V('B', '4/3')}‖ ≈ {fr(NB_G, 0)} daN",
+           f"<p>Le côté parallèle à (BC) mesure environ {fr(NB_G / 1000, 1)} cm : {fr(NB_G / 1000, 1)} × 1 000 ≈ "
+           f"<b>{fr(NB_G, 0)} daN</b>. Le vérin pousse presque deux fois plus fort que le poids de l'échelle : il agit "
+           "près de l'articulation A, avec un petit bras de levier.</p>"),
+         Q("q2_3", f"Relever l'intensité de {V('A', '2/3')}.",
+           "Lecture sur ton dynamique, arrondie à la centaine. " + UNITE,
+           num(NA_G, "daN", relTol=TOL_G, variants=[var(NA_G * 10, "N", relTol=TOL_G), var(NA_G / 100, "kN", relTol=TOL_G)]),
+           f"‖{V('A', '2/3')}‖ ≈ {fr(NA_G, 0)} daN",
+           f"<p>Le côté parallèle à (AI) mesure environ {fr(NA_G / 1000, 1)} cm, soit <b>{fr(NA_G, 0)} daN</b>.</p>"),
+         Q("q2_4", f"Quel angle la droite d'action de {V('A', '2/3')} fait-elle avec l'horizontale ?",
+           "Angle aigu mesuré sur ton tracé, en degrés, arrondi à l'unité. " + UNITE,
+           num(ANG_A_G, "deg", absTol=3), f"≈ {fr(ANG_A_G, 0)}°",
+           "<p>La droite (AI) se mesure avec l'outil <b>Mesurer</b> (l'angle s'affiche) : environ "
+           f"<b>{fr(ANG_A_G, 0)}°</b>.</p>"),
+         Q("q2_5", f"Quel est le sens de {V('A', '2/3')} ?", "Réponds en quelques mots (vers le haut, vers la gauche…).",
+           KW([["bas", "droite"]], forbid=["haut", "gauche"]), "vers le bas et la droite",
+           "<p>En fermant le triangle (vecteurs bout à bout), A2/3 part de l'extrémité de B4/3 et revient à l'origine "
+           "de P3 : il est dirigé <strong>vers le bas et la droite</strong>. La tourelle retient l'échelle, que le vérin "
+           "pousse plus fort que son poids ne la tire.</p>"),
+     ]},
+    {"num": "3", "minutes": 20, "title": "Résolution calculée : bilan et torseurs",
+     "intro": [
+         "<p>On reprend l'échelle isolée par le calcul, dans le repère (A, <var>x</var>, <var>y</var>) de la figure 2. "
+         "On note <i>F</i> l'intensité (inconnue) de l'action du vérin.</p>",
+         figure("n3-echelle-iso", "Échelle isolée : A à l'origine, B à 2,85 m en x et 1,65 m en y, droite BC à 70°, "
+                "poids P3 de 5 000 daN à 6 m de A", "Figure 2 — Échelle (3) isolée, paramètres du calcul.", 400),
+     ],
+     "blocks": [
+         QBAR("Q3.1 – Q3.2", ["DT1"]),
+         GRP("q3_1", "Donner les coordonnées de B (en m) et les composantes du vecteur unitaire <i>u</i> porté par (BC), "
              "orienté de C vers B.", "Coordonnées au centième, composantes de <i>u</i> au millième.",
              [VEC("B", [("x", *val(XB_E, 2, 0, 0.005)), ("y", *val(YB_E, 2, 0, 0.005))], "m"),
               VEC("<i>u</i>", [("x", *val(UX_E, 3, 0, 0.003)), ("y", *val(UY_E, 3, 0, 0.003))])],
              "<p>B est lu sur la figure : 2,85 m et 1,65 m. La droite (CB) fait 70° avec <var>x</var>, B étant au-dessus "
-             "et à gauche de C : <i>u</i> = (−cos 70° ; sin 70°) ≈ (−0,342 ; 0,940).</p>"),
-         GRP("q2_2", "Écrire, en leur point d'application, les torseurs des actions mécaniques extérieures sur "
+             "et à gauche de C : <i>u</i> = (−cos 70° ; sin 70°) ≈ (−0,342 ; 0,940). Autrement dit, "
+             "<i>B</i><sub>y</sub> / <i>B</i><sub>x</sub> = tan 110° = −tan 70°.</p>"),
+         GRP("q3_2", "Écrire, en leur point d'application, les torseurs des actions mécaniques extérieures sur "
              "l'échelle (forces en daN).",
              "Inconnues : X_A, Y_A et F. Une composante de l'action du vérin s'écrit coefficient × F (ex. −0,5F) ; "
              "une composante nulle s'écrit 0.",
@@ -476,11 +617,11 @@ PARTS_ECHELLE = [
              "(<i>X</i><sub>A</sub>, <i>Y</i><sub>A</sub>, <i>F</i>) pour 3 équations : sans l'isolement du vérin, on en "
              "aurait 4.</p>"),
      ]},
-    {"num": "3", "minutes": 30, "title": "PFS au point A et résultats",
+    {"num": "4", "minutes": 30, "title": "PFS au point A et résultats",
      "intro": [],
      "blocks": [
-         QBAR("Q3.1 – Q3.4", ["DT1"]),
-         GRP("q3_1", "Écrire les trois torseurs au point A (forces en daN, moments en daN·m).",
+         QBAR("Q4.1 – Q4.5", ["DT1"]),
+         GRP("q4_1", "Écrire les trois torseurs au point A (forces en daN, moments en daN·m).",
              "Moments positifs dans le sens trigonométrique ; un moment inconnu s'écrit coefficient × F (au centième).",
              [TZ("2→3", "A", sym("X_A"), sym("Y_A"), z()),
               TZ("4→3", "A", lin(["F"], UX_E, 0.003), lin(["F"], UY_E, 0.003), lin(["F"], D_E, 0.008, 2)),
@@ -488,11 +629,13 @@ PARTS_ECHELLE = [
              eq("<i>N</i><sub>A</sub>(B) = 2,85 × 0,940 <i>F</i> − 1,65 × (−0,342 <i>F</i>) ≈ <b>3,24 <i>F</i></b> ; "
                 "<i>N</i><sub>A</sub>(P3) = 6 × (−5 000) = <b>−30 000</b>") +
              "<p>3,24 m est la distance de A à la droite (BC) : le bras de levier du vérin.</p>"),
-         Q("q3_2", "Écrire l'équation des moments en A et en déduire l'intensité <i>F</i> de l'action du vérin.", H_U,
+         Q("q4_2", "Écrire l'équation des moments en A et en déduire l'intensité <i>F</i> de l'action du vérin.", H_U,
            num(F_E, "daN", relTol=0.002, variants=[var(FN_E, "N", relTol=0.002), var(FN_E / 1000, "kN", relTol=0.002)]),
            f"<i>F</i> ≈ {fr(F_E, 0)} daN",
-           eq("3,24 <i>F</i> − 30 000 = 0 ⇒ <i>F</i> = " + frac("30 000", fr(D_E, 3)) + f" ≈ <b>{fr(F_E, 0)} daN</b>")),
-         GRP("q3_3", "Donner les actions mécaniques en A et en B.", "Composantes algébriques, arrondies à l'unité, en daN.",
+           eq("3,24 <i>F</i> − 30 000 = 0 ⇒ <i>F</i> = " + frac("30 000", fr(D_E, 3)) + f" ≈ <b>{fr(F_E, 0)} daN</b>") +
+           "<p>Le manuel écrit la même équation avec les composantes : <i>B</i><sub>y</sub> × 2,85 − <i>B</i><sub>x</sub> "
+           "× 1,65 − 5 000 × 6 = 0, avec <i>B</i><sub>y</sub> = −<i>B</i><sub>x</sub> tan 70°.</p>"),
+         GRP("q4_3", "Donner les actions mécaniques en A et en B.", "Composantes algébriques, arrondies à l'unité, en daN.",
              [VEC(V("A", "2/3"), [("X", *val(AX_E, 0, 0.003)), ("Y", *val(AY_E, 0, 0.003))], "daN"),
               VEC(V("B", "4/3"), [("X", *val(BX_E, 0, 0.003)), ("Y", *val(BY_E, 0, 0.003))], "daN")],
              eq(f"<i>X</i><sub>B</sub> = −0,342 <i>F</i> ≈ {fr(BX_E, 0)} ; <i>Y</i><sub>B</sub> = 0,940 <i>F</i> ≈ {fr(BY_E, 0)}") +
@@ -500,22 +643,75 @@ PARTS_ECHELLE = [
                 f"{fr(BY_E, 0)} ≈ {fr(AY_E, 0)}") +
              "<p><i>Y</i><sub>A</sub> &lt; 0 : la tourelle retient l'échelle vers le bas, le vérin poussant plus fort "
              "que le poids.</p>"),
-         Q("q3_4", f"Calculer la norme ‖{V('A', '2/3')}‖.", H_U,
+         Q("q4_4", f"Calculer la norme ‖{V('A', '2/3')}‖.", H_U,
            num(NA_E, "daN", relTol=0.003, variants=[var(NA_E * 10, "N", relTol=0.003)]), f"≈ {fr(NA_E, 0)} daN",
-           eq(f"‖{V('A', '2/3')}‖ = " + sqrt(f"{fr(AX_E, 0)}² + ({fr(AY_E, 0)})²") + f" ≈ <b>{fr(NA_E, 0)} daN</b>")),
+           eq(f"‖{V('A', '2/3')}‖ = " + sqrt(f"{fr(AX_E, 0)}² + ({fr(AY_E, 0)})²") + f" ≈ <b>{fr(NA_E, 0)} daN</b>") +
+           f"<p>La résolution graphique donnait ≈ {fr(NA_G, 0)} daN : les deux méthodes concordent.</p>"),
+         Q("q4_5", f"Calculer l'angle α<sub>A</sub> que fait {V('A', '2/3')} avec l'axe <var>x</var> "
+           "(angle algébrique, positif dans le sens trigonométrique).",
+           "Arrondir au dixième de degré ; n'oublie pas le signe. " + UNITE,
+           num(ALPHA_A_E, "deg", absTol=0.3), f"α<sub>A</sub> ≈ {fr(ALPHA_A_E, 1)}°",
+           eq("α<sub>A</sub> = arctan " + frac("<i>Y</i><sub>A</sub>", "<i>X</i><sub>A</sub>") + " = arctan " +
+              frac(fr(AY_E, 0), fr(AX_E, 0)) + f" ≈ <b>{fr(ALPHA_A_E, 1)}°</b>") +
+           f"<p>{V('A', '2/3')} est dirigée vers le bas et la droite, à {fr(-ALPHA_A_E, 1)}° sous l'horizontale : c'est "
+           "la direction (AI) trouvée graphiquement.</p>"),
      ]},
-    {"num": "4", "minutes": 10, "title": "Pression d'alimentation du vérin",
-     "intro": ["<p>Le diamètre du piston du vérin est de 100 mm ; l'huile agit sur toute la surface du piston.</p>"],
+    {"num": "5", "minutes": 20, "title": "Le vérin double effet : pression et capacité",
+     "intro": [
+         "<p>Le vérin double effet travaille aussi bien en poussant qu'en tirant. Il se compose d'un corps "
+         "<strong>(1)</strong>, rodé et glacé, et d'une tige de piston <strong>(3)</strong> solidaire d'un piston "
+         "<strong>(2)</strong> ; la liaison entre 1 et (2 + 3) est un pivot glissant d'axe l'axe du vérin. Frottements "
+         "et poids négligés. Diamètre du piston : <strong>100 mm</strong> ; diamètre de la tige : <strong>48 mm</strong>. "
+         "La pression dans la chambre opposée est nulle.</p>",
+         figure("n3-ep-verin-coupe", "Vérin hydraulique en coupe longitudinale : fond 5, corps 1, piston 2 et ses "
+                "joints, tige 3, coussinet 4", "Figure 3 — Vérin hydraulique, coupe longitudinale.", 700),
+     ],
      "blocks": [
-         QBAR("Q4.1 – Q4.2", ["DT1"]),
-         Q("q4_1", "Calculer la surface <i>S</i> du piston.", H_C,
+         QBAR("Q5.1 – Q5.2", ["DT1"]),
+         Q("q5_1", "Calculer la surface <i>S</i> du piston.", H_C,
            num(S_E, "mm2", relTol=0.001, variants=[var(S_E / 100, "cm2", relTol=0.001)]), f"<i>S</i> ≈ {fr(S_E)} mm²",
            eq("<i>S</i> = " + frac("π × 100²", "4") + f" ≈ <b>{fr(S_E)} mm²</b>")),
-         Q("q4_2", "Calculer la pression d'alimentation <i>p</i> nécessaire.", H_C,
+         Q("q5_2", "Calculer la pression d'alimentation <i>p</i> nécessaire pour tenir l'échelle.", H_C,
            num(PR_E, "MPa", relTol=0.003, variants=[var(PR_E * 10, "bar", relTol=0.003), var(PR_E * 1e6, "Pa", relTol=0.003)]),
            f"<i>p</i> ≈ {fr(PR_E)} MPa (≈ {fr(PR_E * 10, 1)} bar)",
            eq("<i>p</i> = " + frac("<i>F</i>", "<i>S</i>") + " = " + frac(fr(FN_E, 0) + " N", fr(S_E) + " mm²") +
-              f" ≈ <b>{fr(PR_E)} MPa</b> ≈ {fr(PR_E * 10, 1)} bar") + "<p>Attention : <i>F</i> en newtons (1 daN = 10 N).</p>"),
+              f" ≈ <b>{fr(PR_E)} MPa</b> ≈ {fr(PR_E * 10, 1)} bar") + "<p>Attention : <i>F</i> en newtons (1 daN = 10 N), "
+           "et 1 MPa = 1 N/mm² = 10 bar.</p>"),
+         QBAR("Q5.3 – Q5.4", ["DT1"]),
+         Q("q5_3", "L'huile est disponible à <strong>150 bar</strong>. On isole le piston et la tige (figure "
+           "ci-dessous) : calculer la capacité du vérin <strong>en poussant</strong>, c'est-à-dire l'effort "
+           "<i>F</i><sub>p</sub> qu'il peut exercer.", H_U,
+           num(FP_E, "daN", relTol=0.003, variants=[var(FP_E * 10, "N", relTol=0.003), var(FP_E / 100, "kN", relTol=0.003)]),
+           f"<i>F</i><sub>p</sub> ≈ {fr(FP_E, 0)} daN",
+           fig_svg(svg_verin("poussant"), "Piston et tige isolés, en poussant : la pression agit sur toute la face du piston.") +
+           "<p>L'ensemble isolé est soumis à deux forces : la résultante <i>R</i> = <i>p</i> · <i>S</i> des forces de "
+           "pression, portée par l'axe du vérin, et l'action <i>F</i><sub>p</sub> = −<i>R</i> sur la rotule (tige "
+           "comprimée).</p>" +
+           eq("<i>F</i><sub>p</sub> = <i>p</i> · <i>S</i> = 15 N/mm² × " + fr(S_E) + f" mm² ≈ {fr(FP_E * 10, 0)} N ≈ "
+              f"<b>{fr(FP_E, 0)} daN</b>") +
+           "<p>Avec <i>p</i> en bar et <i>S</i> en cm² : 150 × 78,54 ≈ 11 781 daN directement.</p>"),
+         Q("q5_4", "À 150 bar, le vérin est-il capable de tenir l'échelle ?", H_OUINON, YES, "oui",
+           f"<p>Il faut {fr(F_E, 0)} daN et le vérin en fournit {fr(FP_E, 0)} : <strong>oui</strong>, avec une réserve "
+           f"d'environ {fr((FP_E / F_E - 1) * 100, 0)} %. Il suffit de {fr(PR_E * 10, 0)} bar pour tenir l'échelle "
+           "dans cette position.</p>"),
+         QBAR("Q5.5 – Q5.7", ["DT1"]),
+         Q("q5_5", "En tirant, l'huile agit de l'autre côté du piston, sur la couronne <i>S</i>′ autour de la tige. "
+           "Calculer <i>S</i>′.", H_C,
+           num(S2_E, "mm2", relTol=0.002, variants=[var(S2_E / 100, "cm2", relTol=0.002)]), f"<i>S</i>′ ≈ {fr(S2_E)} mm²",
+           fig_svg(svg_verin("tirant"), "Piston et tige isolés, en tirant : la pression n'agit que sur la couronne S′.") +
+           eq("<i>S</i>′ = <i>S</i> − section de la tige = " + frac("π (100² − 48²)", "4") + f" ≈ <b>{fr(S2_E)} mm²</b>")),
+         Q("q5_6", "Calculer la capacité du vérin <strong>en tirant</strong>, <i>F</i><sub>t</sub>, toujours à 150 bar.", H_U,
+           num(FT_E, "daN", relTol=0.003, variants=[var(FT_E * 10, "N", relTol=0.003), var(FT_E / 100, "kN", relTol=0.003)]),
+           f"<i>F</i><sub>t</sub> ≈ {fr(FT_E, 0)} daN",
+           eq("<i>F</i><sub>t</sub> = <i>p</i> · <i>S</i>′ = 15 × " + fr(S2_E) + f" ≈ {fr(FT_E * 10, 0)} N ≈ "
+              f"<b>{fr(FT_E, 0)} daN</b>") + "<p>Dans ce cas, la tige est <strong>tendue</strong>.</p>"),
+         Q("q5_7", "De combien de pour cent la capacité en tirant est-elle inférieure à la capacité en poussant ?",
+           "Écart rapporté à <i>F</i><sub>p</sub>, en %, arrondi à l'unité (nombre sans unité).",
+           num(ECART_E, None, absTol=0.6), f"≈ {fr(ECART_E, 0)} %",
+           eq("(" + frac(f"<i>F</i><sub>p</sub> − <i>F</i><sub>t</sub>", "<i>F</i><sub>p</sub>") + ") × 100 = "
+              "(1 − " + frac("<i>S</i>′", "<i>S</i>") + ") × 100 = " + frac("48²", "100²") + f" × 100 ≈ <b>{fr(ECART_E, 0)} %</b>") +
+           "<p>La section de la tige ne reçoit pas de pression : c'est pourquoi on monte le vérin pour qu'il "
+           "<strong>pousse</strong> quand l'effort est le plus grand, comme ici pour lever l'échelle.</p>"),
      ]},
 ]
 
@@ -720,12 +916,24 @@ def dp_echelle():
     return ('<div class="doc-text"><h3>Échelle de pompier</h3><p>L\'échelle <strong>(3)</strong> est articulée en A '
             "(pivot d'axe (A, <var>z</var>)) sur la tourelle <strong>(2)</strong>, qui tourne autour de (D, <var>y</var>) "
             "sur le châssis <strong>(1)</strong>. Le vérin <strong>4 + 5</strong> (tige 4, corps 5) est articulé par des "
-            "rotules en B (échelle) et en C (tourelle). Poids de l'échelle : 5 000 daN ; poids du vérin négligé. "
-            "Diamètre du piston : 100 mm.</p></div>" +
+            "rotules en B (échelle) et en C (tourelle). Poids de l'échelle : 5 000 daN ; poids du vérin négligé.</p>"
+            "<h3>Vérin double effet</h3><p>Piston de diamètre 100 mm, tige de diamètre 48 mm, huile disponible à "
+            "150 bar. La pression dans la chambre opposée est nulle.</p></div>" +
             '<img class="doc-img" src="{0}" width="{1}" height="{2}" alt="Échelle, tourelle et vérin">'.format(*png("n3-echelle")) +
             '<p class="doc-cap">Ensemble échelle, tourelle, vérin.</p>' +
             '<img class="doc-img" src="{0}" width="{1}" height="{2}" alt="Échelle isolée cotée">'.format(*png("n3-echelle-iso")) +
-            '<p class="doc-cap">Échelle isolée : cotes en mètres.</p>')
+            '<p class="doc-cap">Échelle isolée : cotes en mètres.</p>' +
+            '<img class="doc-img" src="{0}" width="{1}" height="{2}" alt="Vérin en coupe longitudinale">'.format(*png("n3-ep-verin-coupe")) +
+            '<p class="doc-cap">Vérin hydraulique, coupe longitudinale : 1 corps, 2 piston, 3 tige, 4 coussinet, 5 fond.</p>')
+
+
+def docs_echelle():
+    """DP1 présentation, DT1 formulaire, DT2 méthode graphique et mode d'emploi de l'atelier de tracé."""
+    import graphique      # import tardif : graphique dépend lui-même de ce module
+    return [("DP1", "Présentation de l'échelle", "Dossier présentation", False, dp_echelle()),
+            ("DT1", "Formulaire de statique analytique", "Dossier technique", True, DT_FORMULAIRE),
+            ("DT2", "Statique graphique et atelier de tracé", "Dossier technique", True,
+             graphique.cartes_methode() + graphique.dt_aide())]
 
 
 def dp_velo():
@@ -751,16 +959,20 @@ EXOS = [
      "desc": "Statique analytique : graphe des liaisons, torseurs transmissibles dans le plan, application du PFS à "
              "une porte de coffre-fort articulée sur deux gonds."},
     {"page": "echelle-pompier.html", "tag": "Exercice 3.2", "level": "Niveau 3", "title": "Échelle de pompier",
-     "parts": PARTS_ECHELLE, "dp": ("Présentation de l'échelle", dp_echelle), "vign": "carte-echelle-pompier.jpg",
-     "mots": ["Deux forces", "Vérin", "PFS plan", "Pression"],
+     "parts": PARTS_ECHELLE, "docs": docs_echelle, "vign": "carte-echelle-pompier.jpg",
+     "mots": ["Deux forces", "Trois forces", "PFS plan", "Vérin double effet"],
+     "toolbar": atelier.toolbar, "sk_bg": {"ECHELLE": ECH.img}, "decor_helpers": "", "decor": {"ECHELLE": ECH.decor_js()},
+     "dr_names": {"ECHELLE": ("DR1", "Q2.1", "Échelle (3) isolée : point de concours et dynamique")},
+     "extra_css": atelier.CSS, "extra_js": atelier.JS, "sk_fact": "sur DR, avec l'atelier de tracé",
      "alt": "Échelle de pompier levée par un vérin articulé en B et C",
      "hero": ("n3-echelle", "Échelle de pompier levée par un vérin hydraulique",
               "Quel effort le vérin doit-il fournir pour lever l'échelle ?"),
      "sub": "Une échelle de 5 000 daN levée par un vérin hydraulique. L'isolement du vérin donne la direction de "
-            "son action ; le PFS appliqué à l'échelle donne les efforts en A et en B, puis la pression "
-            "d'alimentation nécessaire.",
-     "desc": "Statique analytique : solide soumis à deux forces, PFS dans le plan appliqué à une échelle de pompier, "
-             "pression d'alimentation d'un vérin."},
+            "son action ; l'échelle est ensuite résolue deux fois — graphiquement sur DR (trois forces concourantes), "
+            "puis par le calcul (torseurs et PFS au point A) — avant de vérifier la capacité du vérin double effet "
+            "en poussant et en tirant.",
+     "desc": "Statique : solide soumis à deux puis à trois forces, résolution graphique et calculée d'une échelle de "
+             "pompier, capacité d'un vérin double effet en poussant et en tirant."},
     {"page": "cadre-velo.html", "tag": "Exercice 3.3", "level": "Niveau 3", "title": "Cadre de vélo tout terrain",
      "parts": PARTS_VELO, "dp": ("Présentation du cadre", dp_velo), "vign": "carte-cadre-velo.jpg",
      "mots": ["Isolements successifs", "Amortisseur", "Trois forces", "Pivot"],

@@ -14,7 +14,7 @@ même accueil en cartes illustrées). Publié par GitHub Pages depuis `index.htm
 | `potence.html` | Exercice 2.1 (Niveau 2) — Potence à tirant sur mur : 5 parties, 45 questions et 1 tracé, 2 h (repris du dépôt `statique-potence`) |
 | `cours-statique-analytique.html` | Cours 3 (Niveau 3) — Statique analytique : balance, jeux, cartes à retourner, atelier des liaisons, calculateur de moment, poutre résolue pas à pas, quiz |
 | `coffre-fort.html` | Exercice 3.1 (Niveau 3) — Porte de coffre-fort : 3 parties, 4 torseurs ou vecteurs à compléter, 2 questions et 1 tracé, 1 h |
-| `echelle-pompier.html` | Exercice 3.2 (Niveau 3) — Échelle de pompier : 4 parties, 4 torseurs ou vecteurs à compléter, 6 questions, 1 h 10 |
+| `echelle-pompier.html` | Exercice 3.2 (Niveau 3) — Échelle de pompier : 5 parties (vérin isolé, résolution graphique sur DR avec l'atelier de tracé, torseurs, PFS en A, capacité du vérin double effet en poussant et en tirant), 1 tracé, 1 h 45 |
 | `deplacer-torseur.html` | Exercice 3.4 (Niveau 3) — Déplacer un torseur : entraînement à tirages aléatoires (glisseur plan, torseur plan, torseur 3D), vecteur BA et torseur en B à écrire, correction pas à pas, série de 10 notée sur 20 |
 | `cadre-velo.html` | Exercice 3.3 (Niveau 3) — Cadre de vélo tout terrain : 4 parties, 6 torseurs ou vecteurs à compléter, 3 questions et 1 tracé, 1 h 10 |
 
@@ -26,6 +26,7 @@ Les autres cartes (cours 1 et 2, formulaire, exercice 1.1, étude de cas) sont l
 python3 src/generer.py                     # écrit index.html, potence.html, les cours 1.1 et 3, les exercices 1.2 à 1.5 et 3.1 à 3.4
 python3 outils/preparer-images-n3.py       # seulement si src/images/originaux/n3-* change (Pillow)
 python3 outils/preparer-images-graphique.py # seulement si src/images/originaux/g-* change (Pillow)
+python3 outils/preparer-images-echelle.py  # exercice 3.2 : figures du manuel (n3-ep-*) et DR dessiné à l'échelle
 python3 outils/vignette-torseur.py         # vignette de la carte 3.4, dessinée (Pillow)
 ```
 
@@ -43,6 +44,7 @@ NODE_PATH=$(npm root -g) node --test tests/*.test.js   # accueil, cours 1.1 et 3
   de liaisons) assemblés sur le gabarit ; constructeur de page commun à tous les exercices générés (`build_exo`).
 - `src/torseur_alea.py` : exercice 3.4, page autonome d'entraînement à valeurs aléatoires (les tirages se recalculent
   dans le navigateur ; `deplacer-torseur.html?seed=42` rend la suite de tirages reproductible).
+- `src/echelle_dr.py` : cotes du DR de l'échelle de pompier, partagées par son dessin et par la correction graphique.
 - `src/cours3.py` : cours 3, page autonome interactive ; `src/cours1.py` : cours 1.1 (statique graphique).
 - `src/graphique.py` : exercices 1.2 à 1.5 (points relevés sur les DR, constructions résolues, questions, corrections).
 - `src/atelier.py` : **atelier de tracé** des exercices de statique graphique, greffé sur le moteur de tracé du gabarit

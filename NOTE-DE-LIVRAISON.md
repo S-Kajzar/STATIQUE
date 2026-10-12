@@ -1,3 +1,29 @@
+# Note de livraison — Exercice 3.2 enrichi : échelle de pompier (schémas et questions du manuel)
+
+L'exercice reprend l'exercice résolu du manuel (statique plane) : mêmes données, avec ses schémas et ses questions.
+Il passe de 4 à **5 parties** (1 h 45, 34 points) :
+
+| Partie | Contenu |
+|---|---|
+| 1. Vérin isolé | droite d'action (BC), compression ; correction illustrée par le vérin isolé du manuel |
+| 2. Résolution graphique (nouvelle) | tableau bilan des forces ; **tracé sur DR avec l'atelier** : verticale de G3, (BC), point de concours I, (AI), dynamique à 1 cm ↔ 1 000 daN ; lectures de B4/3 et A2/3, angle de (AI), sens de A2/3 ; correction superposée + construction du manuel |
+| 3. Résolution calculée | B et vecteur unitaire u ; torseurs en leur point (inchangé) |
+| 4. PFS en A | torseurs en A, F, composantes de A et B, ‖A‖ (comparée à la lecture graphique), **angle α<sub>A</sub> ≈ −49,4°** (nouveau) |
+| 5. Vérin double effet | coupe longitudinale du manuel ; S, pression nécessaire (≈ 117,8 bar) ; **capacité en poussant à 150 bar** (11 781 daN), le vérin tient-il l'échelle, **couronne S′**, **capacité en tirant** (9 067 daN), écart de 23 % |
+
+- Le **DR est dessiné** à l'échelle 1 cm ↔ 1 m d'après les cotes du manuel (`src/echelle_dr.py`,
+  `outils/preparer-images-echelle.py`) : la construction exacte retrouve les valeurs du calcul (9 252 et 4 864 daN), le
+  manuel, tracé à la main, annonce 9 300 et 4 900 daN ; les lectures sont acceptées à ± 7 %.
+- Figures reprises du manuel : vérin isolé, construction graphique (correction), vérin en coupe. Les schémas du piston
+  isolé en poussant et en tirant sont redessinés en vectoriel (le scan, teinté, laissait voir le verso).
+- Dossiers : DP1 (présentation, figures, vérin), DT1 (formulaire de statique analytique), DT2 (méthode de la statique
+  graphique et mode d'emploi de l'atelier).
+
+Tests : 20/20 sur tout le sujet (tracé compris), cases de torseur fausses, examen et téléphone, et un test qui fait la
+construction sur le DR (I accroché à l'intersection, dynamique à l'échelle, lectures acceptées).
+
+---
+
 # Note de livraison — Exercice 3.4 : déplacer un torseur (entraînement aléatoire)
 
 Nouvelle carte **Exercice 3.4 · Niveau 3** (`deplacer-torseur.html`), page autonome : chaque tirage donne un torseur
