@@ -490,6 +490,36 @@ body:not(.no-mode) .home-back{display:none}
 .gt-aide dt{font:700 .9rem var(--f-titre)}
 .gt-aide dd{margin:0}
 .res-table td,.res-table th{text-align:center}
+.gt-toolbar button[data-tool="sel"][aria-pressed="true"]{background:var(--encre); border-color:var(--encre)}
+.gt-toolbar .gt-del:not(:disabled){border-color:var(--rouge); color:var(--rouge)}
+.gt-sketch.tool-sel .sk-stage canvas{cursor:pointer}
+/* correction pas à pas */
+.gt-steps{display:none; border:1px solid #C9D8EC; border-top:0; background:#fff; padding:6px 10px 8px; font-size:.9rem; line-height:1.4}
+.sketch.revealed .gt-steps{display:block}
+.gt-steps-head{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 4px}
+.gt-steps-head b{font:800 .95rem var(--f-titre); margin-right:auto}
+.gt-steps-head button{border:1.5px solid var(--encre); background:#fff; padding:3px 9px; font:700 .82rem var(--f-titre); cursor:pointer}
+.gt-steps-head button:hover{background:var(--jaune-pale)}
+.gt-steps-head button:disabled{opacity:.4; cursor:default}
+.gt-st-n{font:700 .85rem var(--f-titre); color:var(--bleu); min-width:6.5em; text-align:center}
+.gt-st-list{margin:0; padding:0; list-style:none}
+.gt-st-list li{margin:2px 0; cursor:pointer; color:var(--encre-2)}
+.gt-st-list li .st-d{display:none}
+.gt-st-list li.on{color:var(--encre)}
+.gt-st-list li.on .st-d,.gt-steps.all .gt-st-list li .st-d{display:inline}
+.gt-st-list li.on>b{color:var(--bleu)}
+/* plein écran : le DR occupe toute la place restante et tient en entier (dimensionné par le script) */
+.gt-sketch.is-full .sk-layout{flex:1; min-height:0; display:flex}
+.gt-sketch.is-full .sk-main{flex:1; min-height:0; height:auto; align-items:stretch}
+.gt-sketch.is-full .sk-stage{flex:1 1 0; min-height:0; max-width:none; width:100%; display:flex; align-items:center;
+  justify-content:center; background:transparent; border:0}
+.gt-sketch.is-full .sk-stage canvas{flex:none; max-width:none; max-height:none; box-shadow:0 0 0 1px var(--trait)}
+.gt-sketch.is-full .sk-stage.zoomed{display:block; overflow:auto; max-height:none}
+.gt-sketch.is-full .selfeval,.gt-sketch.is-full .sk-print-wrap{display:none!important}
+.gt-sketch.is-full .gt-status{min-height:0}
+.gt-sketch.is-full .gt-steps{max-height:24vh; overflow:auto}
+.gt-sketch.is-full .gt-st-list li:not(.on){display:none}
+.gt-sketch.is-full .gt-steps.all .gt-st-list li{display:list-item}
 @media print{ .gt-status{display:none!important} }
 </style>
 </head>
@@ -515,13 +545,19 @@ body:not(.no-mode) .home-back{display:none}
 <dt>Vecteur</dt><dd>appuie sur l'origine, glisse jusqu'à l'extrémité. La longueur (cm du document) et l'intensité à l'échelle
 s'affichent en direct. Pour tracer une force connue, saisis d'abord son intensité dans « Intensité imposée ».</dd>
 <dt>Droite d'action</dt><dd>deux points suffisent : la droite est prolongée sur toute la feuille.</dd>
-<dt>Parallèle</dt><dd>clique la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle. C'est l'outil
-du dynamique : il remplace l'équerre et la règle.</dd>
+<dt>Parallèle</dt><dd>clique la droite ou le vecteur de référence (surligné en jaune), puis appuie là où doit passer la
+parallèle. Pour changer de référence, clique simplement sur une autre droite ou un autre vecteur. C'est l'outil du dynamique :
+il remplace l'équerre et la règle.</dd>
 <dt>Point, Texte</dt><dd>marque le point de concours I, nomme tes vecteurs.</dd>
+<dt>Sélection</dt><dd>clique un tracé déjà posé : il s'entoure de jaune. Une couleur ou une épaisseur le modifie ;
+« Supprimer » (ou la touche Suppr) l'efface.</dd>
 <dt>Mesurer</dt><dd>donne une distance et l'intensité correspondante, sans rien tracer.</dd>
 <dt>Aimant</dt><dd>accroche le pointeur aux points du DR, aux extrémités des tracés et aux intersections des droites
 (cercle bleu ou orange). Désactive-le pour un placement libre.</dd>
-<dt>DR</dt><dd>règle la transparence du document sous tes tracés. Le zoom et le plein écran aident à viser.</dd>
+<dt>DR</dt><dd>règle la transparence du document sous tes tracés. Le zoom et le plein écran (le DR y tient en entier)
+aident à viser.</dd>
+<dt>Correction</dt><dd>après validation, « Voir pas à pas » rejoue la construction étape par étape, avec la consigne de
+chaque action.</dd>
 </dl></div></div></section>
   </div>
 </aside>
@@ -680,7 +716,7 @@ du dynamique : il remplace l'équerre et la règle.</dd>
           <div class="sk-layout">
             <div class="sk-main">
               <div class="sk-toolbar gt-toolbar" role="toolbar" aria-label="Outils de construction Q2.1">
-                <span class="tb-group gt-tools"><button type="button" data-tool="vec" aria-pressed="true" title="Tracer un vecteur force à l'échelle">Vecteur</button><button type="button" data-tool="dir" aria-pressed="false" title="Tracer une droite prolongée sur toute la feuille">Droite d'action</button><button type="button" data-tool="par" aria-pressed="false" title="Tracer la parallèle à une droite ou à un vecteur">Parallèle</button><button type="button" data-tool="line" aria-pressed="false" title="Tracer un segment">Segment</button><button type="button" data-tool="pt" aria-pressed="false" title="Marquer un point (point de concours…)">Point</button><button type="button" data-tool="mes" aria-pressed="false" title="Mesurer une longueur et l'intensité correspondante">Mesurer</button><button type="button" data-tool="text" aria-pressed="false" title="Écrire un nom">Texte</button><button type="button" data-tool="erase" aria-pressed="false" title="Effacer un tracé">Gomme</button></span>
+                <span class="tb-group gt-tools"><button type="button" data-tool="vec" aria-pressed="true" title="Tracer un vecteur force à l'échelle">Vecteur</button><button type="button" data-tool="dir" aria-pressed="false" title="Tracer une droite prolongée sur toute la feuille">Droite d'action</button><button type="button" data-tool="par" aria-pressed="false" title="Tracer la parallèle à une droite ou à un vecteur">Parallèle</button><button type="button" data-tool="line" aria-pressed="false" title="Tracer un segment">Segment</button><button type="button" data-tool="pt" aria-pressed="false" title="Marquer un point (point de concours…)">Point</button><button type="button" data-tool="mes" aria-pressed="false" title="Mesurer une longueur et l'intensité correspondante">Mesurer</button><button type="button" data-tool="text" aria-pressed="false" title="Écrire un nom">Texte</button><button type="button" data-tool="erase" aria-pressed="false" title="Effacer un tracé">Gomme</button><button type="button" data-tool="sel" aria-pressed="false" title="Choisir un tracé déjà posé pour changer sa couleur, son épaisseur ou le supprimer">Sélection</button></span>
                 <span class="sep"></span>
                 <button type="button" class="sw" data-color="#1F5FA8" aria-label="Couleur bleue" aria-pressed="true" style="background:#1F5FA8"></button><button type="button" class="sw" data-color="#1B7A43" aria-label="Couleur verte" aria-pressed="false" style="background:#1B7A43"></button><button type="button" class="sw" data-color="#7B3FA0" aria-label="Couleur violette" aria-pressed="false" style="background:#7B3FA0"></button><button type="button" class="sw" data-color="#1C2530" aria-label="Couleur noire" aria-pressed="false" style="background:#1C2530"></button>
                 <span class="sep"></span>
@@ -702,6 +738,7 @@ du dynamique : il remplace l'équerre et la règle.</dd>
                   <button type="button" data-zoom="reset">Ajuster</button></span>
                 <span class="sep"></span>
                 <button type="button" data-act="undo">Annuler</button>
+                <button type="button" class="gt-del" data-act="del" disabled title="Supprimer le tracé sélectionné (touche Suppr)">Supprimer</button>
                 <button type="button" data-act="clear">Tout effacer</button>
                 <span class="spacer"></span>
                 <button type="button" class="btn-drprint" data-act="drprint">Imprimer les DR</button>
@@ -730,13 +767,19 @@ du dynamique : il remplace l'équerre et la règle.</dd>
 <dt>Vecteur</dt><dd>appuie sur l'origine, glisse jusqu'à l'extrémité. La longueur (cm du document) et l'intensité à l'échelle
 s'affichent en direct. Pour tracer une force connue, saisis d'abord son intensité dans « Intensité imposée ».</dd>
 <dt>Droite d'action</dt><dd>deux points suffisent : la droite est prolongée sur toute la feuille.</dd>
-<dt>Parallèle</dt><dd>clique la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle. C'est l'outil
-du dynamique : il remplace l'équerre et la règle.</dd>
+<dt>Parallèle</dt><dd>clique la droite ou le vecteur de référence (surligné en jaune), puis appuie là où doit passer la
+parallèle. Pour changer de référence, clique simplement sur une autre droite ou un autre vecteur. C'est l'outil du dynamique :
+il remplace l'équerre et la règle.</dd>
 <dt>Point, Texte</dt><dd>marque le point de concours I, nomme tes vecteurs.</dd>
+<dt>Sélection</dt><dd>clique un tracé déjà posé : il s'entoure de jaune. Une couleur ou une épaisseur le modifie ;
+« Supprimer » (ou la touche Suppr) l'efface.</dd>
 <dt>Mesurer</dt><dd>donne une distance et l'intensité correspondante, sans rien tracer.</dd>
 <dt>Aimant</dt><dd>accroche le pointeur aux points du DR, aux extrémités des tracés et aux intersections des droites
 (cercle bleu ou orange). Désactive-le pour un placement libre.</dd>
-<dt>DR</dt><dd>règle la transparence du document sous tes tracés. Le zoom et le plein écran aident à viser.</dd>
+<dt>DR</dt><dd>règle la transparence du document sous tes tracés. Le zoom et le plein écran (le DR y tient en entier)
+aident à viser.</dd>
+<dt>Correction</dt><dd>après validation, « Voir pas à pas » rejoue la construction étape par étape, avec la consigne de
+chaque action.</dd>
 </dl></details><p>Conseil : pour reporter la direction de E sur le bras, utilise <b>Parallèle</b> en choisissant comme référence ta droite (EI) de la sellette, puis appuie sur le point E du bras.</p></div>
           </div>
           <p class="sk-note sk-note-wrap">La correction se superpose à ton tracé dès que tu le valides. <span class="sk-wait" aria-live="polite"></span></p>
@@ -1418,20 +1461,23 @@ if (typeof module !== "undefined") module.exports = Grading;
       pad: { t: 0, r: 0, b: 0, l: 0 }, rs: 1.0,
       graph: {"alpha": 0.45, "pxPerCm": 86.2, "zones": [{"unit": "daN", "scale": 50, "poly": [[0, 0], [1500, 0], [760, 1548], [0, 1548]]}, {"unit": "daN", "scale": 150}], "points": {"G": [800, 135], "E (sellette)": [785, 531], "F": [895, 725.5], "B": [1422, 672.5], "D": [1454.5, 990], "E (bras)": [2272.5, 548]}, "refs": [[342.5, 807.5, 1112.5, 692.5], [1241.2, 975, 1938.8, 1022]]},
       decorate: function (c) { line(c, 90, 1470, 176.2, 1470, '#1C2530', 8.1); line(c, 90, 1446, 90, 1494, '#1C2530', 8.1); line(c, 176.2, 1446, 176.2, 1494, '#1C2530', 8.1); text(c, "1 cm \u2194 50 daN", 90, 1405, '#1C2530', 54, 'left', '800'); line(c, 1950, 1470, 2036.2, 1470, '#1C2530', 8.1); line(c, 1950, 1446, 1950, 1494, '#1C2530', 8.1); line(c, 2036.2, 1446, 2036.2, 1494, '#1C2530', 8.1); text(c, "1 cm \u2194 150 daN", 1950, 1405, '#1C2530', 54, 'left', '800');  },
-      correction: function (c) {
-        line(c, 800.0, 0.0, 800.0, 1548.0, CORR, 7.0, [38, 19]);
-        line(c, 746.8, 0.0, 858.1, 1548.0, CORR, 7.0, [38, 19]);
-        dot(c, 800.0, 739.7, 16.2, CORR); text(c, "I", 832.4, 701.9, CORR, 65, 'left', '800');
-        arrow(c, 560.0, 430.0, 560.0, 1119.6, CORR, 9.7, 49); text(c, "G V/4 \u2248 400 daN", 824.6, 774.8, CORR, 54, 'center', '800');
-        arrow(c, 560.0, 1119.6, 609.0, 1112.3, TEAL, 9.7, 49); text(c, "F3/4 \u2248 29 daN", 599.1, 1213.7, TEAL, 54, 'center', '800');
-        arrow(c, 609.0, 1112.3, 560.0, 430.0, PURP, 9.7, 49); text(c, "E2/4 \u2248 397 daN", 333.9, 789.2, PURP, 54, 'center', '800');
-        line(c, 2233.1, 0.0, 2344.4, 1548.0, CORR, 7.0, [38, 19]);
-        line(c, 0.0, 70.9, 2430.0, 1099.0, CORR, 7.0, [38, 19]);
-        dot(c, 2308.4, 1047.5, 16.2, CORR); text(c, "I", 2340.8, 1009.7, CORR, 65, 'left', '800');
-        arrow(c, 1700.0, 70.0, 1716.3, 297.4, PURP, 9.7, 49); text(c, "E4/2 \u2248 397 daN", 1457.6, 201.7, PURP, 54, 'center', '800');
-        arrow(c, 1716.3, 297.4, 2336.2, 339.2, TEAL, 9.7, 49); text(c, "D1/2 \u2248 1 081 daN", 2020.5, 404.5, TEAL, 54, 'center', '800');
-        arrow(c, 2336.2, 339.2, 1700.0, 70.0, ORNG, 9.7, 49); text(c, "B0/2 \u2248 1 202 daN", 2081.2, 55.5, ORNG, 54, 'center', '800');
-      }
+      steps: [
+        { t: "Sellette (4) : droite d'action de G V/4", d: "La charge de 400 daN est connue : trace sa droite d'action, la verticale passant par G.", f: function (c) { line(c, 800.0, 0.0, 800.0, 1548.0, CORR, 7.0, [38, 19]); } },
+        { t: "Sellette (4) : droite d'action de F3/4", d: "La bielle (3) est soumise à deux forces : F3/4 est portée par (CF), droite déjà tracée sur le DR.", f: function (c) {  } },
+        { t: "Sellette (4) : point de concours I", d: "Prolonge ces deux droites jusqu'à leur intersection et marque le point I (outil Point) : les trois droites d'action d'un solide soumis à trois forces sont concourantes.", f: function (c) { dot(c, 800.0, 739.7, 16.2, CORR); text(c, "I", 832.4, 701.9, CORR, 65, 'left', '800'); } },
+        { t: "Sellette (4) : droite d'action de E2/4", d: "Trace la droite d'action de E2/4 : elle passe par E et par I. Sa direction est maintenant connue (inclinée d'environ 86° sur l'horizontale).", f: function (c) { line(c, 746.8, 0.0, 858.1, 1548.0, CORR, 7.0, [38, 19]); } },
+        { t: "Sellette (4) : G V/4 à l'échelle", d: "Dans la zone du dynamique (1 cm ↔ 50 daN), trace G V/4 : 8,0 cm pour 400 daN, vers le bas. Astuce : saisis 400 dans « Intensité imposée », puis trace le vecteur avec l'outil Vecteur.", f: function (c) { arrow(c, 560.0, 430.0, 560.0, 1119.6, CORR, 9.7, 49); text(c, "G V/4 = 400 daN", 824.6, 774.8, CORR, 54, 'center', '800'); } },
+        { t: "Sellette (4) : parallèles", d: "Avec l'outil Parallèle : par la pointe de G V/4, trace la parallèle à la droite d'action de F3/4 ; par son origine, la parallèle à celle de E2/4. Elles se coupent au troisième sommet du triangle.", f: function (c) { line(c, 547.7, 1121.4, 621.3, 1110.4, TEAL, 4.9, [22, 16]); line(c, 547.7, 259.4, 621.3, 1282.8, PURP, 4.9, [22, 16]); } },
+        { t: "Sellette (4) : F3/4 et E2/4", d: "Trace F3/4 puis E2/4 sur les côtés du triangle, bout à bout : chaque flèche part de la pointe de la précédente et le triangle se referme. Mesure-les et convertis avec l'échelle : F3/4 ≈ 29 daN, E2/4 ≈ 397 daN.", f: function (c) { arrow(c, 560.0, 1119.6, 609.0, 1112.3, TEAL, 9.7, 49); text(c, "F3/4 \u2248 29 daN", 599.1, 1213.7, TEAL, 54, 'center', '800'); arrow(c, 609.0, 1112.3, 560.0, 430.0, PURP, 9.7, 49); text(c, "E2/4 \u2248 397 daN", 333.9, 789.2, PURP, 54, 'center', '800'); } },
+        { t: "Bras (2) : droite d'action de E4/2", d: "Actions mutuelles : E4/2 = −E2/4 (même droite d'action, même intensité, sens contraire). Avec l'outil Parallèle, reporte en E sur le bras la direction de (EI) trouvée pour la sellette.", f: function (c) { line(c, 2233.1, 0.0, 2344.4, 1548.0, CORR, 7.0, [38, 19]); } },
+        { t: "Bras (2) : droite d'action de D1/2", d: "Le groupe hydraulique est soumis à deux forces : D1/2 est portée par (AD), l'axe du vérin, droite déjà tracée sur le DR.", f: function (c) {  } },
+        { t: "Bras (2) : point de concours I′", d: "Prolonge ces deux droites jusqu'à leur intersection et marque le point I′ (outil Point) : les trois droites d'action d'un solide soumis à trois forces sont concourantes.", f: function (c) { dot(c, 2308.4, 1047.5, 16.2, CORR); text(c, "I\u2032", 2340.8, 1009.7, CORR, 65, 'left', '800'); } },
+        { t: "Bras (2) : droite d'action de B0/2", d: "Trace la droite d'action de B0/2 : elle passe par B et par I′. Sa direction est maintenant connue (inclinée d'environ 23° sur l'horizontale).", f: function (c) { line(c, 0.0, 70.9, 2430.0, 1099.0, CORR, 7.0, [38, 19]); } },
+        { t: "Bras (2) : E4/2 à l'échelle", d: "Dans la zone de droite (1 cm ↔ 150 daN), trace E4/2 : même intensité que E2/4 (≈ 397 daN), sens contraire. Astuce : saisis cette valeur dans « Intensité imposée ».", f: function (c) { arrow(c, 1700.0, 70.0, 1716.3, 297.4, PURP, 9.7, 49); text(c, "E4/2 = 397 daN", 1457.6, 201.7, PURP, 54, 'center', '800'); } },
+        { t: "Bras (2) : parallèles", d: "Avec l'outil Parallèle : par la pointe de E4/2, trace la parallèle à la droite d'action de D1/2 ; par son origine, la parallèle à celle de B0/2. Elles se coupent au troisième sommet du triangle.", f: function (c) { line(c, 1561.4, 287.0, 2491.2, 349.6, TEAL, 4.9, [22, 16]); line(c, 1540.9, 2.7, 2495.3, 406.5, ORNG, 4.9, [22, 16]); } },
+        { t: "Bras (2) : D1/2 et B0/2", d: "Trace D1/2 puis B0/2 sur les côtés du triangle, bout à bout : chaque flèche part de la pointe de la précédente et le triangle se referme. Mesure-les et convertis avec l'échelle : D1/2 ≈ 1 081 daN, B0/2 ≈ 1 202 daN.", f: function (c) { arrow(c, 1716.3, 297.4, 2336.2, 339.2, TEAL, 9.7, 49); text(c, "D1/2 \u2248 1 081 daN", 2020.5, 404.5, TEAL, 54, 'center', '800'); arrow(c, 2336.2, 339.2, 1700.0, 70.0, ORNG, 9.7, 49); text(c, "B0/2 \u2248 1 202 daN", 2081.2, 55.5, ORNG, 54, 'center', '800'); } }
+      ],
+      correction: function (c) { this.steps.forEach(function (s) { s.f(c); }); }
     }
   };
 
@@ -1949,17 +1995,18 @@ if (typeof module !== "undefined") module.exports = Grading;
   if (!ids.length) return;
   var P = Object.getPrototypeOf(app.sketches[ids[0]]);
   var base = {};
-  ["down", "move", "up", "paint", "draw", "eraseAt", "setTool"].forEach(function (k) { base[k] = P[k]; });
+  ["down", "move", "up", "paint", "draw", "eraseAt", "setTool", "toggleFull", "setZoom"].forEach(function (k) { base[k] = P[k]; });
   var NEW = { vec: 1, dir: 1, par: 1, pt: 1, mes: 1, line: 1 };
   var HINTS = {
     vec: "<b>Vecteur</b> : appuie sur l'origine, glisse jusqu'à l'extrémité ; la longueur et l'intensité à l'échelle s'affichent. Pour un vecteur connu, saisis d'abord son intensité dans « Intensité imposée ».",
     dir: "<b>Droite d'action</b> : appuie sur un point de la droite et glisse vers un second point ; la droite est prolongée sur toute la feuille.",
-    par: "<b>Parallèle</b> : clique d'abord sur la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle (glisse pour ajuster). Reclique sur « Parallèle » pour changer de référence.",
+    par: "<b>Parallèle</b> : clique d'abord sur la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle (glisse pour ajuster). Pour changer de référence, clique simplement sur une autre droite ou un autre vecteur.",
     line: "<b>Segment</b> : trait droit entre deux points.",
     pt: "<b>Point</b> : clique pour marquer un point (point de concours I…), puis nomme-le avec l'outil Texte.",
     mes: "<b>Mesurer</b> : glisse d'un point à l'autre ; la distance en cm du document, l'intensité correspondante et l'angle s'affichent.",
     text: "<b>Texte</b> : clique à l'endroit voulu, tape le nom, valide avec Entrée.",
     erase: "<b>Gomme</b> : passe sur un tracé pour l'effacer.",
+    sel: "<b>Sélection</b> : clique sur un tracé déjà posé ; il s'entoure de jaune. Clique alors une couleur ou une épaisseur pour le modifier, ou « Supprimer » (touche Suppr). Échap désélectionne.",
     pen: "<b>Crayon</b> : tracé libre."
   };
   function fr(x, d) { return (Math.abs(x) < 0.5 * Math.pow(10, -d) ? 0 : x).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -2125,23 +2172,62 @@ if (typeof module !== "undefined") module.exports = Grading;
     } else if (st.t === "text") label(ctx, st.s, st.x, st.y, st.c, st.size, "left");
   }
 
+  // ---------- un tracé est-il sous le pointeur ?
+  function hit(s, st, p, r) {
+    var w = (st.w || 2) / 2, q = [p.x, p.y];
+    if (st.t === "pen") { for (var i = 1; i < st.pts.length; i++) if (segDist(q, st.pts[i - 1], st.pts[i]) <= r + w) return true; return false; }
+    if (st.t === "line" || st.t === "arrow" || st.t === "vec") return segDist(q, st.a, st.b) <= r + w;
+    if (st.t === "dir" || st.t === "par") { var L = lineOf(st); return lineDist(q, L.p, L.u) <= r + w; }
+    if (st.t === "pt") return Math.hypot(p.x - st.x, p.y - st.y) <= r + st.w * 3;
+    if (st.t === "text") {
+      var ctx = s.ctx; ctx.save(); ctx.font = "700 " + st.size + "px system-ui, Segoe UI, Arial, sans-serif";
+      var tw = ctx.measureText(st.s).width; ctx.restore();
+      return p.x >= st.x - r && p.x <= st.x + tw + r && p.y >= st.y - st.size / 2 - r && p.y <= st.y + st.size / 2 + r;
+    }
+    return false;
+  }
+  var NOMS = { vec: "Vecteur", dir: "Droite d'action", par: "Parallèle", line: "Segment", pt: "Point", text: "Texte", pen: "Tracé libre", arrow: "Flèche" };
+  function selOk(s) { if (s.gt.sel !== null && s.gt.sel >= s.strokes.length) s.gt.sel = null; return s.gt.sel !== null; }
+  function updSel(s) {
+    var ok = selOk(s), del = s.root.querySelector(".gt-del");
+    if (del) del.disabled = !ok || s.locked;
+    if (s.tool !== "sel") return;
+    if (ok) {
+      var st = s.strokes[s.gt.sel];
+      status(s, "<b>" + (NOMS[st.t] || "Tracé") + " sélectionné.</b> Clique une couleur ou une épaisseur pour le modifier, ou « Supprimer » (touche Suppr). Échap : désélectionner.");
+    } else status(s, HINTS.sel);
+  }
+  function supprimer(s) {
+    if (s.locked || !selOk(s)) return;
+    s.strokes.splice(s.gt.sel, 1); s.gt.sel = null; updSel(s); s.draw();
+  }
+
   // ---------- surcharges
   P.setTool = function (t) {
     base.setTool.call(this, t);
     if (!this.gt) return;
-    this.gt.ref = null; this.gt.meas = null; this.gt.hover = null;
+    this.gt.ref = null; this.gt.meas = null; this.gt.hover = null; this.gt.sel = null;
+    this.root.classList.toggle("tool-sel", t === "sel");
     status(this, HINTS[t] || "");
+    updSel(this);
     this.draw();
   };
   P.down = function (e) {
     if (!this.gt) return base.down.call(this, e);
     this.gt.meas = null;
+    if (this.tool === "sel") {
+      if (this.locked || e.button > 0) return;
+      e.preventDefault();
+      var ps = this.pos(e), r = Math.max(6, 11 * ps.k), found = null;
+      for (var i = this.strokes.length - 1; i >= 0; i--) if (hit(this, this.strokes[i], ps, r)) { found = i; break; }
+      this.gt.sel = found; this.gt.k = ps.k; updSel(this); this.draw(); return;
+    }
     if (!NEW[this.tool]) return base.down.call(this, e);
     if (this.locked || e.button > 0) return;
     e.preventDefault();
     var p = this.pos(e), w = Math.max(0.6, 2.6 * this.wFactor * p.k), q = snap(this, p);
     this.gt.k = p.k;
-    if (this.tool === "pt") { this.strokes.push({ t: "pt", x: q.x, y: q.y, c: this.color, w: w }); this.draw(); return; }
+    if (this.tool === "pt") { this.strokes.push({ t: "pt", x: q.x, y: q.y, c: this.color, w: w, wf: this.wFactor }); this.draw(); return; }
     if (this.tool === "par" && !this.gt.ref) {
       var L = pickLine(this, p);
       if (L) { this.gt.ref = L; status(this, "<b>Référence choisie.</b> Appuie maintenant à l'endroit où doit passer la parallèle (une extrémité de vecteur par exemple), puis glisse pour ajuster."); }
@@ -2149,8 +2235,12 @@ if (typeof module !== "undefined") module.exports = Grading;
       this.draw(); return;
     }
     this.canvas.setPointerCapture(e.pointerId);
-    if (this.tool === "par") this.cur = { t: "par", a: [q.x, q.y], u: this.gt.ref.u.slice(), c: this.color, w: w * 0.8 };
-    else this.cur = { t: this.tool, a: [q.x, q.y], b: [q.x, q.y], c: this.color, w: this.tool === "dir" ? w * 0.8 : w };
+    if (this.tool === "par") {
+      // un simple clic sur une autre droite (hors point d'accroche) change la référence ; appuyer et glisser pose la parallèle
+      var autre = q.snapped ? null : pickLine(this, p);
+      this.cur = { t: "par", a: [q.x, q.y], u: this.gt.ref.u.slice(), c: this.color, w: w * 0.8, wf: this.wFactor, pend: autre, p0: [p.x, p.y] };
+    }
+    else this.cur = { t: this.tool, a: [q.x, q.y], b: [q.x, q.y], c: this.color, w: this.tool === "dir" ? w * 0.8 : w, wf: this.wFactor };
     this.draw();
   };
   P.move = function (e) {
@@ -2161,6 +2251,7 @@ if (typeof module !== "undefined") module.exports = Grading;
     var changed = !!hv !== !!this.gt.hover || (hv && (hv.x !== this.gt.hover.x || hv.y !== this.gt.hover.y));
     this.gt.hover = hv;
     if (this.cur) {
+      if (this.cur.pend && Math.hypot(p.x - this.cur.p0[0], p.y - this.cur.p0[1]) > 6 * p.k) this.cur.pend = null;
       if (this.cur.t === "par") this.cur.a = [q.x, q.y];
       else {
         var b = [q.x, q.y];
@@ -2176,27 +2267,21 @@ if (typeof module !== "undefined") module.exports = Grading;
     if (!this.gt || !this.cur || !NEW[this.cur.t]) return base.up.call(this, e);
     var st = this.cur; this.cur = null;
     if (st.t === "mes") { if (dist(st.a, st.b) > 2) { this.gt.meas = st; showLen(this, st); } this.draw(); return; }
+    if (st.pend) {
+      this.gt.ref = st.pend;
+      status(this, "<b>Nouvelle référence choisie</b> (en jaune). Appuie là où doit passer la parallèle, ou clique une autre droite pour changer encore de référence.");
+      this.draw(); return;
+    }
+    delete st.pend; delete st.p0;
     if (st.t === "par" || dist(st.a, st.b) > 3) this.strokes.push(st);
     if (st.t === "vec" && this.gt.val > 0) { this.gt.val = 0; var vi = this.root.querySelector(".gt-val"); if (vi) vi.value = ""; }
     this.draw();
   };
   P.eraseAt = function (p) {
     if (!this.gt) return base.eraseAt.call(this, p);
-    var r = Math.max(6, 11 * p.k), self = this, before = this.strokes.length, q = [p.x, p.y], ctx = this.ctx;
-    this.strokes = this.strokes.filter(function (st) {
-      var w = (st.w || 2) / 2;
-      if (st.t === "pen") { for (var i = 1; i < st.pts.length; i++) if (segDist(q, st.pts[i - 1], st.pts[i]) <= r + w) return false; return true; }
-      if (st.t === "line" || st.t === "arrow" || st.t === "vec") return segDist(q, st.a, st.b) > r + w;
-      if (st.t === "dir" || st.t === "par") { var L = lineOf(st); return lineDist(q, L.p, L.u) > r + w; }
-      if (st.t === "pt") return Math.hypot(p.x - st.x, p.y - st.y) > r + st.w * 3;
-      if (st.t === "text") {
-        ctx.save(); ctx.font = "700 " + st.size + "px system-ui, Segoe UI, Arial, sans-serif";
-        var tw = ctx.measureText(st.s).width; ctx.restore();
-        return !(p.x >= st.x - r && p.x <= st.x + tw + r && p.y >= st.y - st.size / 2 - r && p.y <= st.y + st.size / 2 + r);
-      }
-      return true;
-    });
-    if (this.strokes.length !== before) this.draw();
+    var r = Math.max(6, 11 * p.k), self = this, before = this.strokes.length;
+    this.strokes = this.strokes.filter(function (st) { return !hit(self, st, p, r); });
+    if (this.strokes.length !== before) { this.gt.sel = null; this.draw(); }
   };
   P.paint = function (ctx, opts) {
     if (!this.gt) return base.paint.call(this, ctx, opts);
@@ -2214,10 +2299,28 @@ if (typeof module !== "undefined") module.exports = Grading;
       if (c) seg(ctx, c[0], c[1], "rgba(242,183,5,.55)", 9 * k);
     }
     if (opts.student) {
-      var list = this.cur ? this.strokes.concat([this.cur]) : this.strokes;
+      if (opts.live && selOk(this)) {
+        var sst = this.strokes[this.gt.sel], halo = {};
+        Object.keys(sst).forEach(function (key) { halo[key] = sst[key]; });
+        halo.c = "rgba(242,183,5,.65)"; halo.w = (sst.w || 2) + 9 * k;
+        if (sst.t === "text") { ctx.save(); ctx.font = "700 " + sst.size + "px system-ui, Segoe UI, Arial, sans-serif";
+          var tw = ctx.measureText(sst.s).width; ctx.fillStyle = "rgba(242,183,5,.45)";
+          ctx.fillRect(sst.x - 4 * k, sst.y - sst.size * 0.65, tw + 8 * k, sst.size * 1.3); ctx.restore(); }
+        else drawStroke(self, ctx, halo);
+      }
+      var list = this.cur && !this.cur.pend ? this.strokes.concat([this.cur]) : this.strokes;
       list.forEach(function (st) { if (st.t !== "mes") drawStroke(self, ctx, st); });
     }
-    if (opts.corr && this.dec.correction) { ctx.save(); ctx.translate(p.l, p.t); this.dec.correction(ctx); ctx.restore(); }
+    if (opts.corr && this.dec.correction) {
+      ctx.save(); ctx.translate(p.l, p.t);
+      var steps = this.dec.steps;
+      if (opts.live && steps && steps.length && !this.gt.all) {
+        for (var si = 0; si < this.gt.step; si++) {
+          ctx.save(); ctx.globalAlpha = si < this.gt.step - 1 ? 0.35 : 1; steps[si].f(ctx); ctx.restore();
+        }
+      } else this.dec.correction(ctx);
+      ctx.restore();
+    }
     if (opts.live) {
       var m = this.cur && this.cur.t === "mes" ? this.cur : this.gt.meas;
       if (m && dist(m.a, m.b) > 1) {
@@ -2236,6 +2339,53 @@ if (typeof module !== "undefined") module.exports = Grading;
       }
     }
   };
+  function fit(s) {
+    var cv = s.canvas, st = s.root.querySelector(".sk-stage");
+    if (!s.root.classList.contains("is-full")) { cv.style.height = ""; if (s.zoom === 1) cv.style.width = ""; return; }
+    var cw = st.clientWidth, ch = st.clientHeight; if (!cw || !ch) return;
+    var k = Math.min(cw / s.W, (ch - 2) / s.H);
+    cv.style.maxWidth = "none";
+    if (s.zoom > 1) { cv.style.width = Math.floor(s.W * k * s.zoom) + "px"; cv.style.height = ""; }
+    else { cv.style.width = Math.floor(s.W * k) + "px"; cv.style.height = Math.floor(s.H * k) + "px"; }
+  }
+  P.toggleFull = function () { base.toggleFull.call(this); if (this.gt) fit(this); };
+  P.setZoom = function (what) { base.setZoom.call(this, what); if (this.gt) fit(this); };
+
+  // ---------- correction pas à pas
+  function stepsUI(s) {
+    var steps = s.dec.steps; if (!steps || steps.length < 2) return;
+    var box = document.createElement("div"); box.className = "gt-steps all";
+    box.innerHTML = '<div class="gt-steps-head"><b>Correction pas à pas</b>' +
+      '<button type="button" data-st="prev">◀ Précédente</button><span class="gt-st-n" aria-live="polite"></span>' +
+      '<button type="button" data-st="next">Suivante ▶</button><button type="button" data-st="mode"></button></div>' +
+      '<ol class="gt-st-list">' + steps.map(function (st, i) {
+        return '<li data-i="' + i + '"><b>' + (i + 1) + ". " + st.t.charAt(0).toUpperCase() + st.t.slice(1) + "</b><span class=\"st-d\"> — " + st.d + "</span></li>";
+      }).join("") + "</ol>";
+    var anchor = s.root.querySelector(".gt-status");
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    var n = steps.length;
+    function maj() {
+      box.classList.toggle("all", s.gt.all);
+      box.querySelector(".gt-st-n").textContent = s.gt.all ? "Toute la correction" : "Étape " + s.gt.step + " / " + n;
+      box.querySelector("[data-st=mode]").textContent = s.gt.all ? "Voir pas à pas" : "Tout afficher";
+      box.querySelector("[data-st=prev]").disabled = !s.gt.all && s.gt.step <= 1;
+      box.querySelector("[data-st=next]").disabled = !s.gt.all && s.gt.step >= n;
+      Array.prototype.forEach.call(box.querySelectorAll("li"), function (li, i) { li.classList.toggle("on", !s.gt.all && i === s.gt.step - 1); });
+      s.showCorr = true; var tg = s.root.querySelector(".sk-corr-toggle input"); if (tg) tg.checked = true;
+      s.draw();
+    }
+    function aller(k, all) { s.gt.all = !!all; if (!all) s.gt.step = Math.max(1, Math.min(n, k)); maj(); }
+    box.querySelector("[data-st=prev]").addEventListener("click", function () { aller(s.gt.all ? n : s.gt.step - 1); });
+    box.querySelector("[data-st=next]").addEventListener("click", function () { aller(s.gt.all ? 1 : s.gt.step + 1); });
+    box.querySelector("[data-st=mode]").addEventListener("click", function () { aller(1, !s.gt.all); });
+    Array.prototype.forEach.call(box.querySelectorAll("li"), function (li) {
+      li.addEventListener("click", function () { aller(+li.getAttribute("data-i") + 1); });
+    });
+    s.gt.stepsMaj = function () { box.querySelector(".gt-st-n").textContent = s.gt.all ? "Toute la correction" : "Étape " + s.gt.step + " / " + n; };
+    s.gt.stepsMaj();
+    box.querySelector("[data-st=mode]").textContent = "Voir pas à pas";
+  }
+
   P.draw = function () {
     if (!this.gt) return base.draw.call(this);
     var self = this;
@@ -2249,7 +2399,27 @@ if (typeof module !== "undefined") module.exports = Grading;
   // ---------- initialisation des tracés « graph »
   ids.forEach(function (id) {
     var s = app.sketches[id], g = G(s), root = s.root;
-    s.gt = { alpha: g.alpha || 0.45, snap: true, ref: null, hover: null, meas: null, val: 0, k: 1, raf: 0 };
+    s.gt = { alpha: g.alpha || 0.45, snap: true, ref: null, hover: null, meas: null, val: 0, k: 1, raf: 0, sel: null, step: 1, all: true };
+    Array.prototype.forEach.call(root.querySelectorAll("[data-color]"), function (b) {
+      b.addEventListener("click", function () {
+        if (s.tool === "sel" && selOk(s) && !s.locked) { s.strokes[s.gt.sel].c = b.getAttribute("data-color"); s.draw(); }
+      });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-width]"), function (b) {
+      b.addEventListener("click", function () {
+        if (s.tool !== "sel" || !selOk(s) || s.locked) return;
+        var st = s.strokes[s.gt.sel], nf = { fin: 0.5, moyen: 1, epais: 2.1 }[b.getAttribute("data-width")], of = st.wf || 1;
+        if (st.t === "text") st.size = st.size * (0.8 + 0.3 * nf) / (0.8 + 0.3 * of); else st.w = st.w * nf / of;
+        st.wf = nf; s.draw();
+      });
+    });
+    var del = root.querySelector(".gt-del");
+    if (del) del.addEventListener("click", function () { supprimer(s); });
+    var und = root.querySelector("[data-act=undo]");
+    if (und) und.addEventListener("click", function () { s.gt.sel = null; updSel(s); });
+    stepsUI(s);
+    var stage = root.querySelector(".sk-stage");
+    if (window.ResizeObserver) new ResizeObserver(function () { if (root.classList.contains("is-full")) fit(s); }).observe(stage);
     var opa = root.querySelector(".gt-opa");
     if (opa) { opa.value = Math.round(s.gt.alpha * 100); opa.addEventListener("input", function () { s.gt.alpha = opa.value / 100; s.draw(); }); }
     var val = root.querySelector(".gt-val"), un = root.querySelector(".gt-unit");
@@ -2264,7 +2434,18 @@ if (typeof module !== "undefined") module.exports = Grading;
     s.canvas.addEventListener("pointerleave", function () { if (s.gt.hover) { s.gt.hover = null; s.draw(); } });
     s.setTool("vec");
   });
-  window.__atelier__ = { snapCands: snapCands, lenInfo: lenInfo };
+  window.addEventListener("resize", function () { ids.forEach(function (id) { fit(app.sketches[id]); }); });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
+    ids.forEach(function (id) {
+      var s = app.sketches[id];
+      if (s.tool !== "sel" || !selOk(s)) return;
+      if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); supprimer(s); }
+      else if (e.key === "Escape") { s.gt.sel = null; updSel(s); s.draw(); }
+    });
+  });
+  window.__atelier__ = { snapCands: snapCands, lenInfo: lenInfo, fit: fit };
 })();
 </script>
 </body>

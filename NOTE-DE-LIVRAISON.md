@@ -1,3 +1,24 @@
+# Note de livraison — Atelier de tracé : parallèle, sélection, plein écran, correction pas à pas
+
+Améliorations de l'atelier de statique graphique (exercices 1.2 à 1.5 et 3.2) :
+
+- **Parallèle** : une fois une parallèle posée, un simple clic sur une autre droite d'action ou un autre vecteur change
+  la référence (surlignée en jaune). Appuyer sur un point (accroché par l'aimant) ou appuyer-glisser pose la parallèle.
+- **Sélection** (nouvel outil) : un clic sur un tracé posé l'entoure de jaune ; une pastille de couleur le recolore,
+  Fin / Moyen / Épais change son épaisseur, « Supprimer » ou la touche Suppr l'efface, Échap désélectionne.
+- **Plein écran** : le DR est dimensionné pour tenir en entier dans la place laissée par la barre d'outils, la consigne
+  et le bouton de validation (testé en 1366 × 768, 1280 × 600 et tablette en portrait), proportions conservées ; le
+  zoom reste disponible. Sur la pince Kobelco, le vecteur Fc2/3 donné, qui occupe toute la hauteur du DR, est
+  désormais visible jusqu'à sa pointe.
+- **Correction pas à pas** : après validation, « Voir pas à pas » rejoue la construction sur le DR, une étape à la
+  fois (étapes précédentes estompées), avec une consigne simple pour chaque action : droite d'action de la force connue,
+  droite d'action de direction connue (et pourquoi), point de concours, troisième droite, force connue à l'échelle (avec
+  l'astuce « Intensité imposée »), parallèles, vecteurs bout à bout et lecture. 7 étapes pour un solide (panneau,
+  échelle), 6 pour la pince, 14 pour les deux isolements successifs du cric et du VTT (report par actions mutuelles).
+  En plein écran, seule l'étape en cours s'affiche sous le DR.
+
+---
+
 # Note de livraison — Exercice 3.4 : ergonomie « un seul écran »
 
 L'entraînement « Déplacer un torseur » tient désormais dans un écran d'ordinateur (testé en 1366 × 768 et 1280 × 720,

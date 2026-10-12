@@ -7,8 +7,10 @@ un script chargé après le moteur remplace, pour les seuls tracés dont le déc
 méthodes de saisie et de dessin. Les autres tracés gardent le comportement du gabarit.
 
 Outils : Vecteur (longueur et intensité à l'échelle affichées, intensité imposée), Droite d'action (droite
-prolongée sur toute la feuille), Parallèle (à une droite ou à un vecteur choisi), Segment, Point, Mesurer
-(distance en cm du document, intensité correspondante, angle avec l'horizontale), Texte, Gomme, Crayon.
+prolongée sur toute la feuille), Parallèle (à une droite ou à un vecteur choisi ; un clic sur une autre droite change la
+référence), Segment, Point, Mesurer (distance en cm du document, intensité correspondante, angle avec l'horizontale),
+Texte, Gomme, Sélection (recolorer, changer l'épaisseur ou supprimer un tracé posé). En plein écran, le DR est
+dimensionné pour tenir en entier. Après validation, la correction se rejoue pas à pas (étapes de DR.construire).
 Aimantation aux points remarquables du DR, aux extrémités des tracés et aux intersections des droites.
 Le fond du DR est affiché en transparence réglable sous les tracés.
 
@@ -34,7 +36,8 @@ def toolbar(s):
               ("pt", "Point", "Marquer un point (point de concours…)"),
               ("mes", "Mesurer", "Mesurer une longueur et l'intensité correspondante"),
               ("text", "Texte", "Écrire un nom"),
-              ("erase", "Gomme", "Effacer un tracé")]
+              ("erase", "Gomme", "Effacer un tracé"),
+              ("sel", "Sélection", "Choisir un tracé déjà posé pour changer sa couleur, son épaisseur ou le supprimer")]
     btn = "".join(f'<button type="button" data-tool="{k}" aria-pressed="{"true" if k == "vec" else "false"}" '
                   f'title="{t}">{n}</button>' for k, n, t in outils)
     return f"""              <div class="sk-toolbar gt-toolbar" role="toolbar" aria-label="Outils de construction {label}">
@@ -60,6 +63,7 @@ def toolbar(s):
                   <button type="button" data-zoom="reset">Ajuster</button></span>
                 <span class="sep"></span>
                 <button type="button" data-act="undo">Annuler</button>
+                <button type="button" class="gt-del" data-act="del" disabled title="Supprimer le tracé sélectionné (touche Suppr)">Supprimer</button>
                 <button type="button" data-act="clear">Tout effacer</button>
                 <span class="spacer"></span>
                 <button type="button" class="btn-drprint" data-act="drprint">Imprimer les DR</button>
@@ -86,6 +90,36 @@ CSS = """<style>
 .gt-aide dt{font:700 .9rem var(--f-titre)}
 .gt-aide dd{margin:0}
 .res-table td,.res-table th{text-align:center}
+.gt-toolbar button[data-tool="sel"][aria-pressed="true"]{background:var(--encre); border-color:var(--encre)}
+.gt-toolbar .gt-del:not(:disabled){border-color:var(--rouge); color:var(--rouge)}
+.gt-sketch.tool-sel .sk-stage canvas{cursor:pointer}
+/* correction pas à pas */
+.gt-steps{display:none; border:1px solid #C9D8EC; border-top:0; background:#fff; padding:6px 10px 8px; font-size:.9rem; line-height:1.4}
+.sketch.revealed .gt-steps{display:block}
+.gt-steps-head{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 4px}
+.gt-steps-head b{font:800 .95rem var(--f-titre); margin-right:auto}
+.gt-steps-head button{border:1.5px solid var(--encre); background:#fff; padding:3px 9px; font:700 .82rem var(--f-titre); cursor:pointer}
+.gt-steps-head button:hover{background:var(--jaune-pale)}
+.gt-steps-head button:disabled{opacity:.4; cursor:default}
+.gt-st-n{font:700 .85rem var(--f-titre); color:var(--bleu); min-width:6.5em; text-align:center}
+.gt-st-list{margin:0; padding:0; list-style:none}
+.gt-st-list li{margin:2px 0; cursor:pointer; color:var(--encre-2)}
+.gt-st-list li .st-d{display:none}
+.gt-st-list li.on{color:var(--encre)}
+.gt-st-list li.on .st-d,.gt-steps.all .gt-st-list li .st-d{display:inline}
+.gt-st-list li.on>b{color:var(--bleu)}
+/* plein écran : le DR occupe toute la place restante et tient en entier (dimensionné par le script) */
+.gt-sketch.is-full .sk-layout{flex:1; min-height:0; display:flex}
+.gt-sketch.is-full .sk-main{flex:1; min-height:0; height:auto; align-items:stretch}
+.gt-sketch.is-full .sk-stage{flex:1 1 0; min-height:0; max-width:none; width:100%; display:flex; align-items:center;
+  justify-content:center; background:transparent; border:0}
+.gt-sketch.is-full .sk-stage canvas{flex:none; max-width:none; max-height:none; box-shadow:0 0 0 1px var(--trait)}
+.gt-sketch.is-full .sk-stage.zoomed{display:block; overflow:auto; max-height:none}
+.gt-sketch.is-full .selfeval,.gt-sketch.is-full .sk-print-wrap{display:none!important}
+.gt-sketch.is-full .gt-status{min-height:0}
+.gt-sketch.is-full .gt-steps{max-height:24vh; overflow:auto}
+.gt-sketch.is-full .gt-st-list li:not(.on){display:none}
+.gt-sketch.is-full .gt-steps.all .gt-st-list li{display:list-item}
 @media print{ .gt-status{display:none!important} }
 </style>"""
 
@@ -101,17 +135,18 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
   if (!ids.length) return;
   var P = Object.getPrototypeOf(app.sketches[ids[0]]);
   var base = {};
-  ["down", "move", "up", "paint", "draw", "eraseAt", "setTool"].forEach(function (k) { base[k] = P[k]; });
+  ["down", "move", "up", "paint", "draw", "eraseAt", "setTool", "toggleFull", "setZoom"].forEach(function (k) { base[k] = P[k]; });
   var NEW = { vec: 1, dir: 1, par: 1, pt: 1, mes: 1, line: 1 };
   var HINTS = {
     vec: "<b>Vecteur</b> : appuie sur l'origine, glisse jusqu'à l'extrémité ; la longueur et l'intensité à l'échelle s'affichent. Pour un vecteur connu, saisis d'abord son intensité dans « Intensité imposée ».",
     dir: "<b>Droite d'action</b> : appuie sur un point de la droite et glisse vers un second point ; la droite est prolongée sur toute la feuille.",
-    par: "<b>Parallèle</b> : clique d'abord sur la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle (glisse pour ajuster). Reclique sur « Parallèle » pour changer de référence.",
+    par: "<b>Parallèle</b> : clique d'abord sur la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle (glisse pour ajuster). Pour changer de référence, clique simplement sur une autre droite ou un autre vecteur.",
     line: "<b>Segment</b> : trait droit entre deux points.",
     pt: "<b>Point</b> : clique pour marquer un point (point de concours I…), puis nomme-le avec l'outil Texte.",
     mes: "<b>Mesurer</b> : glisse d'un point à l'autre ; la distance en cm du document, l'intensité correspondante et l'angle s'affichent.",
     text: "<b>Texte</b> : clique à l'endroit voulu, tape le nom, valide avec Entrée.",
     erase: "<b>Gomme</b> : passe sur un tracé pour l'effacer.",
+    sel: "<b>Sélection</b> : clique sur un tracé déjà posé ; il s'entoure de jaune. Clique alors une couleur ou une épaisseur pour le modifier, ou « Supprimer » (touche Suppr). Échap désélectionne.",
     pen: "<b>Crayon</b> : tracé libre."
   };
   function fr(x, d) { return (Math.abs(x) < 0.5 * Math.pow(10, -d) ? 0 : x).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }); }
@@ -277,23 +312,62 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
     } else if (st.t === "text") label(ctx, st.s, st.x, st.y, st.c, st.size, "left");
   }
 
+  // ---------- un tracé est-il sous le pointeur ?
+  function hit(s, st, p, r) {
+    var w = (st.w || 2) / 2, q = [p.x, p.y];
+    if (st.t === "pen") { for (var i = 1; i < st.pts.length; i++) if (segDist(q, st.pts[i - 1], st.pts[i]) <= r + w) return true; return false; }
+    if (st.t === "line" || st.t === "arrow" || st.t === "vec") return segDist(q, st.a, st.b) <= r + w;
+    if (st.t === "dir" || st.t === "par") { var L = lineOf(st); return lineDist(q, L.p, L.u) <= r + w; }
+    if (st.t === "pt") return Math.hypot(p.x - st.x, p.y - st.y) <= r + st.w * 3;
+    if (st.t === "text") {
+      var ctx = s.ctx; ctx.save(); ctx.font = "700 " + st.size + "px system-ui, Segoe UI, Arial, sans-serif";
+      var tw = ctx.measureText(st.s).width; ctx.restore();
+      return p.x >= st.x - r && p.x <= st.x + tw + r && p.y >= st.y - st.size / 2 - r && p.y <= st.y + st.size / 2 + r;
+    }
+    return false;
+  }
+  var NOMS = { vec: "Vecteur", dir: "Droite d'action", par: "Parallèle", line: "Segment", pt: "Point", text: "Texte", pen: "Tracé libre", arrow: "Flèche" };
+  function selOk(s) { if (s.gt.sel !== null && s.gt.sel >= s.strokes.length) s.gt.sel = null; return s.gt.sel !== null; }
+  function updSel(s) {
+    var ok = selOk(s), del = s.root.querySelector(".gt-del");
+    if (del) del.disabled = !ok || s.locked;
+    if (s.tool !== "sel") return;
+    if (ok) {
+      var st = s.strokes[s.gt.sel];
+      status(s, "<b>" + (NOMS[st.t] || "Tracé") + " sélectionné.</b> Clique une couleur ou une épaisseur pour le modifier, ou « Supprimer » (touche Suppr). Échap : désélectionner.");
+    } else status(s, HINTS.sel);
+  }
+  function supprimer(s) {
+    if (s.locked || !selOk(s)) return;
+    s.strokes.splice(s.gt.sel, 1); s.gt.sel = null; updSel(s); s.draw();
+  }
+
   // ---------- surcharges
   P.setTool = function (t) {
     base.setTool.call(this, t);
     if (!this.gt) return;
-    this.gt.ref = null; this.gt.meas = null; this.gt.hover = null;
+    this.gt.ref = null; this.gt.meas = null; this.gt.hover = null; this.gt.sel = null;
+    this.root.classList.toggle("tool-sel", t === "sel");
     status(this, HINTS[t] || "");
+    updSel(this);
     this.draw();
   };
   P.down = function (e) {
     if (!this.gt) return base.down.call(this, e);
     this.gt.meas = null;
+    if (this.tool === "sel") {
+      if (this.locked || e.button > 0) return;
+      e.preventDefault();
+      var ps = this.pos(e), r = Math.max(6, 11 * ps.k), found = null;
+      for (var i = this.strokes.length - 1; i >= 0; i--) if (hit(this, this.strokes[i], ps, r)) { found = i; break; }
+      this.gt.sel = found; this.gt.k = ps.k; updSel(this); this.draw(); return;
+    }
     if (!NEW[this.tool]) return base.down.call(this, e);
     if (this.locked || e.button > 0) return;
     e.preventDefault();
     var p = this.pos(e), w = Math.max(0.6, 2.6 * this.wFactor * p.k), q = snap(this, p);
     this.gt.k = p.k;
-    if (this.tool === "pt") { this.strokes.push({ t: "pt", x: q.x, y: q.y, c: this.color, w: w }); this.draw(); return; }
+    if (this.tool === "pt") { this.strokes.push({ t: "pt", x: q.x, y: q.y, c: this.color, w: w, wf: this.wFactor }); this.draw(); return; }
     if (this.tool === "par" && !this.gt.ref) {
       var L = pickLine(this, p);
       if (L) { this.gt.ref = L; status(this, "<b>Référence choisie.</b> Appuie maintenant à l'endroit où doit passer la parallèle (une extrémité de vecteur par exemple), puis glisse pour ajuster."); }
@@ -301,8 +375,12 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
       this.draw(); return;
     }
     this.canvas.setPointerCapture(e.pointerId);
-    if (this.tool === "par") this.cur = { t: "par", a: [q.x, q.y], u: this.gt.ref.u.slice(), c: this.color, w: w * 0.8 };
-    else this.cur = { t: this.tool, a: [q.x, q.y], b: [q.x, q.y], c: this.color, w: this.tool === "dir" ? w * 0.8 : w };
+    if (this.tool === "par") {
+      // un simple clic sur une autre droite (hors point d'accroche) change la référence ; appuyer et glisser pose la parallèle
+      var autre = q.snapped ? null : pickLine(this, p);
+      this.cur = { t: "par", a: [q.x, q.y], u: this.gt.ref.u.slice(), c: this.color, w: w * 0.8, wf: this.wFactor, pend: autre, p0: [p.x, p.y] };
+    }
+    else this.cur = { t: this.tool, a: [q.x, q.y], b: [q.x, q.y], c: this.color, w: this.tool === "dir" ? w * 0.8 : w, wf: this.wFactor };
     this.draw();
   };
   P.move = function (e) {
@@ -313,6 +391,7 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
     var changed = !!hv !== !!this.gt.hover || (hv && (hv.x !== this.gt.hover.x || hv.y !== this.gt.hover.y));
     this.gt.hover = hv;
     if (this.cur) {
+      if (this.cur.pend && Math.hypot(p.x - this.cur.p0[0], p.y - this.cur.p0[1]) > 6 * p.k) this.cur.pend = null;
       if (this.cur.t === "par") this.cur.a = [q.x, q.y];
       else {
         var b = [q.x, q.y];
@@ -328,27 +407,21 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
     if (!this.gt || !this.cur || !NEW[this.cur.t]) return base.up.call(this, e);
     var st = this.cur; this.cur = null;
     if (st.t === "mes") { if (dist(st.a, st.b) > 2) { this.gt.meas = st; showLen(this, st); } this.draw(); return; }
+    if (st.pend) {
+      this.gt.ref = st.pend;
+      status(this, "<b>Nouvelle référence choisie</b> (en jaune). Appuie là où doit passer la parallèle, ou clique une autre droite pour changer encore de référence.");
+      this.draw(); return;
+    }
+    delete st.pend; delete st.p0;
     if (st.t === "par" || dist(st.a, st.b) > 3) this.strokes.push(st);
     if (st.t === "vec" && this.gt.val > 0) { this.gt.val = 0; var vi = this.root.querySelector(".gt-val"); if (vi) vi.value = ""; }
     this.draw();
   };
   P.eraseAt = function (p) {
     if (!this.gt) return base.eraseAt.call(this, p);
-    var r = Math.max(6, 11 * p.k), self = this, before = this.strokes.length, q = [p.x, p.y], ctx = this.ctx;
-    this.strokes = this.strokes.filter(function (st) {
-      var w = (st.w || 2) / 2;
-      if (st.t === "pen") { for (var i = 1; i < st.pts.length; i++) if (segDist(q, st.pts[i - 1], st.pts[i]) <= r + w) return false; return true; }
-      if (st.t === "line" || st.t === "arrow" || st.t === "vec") return segDist(q, st.a, st.b) > r + w;
-      if (st.t === "dir" || st.t === "par") { var L = lineOf(st); return lineDist(q, L.p, L.u) > r + w; }
-      if (st.t === "pt") return Math.hypot(p.x - st.x, p.y - st.y) > r + st.w * 3;
-      if (st.t === "text") {
-        ctx.save(); ctx.font = "700 " + st.size + "px system-ui, Segoe UI, Arial, sans-serif";
-        var tw = ctx.measureText(st.s).width; ctx.restore();
-        return !(p.x >= st.x - r && p.x <= st.x + tw + r && p.y >= st.y - st.size / 2 - r && p.y <= st.y + st.size / 2 + r);
-      }
-      return true;
-    });
-    if (this.strokes.length !== before) this.draw();
+    var r = Math.max(6, 11 * p.k), self = this, before = this.strokes.length;
+    this.strokes = this.strokes.filter(function (st) { return !hit(self, st, p, r); });
+    if (this.strokes.length !== before) { this.gt.sel = null; this.draw(); }
   };
   P.paint = function (ctx, opts) {
     if (!this.gt) return base.paint.call(this, ctx, opts);
@@ -366,10 +439,28 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
       if (c) seg(ctx, c[0], c[1], "rgba(242,183,5,.55)", 9 * k);
     }
     if (opts.student) {
-      var list = this.cur ? this.strokes.concat([this.cur]) : this.strokes;
+      if (opts.live && selOk(this)) {
+        var sst = this.strokes[this.gt.sel], halo = {};
+        Object.keys(sst).forEach(function (key) { halo[key] = sst[key]; });
+        halo.c = "rgba(242,183,5,.65)"; halo.w = (sst.w || 2) + 9 * k;
+        if (sst.t === "text") { ctx.save(); ctx.font = "700 " + sst.size + "px system-ui, Segoe UI, Arial, sans-serif";
+          var tw = ctx.measureText(sst.s).width; ctx.fillStyle = "rgba(242,183,5,.45)";
+          ctx.fillRect(sst.x - 4 * k, sst.y - sst.size * 0.65, tw + 8 * k, sst.size * 1.3); ctx.restore(); }
+        else drawStroke(self, ctx, halo);
+      }
+      var list = this.cur && !this.cur.pend ? this.strokes.concat([this.cur]) : this.strokes;
       list.forEach(function (st) { if (st.t !== "mes") drawStroke(self, ctx, st); });
     }
-    if (opts.corr && this.dec.correction) { ctx.save(); ctx.translate(p.l, p.t); this.dec.correction(ctx); ctx.restore(); }
+    if (opts.corr && this.dec.correction) {
+      ctx.save(); ctx.translate(p.l, p.t);
+      var steps = this.dec.steps;
+      if (opts.live && steps && steps.length && !this.gt.all) {
+        for (var si = 0; si < this.gt.step; si++) {
+          ctx.save(); ctx.globalAlpha = si < this.gt.step - 1 ? 0.35 : 1; steps[si].f(ctx); ctx.restore();
+        }
+      } else this.dec.correction(ctx);
+      ctx.restore();
+    }
     if (opts.live) {
       var m = this.cur && this.cur.t === "mes" ? this.cur : this.gt.meas;
       if (m && dist(m.a, m.b) > 1) {
@@ -388,6 +479,53 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
       }
     }
   };
+  function fit(s) {
+    var cv = s.canvas, st = s.root.querySelector(".sk-stage");
+    if (!s.root.classList.contains("is-full")) { cv.style.height = ""; if (s.zoom === 1) cv.style.width = ""; return; }
+    var cw = st.clientWidth, ch = st.clientHeight; if (!cw || !ch) return;
+    var k = Math.min(cw / s.W, (ch - 2) / s.H);
+    cv.style.maxWidth = "none";
+    if (s.zoom > 1) { cv.style.width = Math.floor(s.W * k * s.zoom) + "px"; cv.style.height = ""; }
+    else { cv.style.width = Math.floor(s.W * k) + "px"; cv.style.height = Math.floor(s.H * k) + "px"; }
+  }
+  P.toggleFull = function () { base.toggleFull.call(this); if (this.gt) fit(this); };
+  P.setZoom = function (what) { base.setZoom.call(this, what); if (this.gt) fit(this); };
+
+  // ---------- correction pas à pas
+  function stepsUI(s) {
+    var steps = s.dec.steps; if (!steps || steps.length < 2) return;
+    var box = document.createElement("div"); box.className = "gt-steps all";
+    box.innerHTML = '<div class="gt-steps-head"><b>Correction pas à pas</b>' +
+      '<button type="button" data-st="prev">◀ Précédente</button><span class="gt-st-n" aria-live="polite"></span>' +
+      '<button type="button" data-st="next">Suivante ▶</button><button type="button" data-st="mode"></button></div>' +
+      '<ol class="gt-st-list">' + steps.map(function (st, i) {
+        return '<li data-i="' + i + '"><b>' + (i + 1) + ". " + st.t.charAt(0).toUpperCase() + st.t.slice(1) + "</b><span class=\"st-d\"> — " + st.d + "</span></li>";
+      }).join("") + "</ol>";
+    var anchor = s.root.querySelector(".gt-status");
+    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+    var n = steps.length;
+    function maj() {
+      box.classList.toggle("all", s.gt.all);
+      box.querySelector(".gt-st-n").textContent = s.gt.all ? "Toute la correction" : "Étape " + s.gt.step + " / " + n;
+      box.querySelector("[data-st=mode]").textContent = s.gt.all ? "Voir pas à pas" : "Tout afficher";
+      box.querySelector("[data-st=prev]").disabled = !s.gt.all && s.gt.step <= 1;
+      box.querySelector("[data-st=next]").disabled = !s.gt.all && s.gt.step >= n;
+      Array.prototype.forEach.call(box.querySelectorAll("li"), function (li, i) { li.classList.toggle("on", !s.gt.all && i === s.gt.step - 1); });
+      s.showCorr = true; var tg = s.root.querySelector(".sk-corr-toggle input"); if (tg) tg.checked = true;
+      s.draw();
+    }
+    function aller(k, all) { s.gt.all = !!all; if (!all) s.gt.step = Math.max(1, Math.min(n, k)); maj(); }
+    box.querySelector("[data-st=prev]").addEventListener("click", function () { aller(s.gt.all ? n : s.gt.step - 1); });
+    box.querySelector("[data-st=next]").addEventListener("click", function () { aller(s.gt.all ? 1 : s.gt.step + 1); });
+    box.querySelector("[data-st=mode]").addEventListener("click", function () { aller(1, !s.gt.all); });
+    Array.prototype.forEach.call(box.querySelectorAll("li"), function (li) {
+      li.addEventListener("click", function () { aller(+li.getAttribute("data-i") + 1); });
+    });
+    s.gt.stepsMaj = function () { box.querySelector(".gt-st-n").textContent = s.gt.all ? "Toute la correction" : "Étape " + s.gt.step + " / " + n; };
+    s.gt.stepsMaj();
+    box.querySelector("[data-st=mode]").textContent = "Voir pas à pas";
+  }
+
   P.draw = function () {
     if (!this.gt) return base.draw.call(this);
     var self = this;
@@ -401,7 +539,27 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
   // ---------- initialisation des tracés « graph »
   ids.forEach(function (id) {
     var s = app.sketches[id], g = G(s), root = s.root;
-    s.gt = { alpha: g.alpha || 0.45, snap: true, ref: null, hover: null, meas: null, val: 0, k: 1, raf: 0 };
+    s.gt = { alpha: g.alpha || 0.45, snap: true, ref: null, hover: null, meas: null, val: 0, k: 1, raf: 0, sel: null, step: 1, all: true };
+    Array.prototype.forEach.call(root.querySelectorAll("[data-color]"), function (b) {
+      b.addEventListener("click", function () {
+        if (s.tool === "sel" && selOk(s) && !s.locked) { s.strokes[s.gt.sel].c = b.getAttribute("data-color"); s.draw(); }
+      });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-width]"), function (b) {
+      b.addEventListener("click", function () {
+        if (s.tool !== "sel" || !selOk(s) || s.locked) return;
+        var st = s.strokes[s.gt.sel], nf = { fin: 0.5, moyen: 1, epais: 2.1 }[b.getAttribute("data-width")], of = st.wf || 1;
+        if (st.t === "text") st.size = st.size * (0.8 + 0.3 * nf) / (0.8 + 0.3 * of); else st.w = st.w * nf / of;
+        st.wf = nf; s.draw();
+      });
+    });
+    var del = root.querySelector(".gt-del");
+    if (del) del.addEventListener("click", function () { supprimer(s); });
+    var und = root.querySelector("[data-act=undo]");
+    if (und) und.addEventListener("click", function () { s.gt.sel = null; updSel(s); });
+    stepsUI(s);
+    var stage = root.querySelector(".sk-stage");
+    if (window.ResizeObserver) new ResizeObserver(function () { if (root.classList.contains("is-full")) fit(s); }).observe(stage);
     var opa = root.querySelector(".gt-opa");
     if (opa) { opa.value = Math.round(s.gt.alpha * 100); opa.addEventListener("input", function () { s.gt.alpha = opa.value / 100; s.draw(); }); }
     var val = root.querySelector(".gt-val"), un = root.querySelector(".gt-unit");
@@ -416,7 +574,18 @@ JS = r"""<script>/* ATELIER DE STATIQUE GRAPHIQUE — outils de construction gre
     s.canvas.addEventListener("pointerleave", function () { if (s.gt.hover) { s.gt.hover = null; s.draw(); } });
     s.setTool("vec");
   });
-  window.__atelier__ = { snapCands: snapCands, lenInfo: lenInfo };
+  window.addEventListener("resize", function () { ids.forEach(function (id) { fit(app.sketches[id]); }); });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
+    ids.forEach(function (id) {
+      var s = app.sketches[id];
+      if (s.tool !== "sel" || !selOk(s)) return;
+      if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); supprimer(s); }
+      else if (e.key === "Escape") { s.gt.sel = null; updSel(s); s.draw(); }
+    });
+  });
+  window.__atelier__ = { snapCands: snapCands, lenInfo: lenInfo, fit: fit };
 })();
 </script>"""
 
@@ -478,14 +647,49 @@ def fr(x, d=0):
     return f"{x:,.{d}f}".replace(",", " ").replace(".", ",").replace("-", "−")
 
 
+def direction_txt(u):
+    """Direction d'une droite (repère écran) en mots : verticale, horizontale ou inclinée de x° sur l'horizontale."""
+    a = angle(u)
+    if a > 88.5:
+        return "verticale"
+    if a < 1.5:
+        return "horizontale"
+    return f"inclinée d'environ {fr(a)}° sur l'horizontale"
+
+
+def sens_txt(F):
+    """Sens d'une force (repère écran) en mots."""
+    a = math.degrees(math.atan2(-F[1], F[0]))
+    for lo, hi, n in ((-22.5, 22.5, "vers la droite"), (22.5, 67.5, "vers le haut et la droite"),
+                      (67.5, 112.5, "vers le haut"), (112.5, 157.5, "vers le haut et la gauche"),
+                      (-67.5, -22.5, "vers le bas et la droite"), (-112.5, -67.5, "vers le bas"),
+                      (-157.5, -112.5, "vers le bas et la gauche")):
+        if lo <= a < hi:
+            return n
+    return "vers la gauche"
+
+
 class DR:
-    """Un document réponse : fond, points, droites données, zones d'échelle, constructions corrigées."""
+    """Un document réponse : fond, points, droites données, zones d'échelle, constructions corrigées.
+
+    La correction est découpée en étapes (etape) : chacune a un titre, une consigne simple et ses tracés ; l'atelier
+    les affiche une à une (correction pas à pas) ou toutes ensemble (correction superposée)."""
 
     def __init__(self, name, img, size, px_cm, zones, points, refs=(), alpha=0.45, rs=1.2):
         self.name, self.img, (self.W, self.H), self.px_cm = name, img, size, px_cm
         self.zones, self.points, self.refs, self.alpha, self.rs = zones, points, list(refs), alpha, rs
-        self.corr = []      # instructions JS de la correction
+        self.steps = []     # [{"t": titre, "d": consigne, "js": [instructions de dessin]}]
         self.f = max(1.0, self.W / 900)   # taille des traits et des textes, proportionnée au fond
+
+    @property
+    def corr(self):
+        """Instructions de dessin de l'étape en cours (une étape « Correction » est créée au besoin)."""
+        if not self.steps:
+            self.etape("Correction", "")
+        return self.steps[-1]["js"]
+
+    def etape(self, titre, consigne):
+        self.steps.append({"t": titre, "d": consigne, "js": []})
 
     def zone_scale(self, pt):
         for z in self.zones:
@@ -505,6 +709,13 @@ class DR:
         f = self.f
         self.corr.append(f"line(c, {a[0]:.1f}, {a[1]:.1f}, {b[0]:.1f}, {b[1]:.1f}, {color}, {w * f:.1f}, [{14 * f:.0f}, {7 * f:.0f}]);")
 
+    def trait(self, p, u, t0, t1, color="CORR", w=1.8):
+        """Trait de construction (parallèle du dynamique) limité au voisinage du triangle."""
+        u = _unit(u)
+        a, b = (p[0] + t0 * u[0], p[1] + t0 * u[1]), (p[0] + t1 * u[0], p[1] + t1 * u[1])
+        f = self.f
+        self.corr.append(f"line(c, {a[0]:.1f}, {a[1]:.1f}, {b[0]:.1f}, {b[1]:.1f}, {color}, {w * f:.1f}, [{8 * f:.0f}, {6 * f:.0f}]);")
+
     def point(self, p, nom, color="CORR", dx=12, dy=-14):
         f = self.f
         self.corr.append(f"dot(c, {p[0]:.1f}, {p[1]:.1f}, {6 * f:.1f}, {color}); "
@@ -523,24 +734,65 @@ class DR:
     def texte(self, s, x, y, color="CORR", size=20, align="left"):
         self.corr.append(f"text(c, {json.dumps(s)}, {x:.1f}, {y:.1f}, {color}, {size * self.f:.0f}, '{align}', '800');")
 
-    def construire(self, res, depart, ordre, couleurs, unite, dirs=None, sides=None, connu_trace=True):
-        """Correction d'un solide soumis à trois forces : droites d'action, point I, dynamique à partir de depart.
-        ordre : indices des forces dans res['forces'] dans l'ordre du dynamique."""
+    def construire(self, res, depart, ordre, couleurs, unite, dirs=None, sides=None, connu_trace=True,
+                   noms=("", "", ""), quoi="", nom_i="I", t=None):
+        """Correction d'un solide soumis à trois forces, en étapes : droites d'action, point de concours, troisième
+        droite, force connue à l'échelle, parallèles, vecteurs lus. ordre : indices des forces dans res['forces']
+        dans l'ordre du dynamique. noms : points d'application (texte des consignes) ; t : consignes remplaçant
+        celles par défaut (clés k1, k2, I, k3, dyn, par, fin)."""
+        t = t or {}
         forces = res["forces"]
-        for i, (n, p, F) in enumerate(forces):
-            if dirs is None or dirs[i]:
-                self.droite(p, F if i != 2 else res["u3"])
-        self.point(res["I"], "I")
-        pt = depart
-        for j, i in enumerate(ordre):
+        dirs = dirs or [True, True, True]
+        (n1, p1, F1), (n2, p2, F2), (n3, p3, F3) = [forces[i] for i in ordre]
+        u_of = [F1, F2, res["u3"]]
+        q1, q2, q3 = (noms[i] if noms[i] else "son point d'application" for i in ordre)
+        z = self.zone_scale(depart)
+        N1, N2, N3 = (math.hypot(*F) for F in (F1, F2, F3))
+        tq = (quoi + " : ") if quoi else ""
+
+        def droite_i(i):
             n, p, F = forces[i]
-            if j == 0 and not connu_trace:
-                pt = (pt[0] + self.px(F, depart)[0], pt[1] + self.px(F, depart)[1])
-                continue
-            v = self.px(F, depart)
-            q = (pt[0] + v[0], pt[1] + v[1])
-            self.vecteur(pt, q, f"{n} ≈ {fr(math.hypot(*F))} {unite}", couleurs[j], (sides or [1, 1, 1])[j])
-            pt = q
+            self.droite(p, F if i != 2 else res["u3"])
+
+        self.etape(f"{tq}droite d'action de {n1}", t.get("k1") or
+                   f"{n1} est connue : trace sa droite d'action, {direction_txt(F1)}, passant par {q1}.")
+        if dirs[ordre[0]]:
+            droite_i(ordre[0])
+        self.etape(f"{tq}droite d'action de {n2}", t.get("k2") or
+                   f"Trace la droite d'action de {n2} : elle passe par {q2} et elle est {direction_txt(F2)}.")
+        if dirs[ordre[1]]:
+            droite_i(ordre[1])
+        self.etape(f"{tq}point de concours {nom_i}", t.get("I") or
+                   f"Prolonge ces deux droites jusqu'à leur intersection et marque le point {nom_i} (outil Point) : "
+                   "les trois droites d'action d'un solide soumis à trois forces sont concourantes.")
+        self.point(res["I"], nom_i)
+        self.etape(f"{tq}droite d'action de {n3}", t.get("k3") or
+                   f"Trace la droite d'action de {n3} : elle passe par {q3} et par {nom_i}. Sa direction est maintenant "
+                   f"connue ({direction_txt(res['u3'])}).")
+        if dirs[ordre[2]]:
+            droite_i(ordre[2])
+        v1 = self.px(F1, depart)
+        a, b = depart, (depart[0] + v1[0], depart[1] + v1[1])
+        self.etape(f"{tq}{n1} à l'échelle", t.get("dyn") or
+                   f"Dans la zone du dynamique (1 cm ↔ {fr(z['scale'])} {unite}), trace {n1} : {fr(N1 / z['scale'], 1)} cm "
+                   f"pour {fr(N1)} {unite}, {sens_txt(F1)}. Astuce : saisis {fr(N1)} dans « Intensité imposée », puis "
+                   "trace le vecteur avec l'outil Vecteur.")
+        if connu_trace:
+            self.vecteur(a, b, f"{n1} = {fr(N1)} {unite}", couleurs[0], (sides or [1, 1, 1])[0])
+        v2, v3 = self.px(F2, depart), self.px(F3, depart)
+        c = (b[0] + v2[0], b[1] + v2[1])
+        L2, L3 = math.hypot(*v2), math.hypot(*v3)
+        self.etape(f"{tq}parallèles", t.get("par") or
+                   f"Avec l'outil Parallèle : par la pointe de {n1}, trace la parallèle à la droite d'action de {n2} ; par "
+                   f"son origine, la parallèle à celle de {n3}. Elles se coupent au troisième sommet du triangle.")
+        self.trait(b, v2, -0.25 * L2, 1.25 * L2, couleurs[1])
+        self.trait(a, (-v3[0], -v3[1]), -0.25 * L3, 1.25 * L3, couleurs[2])
+        self.etape(f"{tq}{n2} et {n3}", t.get("fin") or
+                   f"Trace {n2} puis {n3} sur les côtés du triangle, bout à bout : chaque flèche part de la pointe de la "
+                   f"précédente et le triangle se referme. Mesure-les et convertis avec l'échelle : {n2} ≈ {fr(N2)} {unite}, "
+                   f"{n3} ≈ {fr(N3)} {unite}.")
+        self.vecteur(b, c, f"{n2} ≈ {fr(N2)} {unite}", couleurs[1], (sides or [1, 1, 1])[1])
+        self.vecteur(c, a, f"{n3} ≈ {fr(N3)} {unite}", couleurs[2], (sides or [1, 1, 1])[2])
 
     def decor_js(self, extra_decorate=""):
         bars = []
@@ -556,10 +808,14 @@ class DR:
                            for z in self.zones],
                  "points": {k: [round(v[0], 1), round(v[1], 1)] for k, v in self.points.items()},
                  "refs": [[round(c, 1) for c in r] for r in self.refs]}
+        steps = ",\n        ".join(
+            f"{{ t: {json.dumps(st['t'], ensure_ascii=False)}, d: {json.dumps(st['d'], ensure_ascii=False)}, "
+            f"f: function (c) {{ {' '.join(st['js'])} }} }}" for st in self.steps)
         return (f"    {self.name}: {{\n      pad: {{ t: 0, r: 0, b: 0, l: 0 }}, rs: {self.rs},\n"
                 f"      graph: {json.dumps(graph, ensure_ascii=False)},\n"
                 f"      decorate: function (c) {{ {' '.join(bars)} {extra_decorate} }},\n"
-                f"      correction: function (c) {{\n        " + "\n        ".join(self.corr) + "\n      }\n    }")
+                f"      steps: [\n        {steps}\n      ],\n"
+                f"      correction: function (c) {{ this.steps.forEach(function (s) {{ s.f(c); }}); }}\n    }}")
 
 
 def _in_poly(p, poly):
@@ -579,11 +835,17 @@ AIDE = """<details class="gt-aide"><summary>Mode d'emploi de l'atelier de tracé
 <dt>Vecteur</dt><dd>appuie sur l'origine, glisse jusqu'à l'extrémité. La longueur (cm du document) et l'intensité à l'échelle
 s'affichent en direct. Pour tracer une force connue, saisis d'abord son intensité dans « Intensité imposée ».</dd>
 <dt>Droite d'action</dt><dd>deux points suffisent : la droite est prolongée sur toute la feuille.</dd>
-<dt>Parallèle</dt><dd>clique la droite ou le vecteur de référence, puis appuie là où doit passer la parallèle. C'est l'outil
-du dynamique : il remplace l'équerre et la règle.</dd>
+<dt>Parallèle</dt><dd>clique la droite ou le vecteur de référence (surligné en jaune), puis appuie là où doit passer la
+parallèle. Pour changer de référence, clique simplement sur une autre droite ou un autre vecteur. C'est l'outil du dynamique :
+il remplace l'équerre et la règle.</dd>
 <dt>Point, Texte</dt><dd>marque le point de concours I, nomme tes vecteurs.</dd>
+<dt>Sélection</dt><dd>clique un tracé déjà posé : il s'entoure de jaune. Une couleur ou une épaisseur le modifie ;
+« Supprimer » (ou la touche Suppr) l'efface.</dd>
 <dt>Mesurer</dt><dd>donne une distance et l'intensité correspondante, sans rien tracer.</dd>
 <dt>Aimant</dt><dd>accroche le pointeur aux points du DR, aux extrémités des tracés et aux intersections des droites
 (cercle bleu ou orange). Désactive-le pour un placement libre.</dd>
-<dt>DR</dt><dd>règle la transparence du document sous tes tracés. Le zoom et le plein écran aident à viser.</dd>
+<dt>DR</dt><dd>règle la transparence du document sous tes tracés. Le zoom et le plein écran (le DR y tient en entier)
+aident à viser.</dd>
+<dt>Correction</dt><dd>après validation, « Voir pas à pas » rejoue la construction étape par étape, avec la consigne de
+chaque action.</dd>
 </dl></details>"""

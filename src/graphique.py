@@ -99,8 +99,10 @@ PAN = DR("PANNEAU", "g-panneau-dr", (1780, 1142), 80,
          points={"A": (251.2, 166.2), "G": (623.8, 526.2), "D": (782.5, 696.2), "E": (253.8, 696.2)}, rs=1.2)
 P_PAN = 38 * 10
 RES_PAN = trois_forces(("P", PAN.points["G"], (0, P_PAN)), ("D3/1", PAN.points["D"], (1, 0)), ("A2/1", PAN.points["A"]))
-PAN.construire(RES_PAN, (1150, 150), [0, 1, 2], ["CORR", "TEAL", "PURP"], "N")
-PAN.texte("Dynamique (1 cm ↔ 50 N)", 1150, 110, "CORR", 20)
+PAN.construire(RES_PAN, (1150, 150), [0, 1, 2], ["CORR", "TEAL", "PURP"], "N", noms=("G", "D", "A"),
+               t={"k1": "Le poids P est connu : trace sa droite d'action, la verticale passant par G.",
+                  "k2": "La barre de réglage (3) est soumise à deux forces : D3/1 est portée par (ED), horizontale. "
+                        "Trace l'horizontale passant par D."})
 NA_PAN, ND_PAN = RES_PAN["normes"]["A2/1"], RES_PAN["normes"]["D3/1"]
 ANG_A_PAN = atelier.angle(RES_PAN["u3"])
 FD_PAN = RES_PAN["forces"][1][2]
@@ -208,18 +210,31 @@ def _pince_dr(name, img, size, pts, ref, v1, v2, nom_contact):
     u = ((v2[0] - v1[0]) / L, (v2[1] - v1[1]) / L)
     res = trois_forces(("Fc2/3", pts["C"], (VERIN * u[0], VERIN * u[1])), (nom_contact, pts[nom_contact[0]], (1, 0)),
                        ("B1/3", pts["B"]))
-    # correction : directions + I ; dynamique à partir du vecteur donné : Fc, puis B (par l'extrémité), puis contact
-    for i in (1, 2):
-        n, p, F = res["forces"][i]
-        d.droite(p, F if i == 1 else res["u3"])
-    d.point(res["I"], "I")
+    # correction pas à pas : directions + I ; dynamique à partir du vecteur donné : Fc, puis B (par l'extrémité), puis contact
     Fc, Fcon, Fb = res["forces"][0][2], res["forces"][1][2], res["forces"][2][2]
+    pc = nom_contact[0]
+    d.etape("Les données", "Fc2/3 (action du vérin, 2 500 kN) est déjà tracé à l'échelle à droite du DR. Le vérin est "
+            "soumis à deux forces : la droite d'action de Fc2/3 passe par C, parallèle au vecteur donné.")
+    d.droite(pts["C"], Fc)
+    d.etape(f"Droite d'action de {nom_contact}", f"Le contact avec le béton se fait sans frottement : l'action en {pc} "
+            f"est perpendiculaire aux mâchoires, donc horizontale. Trace l'horizontale passant par {pc}.")
+    d.droite(pts[pc], Fcon)
+    d.etape("Point de concours I", "Prolonge les deux droites jusqu'à leur intersection et marque le point I : les trois "
+            "droites d'action sont concourantes.")
+    d.point(res["I"], "I")
+    d.etape("Droite d'action de B1/3", "Trace la droite d'action de B1/3 : elle passe par B et par I.")
+    d.droite(pts["B"], res["u3"])
     k = d.px_cm / 250
     x = (v2[0] + Fb[0] * k, v2[1] + Fb[1] * k)
+    d.etape("Parallèles", "Avec l'outil Parallèle : par la pointe du vecteur Fc2/3 donné, trace la parallèle à (BI) ; "
+            f"par son origine, l'horizontale (parallèle à l'action en {pc}). Elles se coupent au troisième sommet.")
+    d.droite(v2, res["u3"], "PURP", 1.6)
+    d.droite(v1, (1, 0), "TEAL", 1.6)
+    d.etape("Vecteurs et lecture", "Trace B1/3 à partir de la pointe de Fc2/3, puis l'action du béton qui revient à "
+            f"l'origine : les vecteurs se suivent bout à bout. Mesure et convertis (1 cm ↔ 250 kN) : B1/3 ≈ "
+            f"{fr(math.hypot(*Fb))} kN, {nom_contact} ≈ {fr(math.hypot(*Fcon))} kN.")
     d.vecteur(v2, x, f"B1/3 ≈ {fr(math.hypot(*Fb))} kN", "PURP", -1)
     d.vecteur(x, v1, f"{nom_contact} ≈ {fr(math.hypot(*Fcon))} kN", "TEAL", 1)
-    d.droite(v1, (1, 0), "TEAL", 1.6)
-    d.droite(v2, res["u3"], "PURP", 1.6)
     return d, res
 
 
@@ -358,8 +373,19 @@ RES_S = trois_forces(("G V/4", CRIC.points["G"], (0, 400)), ("F3/4", CRIC.points
 E24 = RES_S["forces"][2][2]
 RES_B = trois_forces(("E4/2", CRIC.points["E (bras)"], (-E24[0], -E24[1])), ("D1/2", CRIC.points["D"], AD),
                      ("B0/2", CRIC.points["B"]))
-CRIC.construire(RES_S, (560, 430), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", dirs=[True, False, True], sides=[-1, 1, -1])
-CRIC.construire(RES_B, (1700, 70), [0, 1, 2], ["PURP", "TEAL", "ORNG"], "daN", dirs=[True, False, True], sides=[1, 1, 1])
+CRIC.construire(RES_S, (560, 430), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", dirs=[True, False, True], sides=[-1, 1, -1],
+                noms=("G", "F", "E"), quoi="Sellette (4)",
+                t={"k1": "La charge de 400 daN est connue : trace sa droite d'action, la verticale passant par G.",
+                   "k2": "La bielle (3) est soumise à deux forces : F3/4 est portée par (CF), droite déjà tracée sur le DR."})
+CRIC.construire(RES_B, (1700, 70), [0, 1, 2], ["PURP", "TEAL", "ORNG"], "daN", dirs=[True, False, True], sides=[1, 1, 1],
+                noms=("E", "D", "B"), quoi="Bras (2)", nom_i="I′",
+                t={"k1": "Actions mutuelles : E4/2 = −E2/4 (même droite d'action, même intensité, sens contraire). Avec "
+                         "l'outil Parallèle, reporte en E sur le bras la direction de (EI) trouvée pour la sellette.",
+                   "k2": "Le groupe hydraulique est soumis à deux forces : D1/2 est portée par (AD), l'axe du vérin, "
+                         "droite déjà tracée sur le DR.",
+                   "dyn": f"Dans la zone de droite (1 cm ↔ 150 daN), trace E4/2 : même intensité que E2/4 (≈ "
+                          f"{fr(RES_S['normes']['E2/4'])} daN), sens contraire. Astuce : saisis cette valeur dans "
+                          "« Intensité imposée »."})
 NE_C, NF_C = RES_S["normes"]["E2/4"], RES_S["normes"]["F3/4"]
 ND_C, NB_C = RES_B["normes"]["D1/2"], RES_B["normes"]["B0/2"]
 
@@ -470,8 +496,18 @@ RES_H = trois_forces(("C R/3", VTT.points["C"], (0, -65)), ("B4/3", VTT.points["
 D23 = RES_H["forces"][2][2]
 RES_K = trois_forces(("D3/2", VTT.points["D (basculeur)"], (-D23[0], -D23[1])), ("F1/2", VTT.points["F"], UFG),
                      ("E0/2", VTT.points["E"]))
-VTT.construire(RES_H, (200, 1000), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", dirs=[True, False, True], sides=[1, -1, 1])
-VTT.construire(RES_K, (1300, 650), [0, 1, 2], ["PURP", "TEAL", "ORNG"], "daN", dirs=[True, False, True], sides=[1, 1, 1])
+VTT.construire(RES_H, (200, 1000), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", dirs=[True, False, True], sides=[1, -1, 1],
+               noms=("C", "B", "D"), quoi="Haubans (3)",
+               t={"k1": "L'action de la roue en C (65 daN) est connue : trace sa droite d'action, la verticale passant par C.",
+                  "k2": "Les bases (4) sont soumises à deux forces : B4/3 est portée par (AB), droite déjà tracée sur le DR."})
+VTT.construire(RES_K, (1300, 650), [0, 1, 2], ["PURP", "TEAL", "ORNG"], "daN", dirs=[True, False, True], sides=[1, 1, 1],
+               noms=("D", "F", "E"), quoi="Basculeur (2)", nom_i="I′",
+               t={"k1": "Actions mutuelles : D3/2 = −D2/3 (même droite d'action, même intensité, sens contraire). Avec "
+                        "l'outil Parallèle, reporte en D sur le basculeur la direction de (DI) trouvée pour les haubans.",
+                  "k2": "L'amortisseur (1) est soumis à deux forces : F1/2 est portée par (FG), droite déjà tracée sur le DR.",
+                  "dyn": f"Dans la zone de droite (1 cm ↔ 40 daN), trace D3/2 : même intensité que D2/3 (≈ "
+                         f"{fr(RES_H['normes']['D2/3'])} daN), sens contraire. Astuce : saisis cette valeur dans "
+                         "« Intensité imposée »."})
 NB_V, ND_V = RES_H["normes"]["B4/3"], RES_H["normes"]["D2/3"]
 NF_V, NE_V = RES_K["normes"]["F1/2"], RES_K["normes"]["E0/2"]
 

@@ -48,9 +48,11 @@ NODE_PATH=$(npm root -g) node --test tests/*.test.js   # accueil, cours 1.1 et 3
 - `src/cours3.py` : cours 3, page autonome interactive ; `src/cours1.py` : cours 1.1 (statique graphique).
 - `src/graphique.py` : exercices 1.2 à 1.5 (points relevés sur les DR, constructions résolues, questions, corrections).
 - `src/atelier.py` : **atelier de tracé** des exercices de statique graphique, greffé sur le moteur de tracé du gabarit
-  sans le modifier : vecteur à l'échelle (intensité affichée ou imposée), droite d'action, parallèle, segment, point,
-  mesure (distance, intensité, angle), aimantation aux points, extrémités et intersections, DR en transparence réglable,
-  zones d'échelle multiples sur un même DR.
+  sans le modifier : vecteur à l'échelle (intensité affichée ou imposée), droite d'action, parallèle (un clic sur une
+  autre droite change la référence), segment, point, mesure (distance, intensité, angle), sélection (recolorer, changer
+  l'épaisseur, supprimer), aimantation aux points, extrémités et intersections, DR en transparence réglable, zones
+  d'échelle multiples sur un même DR, plein écran où le DR tient en entier, correction rejouée pas à pas
+  (`DR.etape`, `DR.construire`).
 - Notes de conception du niveau 3 : [`NOTE-DE-LIVRAISON.md`](NOTE-DE-LIVRAISON.md).
 
 **Remplacer une carte « en cours d'édition »** : déposer la page dans `src/exercices/`, la vignette dans `src/images/`, ajouter l'entrée dans `EXERCICES` et retirer la ligne correspondante de `ENCOURS`.

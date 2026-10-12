@@ -447,7 +447,10 @@ ECH = atelier.DR("ECHELLE", "n3-echelle-dr", (echelle_dr.W, echelle_dr.H), echel
 _PB, _PC = echelle_dr.POINTS["B"], echelle_dr.POINTS["C"]
 RES_ECH = atelier.trois_forces(("P3", echelle_dr.POINTS["G3"], (0, P_E)),
                                ("B4/3", _PB, (_PC[0] - _PB[0], _PC[1] - _PB[1])), ("A2/3", echelle_dr.POINTS["A"]))
-ECH.construire(RES_ECH, (1200, 400), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", sides=[1, -1, 1])
+ECH.construire(RES_ECH, (1200, 400), [0, 1, 2], ["CORR", "TEAL", "PURP"], "daN", sides=[1, -1, 1], noms=("G3", "B", "A"),
+               t={"k1": "Le poids P3 est connu : trace sa droite d'action, la verticale passant par G3.",
+                  "k2": "Le vérin (4 + 5) est soumis à deux forces : B4/3 est portée par (BC). Trace la droite passant "
+                        "par B et C (l'aimant accroche les deux points)."})
 NB_G, NA_G = RES_ECH["normes"]["B4/3"], RES_ECH["normes"]["A2/3"]
 ANG_A_G = atelier.angle(RES_ECH["u3"])
 TOL_G = 0.07

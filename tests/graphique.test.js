@@ -183,3 +183,136 @@ for (const file of Object.keys(EXO)) {
     await context.close();
   });
 }
+
+// ---------- outils ajoutés : parallèle (changement de référence), sélection, plein écran, correction pas à pas
+async function atelier(page, sk, W, H) {
+  await page.locator("#" + sk).scrollIntoViewIfNeeded();
+  const xy = async (x, y) => { const b = await page.locator(`#${sk} canvas`).boundingBox(); return [b.x + x * b.width / W, b.y + y * b.height / H]; };
+  const drag = async (tool, a, c) => {
+    if (tool) await page.click(`#${sk} [data-tool=${tool}]`);
+    const A = await xy(...a), C = await xy(...c);
+    await page.mouse.move(A[0], A[1]); await page.mouse.down();
+    await page.mouse.move((A[0] + C[0]) / 2, (A[1] + C[1]) / 2, { steps: 3 }); await page.mouse.move(C[0], C[1], { steps: 3 });
+    await page.mouse.up();
+  };
+  const click = async (tool, a) => { if (tool) await page.click(`#${sk} [data-tool=${tool}]`); const A = await xy(...a); await page.mouse.click(A[0], A[1]); };
+  const strokes = () => page.evaluate((id) => window.__app__.sketches[id].strokes.map((s) => ({ t: s.t, c: s.c, w: s.w, u: s.u })), sk);
+  return { drag, click, strokes };
+}
+
+test("atelier : parallèle, un clic sur une autre droite change la référence ; appuyer-glisser pose la parallèle", async () => {
+  const { context, page, errors } = await open("panneau-solaire.html");
+  await page.click("[data-mode=training]");
+  const { drag, click, strokes } = await atelier(page, "sk_q2_1", 1780, 1142);
+  await drag("dir", [623.8, 526.2], [623.8, 900]);          // verticale par G
+  await drag("dir", [782.5, 696.2], [400, 696.2]);           // horizontale par D
+  await click("par", [623.8, 300]);                          // référence : la verticale
+  await drag(null, [1300, 400], [1302, 420]);                // parallèle verticale
+  let st = await strokes();
+  assert.equal(st.length, 3);
+  assert.ok(Math.abs(st[2].u[0]) < 0.01, "première parallèle verticale");
+  await click(null, [300, 696.2]);                           // simple clic sur l'horizontale : nouvelle référence, rien de posé
+  assert.equal((await strokes()).length, 3);
+  assert.match(await text(page, "#sk_q2_1 .gt-status"), /Nouvelle référence/);
+  await drag(null, [1500, 900], [1510, 905]);                // parallèle horizontale (point libre)
+  st = await strokes();
+  assert.equal(st.length, 4);
+  assert.ok(Math.abs(st[3].u[1]) < 0.01, "deuxième parallèle horizontale");
+  await click(null, [1300, 300]);                            // clic sur la parallèle verticale posée : elle devient la référence
+  await drag(null, [1500, 1000], [1500, 1010]);
+  st = await strokes();
+  assert.equal(st.length, 5);
+  assert.ok(Math.abs(st[4].u[0]) < 0.01, "troisième parallèle verticale");
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test("atelier : sélection d'un tracé posé, changement de couleur et d'épaisseur, suppression", async () => {
+  const { context, page, errors } = await open("panneau-solaire.html");
+  await page.click("[data-mode=training]");
+  const { drag, click, strokes } = await atelier(page, "sk_q2_1", 1780, 1142);
+  await drag("dir", [623.8, 526.2], [623.8, 900]);
+  await drag("vec", [1150, 150], [1150, 500]);
+  const del = page.locator("#sk_q2_1 .gt-del");
+  assert.ok(await del.isDisabled());
+  await click("sel", [623.8, 1000]);                         // la droite d'action
+  assert.equal(await page.evaluate(() => window.__app__.sketches.sk_q2_1.gt.sel), 0);
+  assert.match(await text(page, "#sk_q2_1 .gt-status"), /Droite d'action sélectionné/);
+  assert.ok(!(await del.isDisabled()));
+  const w0 = (await strokes())[0].w;
+  await page.click('#sk_q2_1 [data-color="#1B7A43"]');
+  await page.click("#sk_q2_1 [data-width=epais]");
+  let st = await strokes();
+  assert.equal(st[0].c, "#1B7A43");
+  assert.ok(Math.abs(st[0].w - w0 * 2.1) < 0.01, "épaisseur modifiée");
+  assert.equal(st[1].c, "#1F5FA8", "l'autre tracé ne change pas");
+  await click(null, [1150, 300]);                            // le vecteur
+  assert.equal(await page.evaluate(() => window.__app__.sketches.sk_q2_1.gt.sel), 1);
+  await page.keyboard.press("Delete");
+  st = await strokes();
+  assert.deepEqual(st.map((s) => s.t), ["dir"]);
+  await click(null, [623.8, 1000]);
+  await del.click();
+  assert.equal((await strokes()).length, 0);
+  await click(null, [300, 300]);                             // rien sous le pointeur : aucune sélection
+  assert.equal(await page.evaluate(() => window.__app__.sketches.sk_q2_1.gt.sel), null);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+for (const [w, h] of [[1366, 768], [1280, 600], [820, 1180]]) {
+  test(`plein écran ${w} × ${h} : le DR de la pince tient en entier, sans rognage ni défilement`, async () => {
+    const { context, page, errors } = await open("pince-kobelco.html", { width: w, height: h });
+    await page.click("[data-mode=training]");
+    await page.click("#sk_q2_1 [data-act=full]");
+    await page.waitForTimeout(150);
+    const r = await page.evaluate(() => {
+      const s = window.__app__.sketches.sk_q2_1, c = s.canvas.getBoundingClientRect(), root = s.root;
+      const f = root.querySelector(".sk-foot").getBoundingClientRect();
+      return { top: c.top, bottom: c.bottom, left: c.left, right: c.right, ratio: (c.width / c.height) / (s.W / s.H),
+               foot: f.bottom, scroll: root.scrollHeight - root.clientHeight, W: innerWidth, H: innerHeight };
+    });
+    assert.ok(r.top >= 0 && r.left >= 0 && r.right <= r.W + 0.5 && r.bottom <= r.H + 0.5, JSON.stringify(r));
+    assert.ok(r.foot <= r.H + 0.5, "bouton de validation visible");
+    assert.ok(Math.abs(r.ratio - 1) < 0.01, "proportions du DR conservées");
+    assert.ok(r.scroll <= 1, "aucun défilement");
+    // le zoom reste utilisable en plein écran, puis « Ajuster » revient au DR entier
+    const w1 = await page.evaluate(() => window.__app__.sketches.sk_q2_1.canvas.getBoundingClientRect().width);
+    await page.click("#sk_q2_1 [data-zoom=in]");
+    const w2 = await page.evaluate(() => window.__app__.sketches.sk_q2_1.canvas.getBoundingClientRect().width);
+    assert.ok(Math.abs(w2 / w1 - 1.5) < 0.02, `zoom ×1,5 (${w1} → ${w2})`);
+    await page.click("#sk_q2_1 [data-zoom=reset]");
+    await page.click("#sk_q2_1 [data-act=full]");
+    assert.ok(!(await page.evaluate(() => document.body.classList.contains("sk-full-open"))));
+    assert.deepEqual(errors, []);
+    await context.close();
+  });
+}
+
+test("correction pas à pas : étapes numérotées, dessinées une à une, consignes simples", async () => {
+  for (const [file, sk, n] of [["panneau-solaire.html", "sk_q2_1", 7], ["pince-kobelco.html", "sk_q2_1", 6],
+    ["cric-hydraulique.html", "sk_q2_1", 14], ["suspension-vtt.html", "sk_q2_1", 14], ["echelle-pompier.html", "sk_q2_1", 7]]) {
+    const { context, page, errors } = await open(file);
+    await page.click("[data-mode=training]");
+    assert.ok(!(await page.isVisible(`#${sk} .gt-steps`)), `${file} : pas de correction avant validation`);
+    await page.click(`#${sk} .btn-sketch`);
+    const box = page.locator(`#${sk} .gt-steps`);
+    assert.ok(await box.isVisible(), file);
+    assert.equal(await box.locator("li").count(), n, `${file} : nombre d'étapes`);
+    assert.equal(await text(page, `#${sk} .gt-st-n`), "Toute la correction");
+    await page.click(`#${sk} [data-st=mode]`);
+    assert.equal(await text(page, `#${sk} .gt-st-n`), `Étape 1 / ${n}`);
+    assert.ok(await page.locator(`#${sk} [data-st=prev]`).isDisabled());
+    assert.match(await box.locator("li.on").innerText(), /^1\. [\s\S]+ — [\s\S]{20,}/);
+    await page.click(`#${sk} [data-st=next]`); await page.click(`#${sk} [data-st=next]`);
+    assert.equal(await text(page, `#${sk} .gt-st-n`), `Étape 3 / ${n}`);
+    assert.match(await box.locator("li.on").innerText(), /^3\. /);
+    await box.locator("li").nth(n - 1).click();
+    assert.ok(await page.locator(`#${sk} [data-st=next]`).isDisabled());
+    assert.equal(await page.evaluate((id) => window.__app__.sketches[id].gt.step, sk), n);
+    await page.click(`#${sk} [data-st=mode]`);
+    assert.equal(await text(page, `#${sk} .gt-st-n`), "Toute la correction");
+    assert.deepEqual(errors, [], file);
+    await context.close();
+  }
+});
