@@ -1,3 +1,26 @@
+# Note de livraison — Exercice 2.1 « Déplacer un torseur » : séries et plein écran
+
+- **Séries** : menu « Série » dans la barre d'en-tête : types de questions à cocher (glisseur plan, torseur plan,
+  torseur 3D ; au moins un) et nombre de questions (5, 10, 15 ou 20). Les types cochés sont répartis à parts égales
+  puis mélangés au hasard. Par défaut : 10 questions des trois types.
+- **Progression** : « Question k / N », une pastille par question (verte réussie, rouge manquée), nombre de réussites ;
+  « Question suivante » après une vérification ou la correction ; Entrée enchaîne. Une question n'est réussie que si
+  tout est juste à la première vérification ; demander la correction la compte manquée.
+- **Fin de série** : note sur 20 (arrondie au demi-point), étoiles, détail par type et question par question ;
+  « Nouvelle série (mêmes réglages) » ou « Changer les réglages ».
+- **Notation** : le vecteur BA se saisit en colonne entre parenthèses ; la correction écrit BA = A − B, R, et
+  M_B = M_A + BA ∧ R en colonnes.
+- **Conseil** affiché au-dessus de la saisie : « utilise un brouillon » (BA d'abord, puis BA ∧ R).
+- **Plein écran** : la page occupe toute la largeur et la hauteur ; la taille du texte suit l'écran ; 3 colonnes sur
+  ordinateur, 2 sur tablette (correction sous les données), 1 sur téléphone. En 3D, une figure en perspective
+  cavalière (axe z vers l'avant, rappels pointillés des points dans le plan (x, z)) remplace l'ancien message.
+
+Tests (`tests/torseur.test.js`, 15) : série par défaut, séries de chaque type seul (20/20), répartition 20 questions
+plan + 3D, au moins un type exigé, erreurs et note 12/20, 100 tirages cohérents, sens de l'arc du moment, pas de
+défilement en 1920 × 1080, 1366 × 768 et 1280 × 720, clavier et menus, tablette et téléphone.
+
+---
+
 # Note de livraison — Réorganisation des niveaux
 
 - Les cartes « Cours 1 » et « Cours 2 », en cours d'édition, sont retirées : la rubrique « Les cours » ne garde que
