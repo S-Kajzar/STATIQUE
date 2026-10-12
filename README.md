@@ -15,7 +15,7 @@ même accueil en cartes illustrées). Publié par GitHub Pages depuis `index.htm
 | `cours-statique-analytique.html` | Cours 3 (Niveau 3) — Statique analytique : balance, jeux, cartes à retourner, atelier des liaisons, calculateur de moment, poutre résolue pas à pas, quiz |
 | `coffre-fort.html` | Exercice 3.1 (Niveau 3) — Porte de coffre-fort : 3 parties, 4 torseurs ou vecteurs à compléter, 2 questions et 1 tracé, 1 h |
 | `echelle-pompier.html` | Exercice 3.2 (Niveau 3) — Échelle de pompier : 5 parties (vérin isolé, résolution graphique sur DR avec l'atelier de tracé, torseurs, PFS en A, capacité du vérin double effet en poussant et en tirant), 1 tracé, 1 h 45 |
-| `deplacer-torseur.html` | Exercice 3.4 (Niveau 3) — Déplacer un torseur : entraînement à tirages aléatoires (glisseur plan, torseur plan, torseur 3D), vecteur BA et torseur en B à écrire, correction pas à pas, série de 10 notée sur 20 |
+| `deplacer-torseur.html` | Exercice 3.4 (Niveau 3) — Déplacer un torseur : entraînement à tirages aléatoires (glisseur plan, torseur plan, torseur 3D) sur un seul écran (données, réponse et correction côte à côte), vecteur BA et torseur en B à écrire, correction pas à pas, série de 10 notée sur 20 |
 | `cadre-velo.html` | Exercice 3.3 (Niveau 3) — Cadre de vélo tout terrain : 4 parties, 6 torseurs ou vecteurs à compléter, 3 questions et 1 tracé, 1 h 10 |
 
 Les autres cartes (cours 1 et 2, formulaire, exercice 1.1, étude de cas) sont légèrement transparentes et annoncées « En cours d'édition ».

@@ -181,3 +181,60 @@ test("téléphone : aucun débordement horizontal, niveaux 1 à 3", async () => 
   assert.deepEqual(errors, []);
   await context.close();
 });
+
+for (const [w, h] of [[1366, 768], [1280, 720]]) {
+  test(`un seul écran ${w} × ${h} : données, saisie, boutons et correction visibles sans défiler (niveaux 1 à 3)`, async () => {
+    const { context, page, errors } = await open("?seed=21", { width: w, height: h });
+    for (const n of [1, 2, 3]) {
+      await page.click(`[data-niv="${n}"]`);
+      await page.click("#ta-sol");
+      const hors = await page.evaluate(() => {
+        const sel = ["#ta-donnees", "#ta-svg", "#ta .ta-f", "#ta-check", "#ta-sol", "#ta-new", "#ta-fb", "#ta-corr", ".ta-niv", ".ta-score"];
+        const out = [];
+        for (const s of sel) for (const e of document.querySelectorAll(s)) {
+          if (getComputedStyle(e).display === "none") continue;
+          const r = e.getBoundingClientRect();
+          if (r.bottom > innerHeight + 0.5 || r.top < 0 || r.right > innerWidth) out.push(`${s} ${Math.round(r.top)}→${Math.round(r.bottom)}`);
+        }
+        return [scrollY].concat(out);
+      });
+      assert.deepEqual(hors, [0], `niveau ${n}`);
+    }
+    assert.deepEqual(errors, []);
+    await context.close();
+  });
+}
+
+test("clavier : Entrée vérifie, puis lance le tirage suivant ; valeurs attendues sous les cases fausses", async () => {
+  const { context, page, errors } = await open("?seed=8");
+  await page.click('[data-niv="2"]');
+  const first = page.locator("#ta .ta-f input").first();
+  assert.ok(await first.evaluate((e) => e === document.activeElement), "curseur dans la première case");
+  const t = await tirage(page);
+  const v = cases(t);
+  const inputs = page.locator("#ta .ta-f input");
+  for (let i = 0; i < v.length; i++) await inputs.nth(i).fill(i === 4 ? "999" : fr(v[i]));
+  await page.keyboard.press("Enter");
+  assert.match(await page.innerText("#ta-fb"), /1 case à revoir/);
+  assert.ok(await inputs.nth(4).evaluate((e) => e === document.activeElement), "curseur sur la case fausse");
+  await inputs.nth(4).fill(fr(v[4]));
+  await page.keyboard.press("Enter");
+  assert.match(await page.innerText("#ta-fb"), /Tout est juste/);
+  await page.keyboard.press("Enter");                                  // tirage suivant
+  assert.equal(await page.innerText("#ta-n"), "3");
+  assert.notDeepEqual(await tirage(page), t);
+  assert.ok(await first.evaluate((e) => e === document.activeElement && e.value === ""));
+  // correction demandée sans réponse : chaque case montre sa valeur attendue
+  await page.click("#ta-sol");
+  const att = await page.locator("#ta .ta-att").allInnerTexts();
+  const e2 = cases(await tirage(page)).map((x) => "→ " + fr(x).replace("-", "−"));
+  assert.deepEqual(att, e2);
+  assert.ok(!(await page.isVisible("#ta-vide")));
+  // rappel en surimpression, refermé par un clic ailleurs
+  await page.click(".ta-aide summary");
+  assert.ok(await page.isVisible(".ta-pop"));
+  await page.mouse.click(5, 700);
+  assert.ok(!(await page.isVisible(".ta-pop")));
+  assert.deepEqual(errors, []);
+  await context.close();
+});

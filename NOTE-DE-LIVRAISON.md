@@ -1,3 +1,19 @@
+# Note de livraison — Exercice 3.4 : ergonomie « un seul écran »
+
+L'entraînement « Déplacer un torseur » tient désormais dans un écran d'ordinateur (testé en 1366 × 768 et 1280 × 720,
+niveaux 1 à 3, correction affichée) : plus besoin de remonter pour relire les données.
+
+- **Barre d'en-tête** compacte : titre, choix du niveau, bouton « Rappel » (formule de Varignon en surimpression,
+  refermée d'un clic ailleurs), score (tirage, réussis, série, série de 10).
+- **Trois colonnes** : 1 Données (torseur en A, points A et B, figure), 2 Ta réponse (BA, torseur en B, boutons),
+  3 Correction (pas à pas). Sur tablette, la correction passe sous les données, à côté de la réponse ; sur téléphone,
+  une seule colonne, la page descend vers la correction et remonte d'elle-même au tirage suivant.
+- **Clavier** : le curseur est placé dans la première case ; Entrée vérifie, ramène le curseur sur la première case
+  fausse, puis lance le tirage suivant quand tout est juste ; Tab passe d'une case à l'autre.
+- **Correction en place** : la valeur attendue s'affiche sous chaque case fausse ou vide.
+
+---
+
 # Note de livraison — Exercice 3.2 enrichi : échelle de pompier (schémas et questions du manuel)
 
 L'exercice reprend l'exercice résolu du manuel (statique plane) : mêmes données, avec ses schémas et ses questions.

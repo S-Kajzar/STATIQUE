@@ -640,46 +640,108 @@ body.hub #home{min-height:0}
 }
 </style>
 <style>
-.ta-niv{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px}
-.ta-score{display:flex; flex-wrap:wrap; gap:6px 18px; background:var(--encre); color:#fff; padding:8px 14px; margin:0 0 12px; font-size:.95rem}
+/* ---------- un seul écran : barre d'en-tête, puis données | réponse | correction côte à côte ---------- */
+.ta-page #home{padding:10px 16px 16px}
+.ta-app{max-width:1500px; margin:0 auto}
+.ta-top{display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; background:var(--encre); color:#fff; padding:8px 12px; position:relative}
+.ta-id{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+#ta .ta-id h1{margin:0; font:800 1.25rem/1.2 var(--f-titre); color:#fff}
+.ta-home{display:inline-flex; color:var(--jaune)} .ta-home svg{width:22px; height:22px}
+.ta-niv{display:flex; gap:0; border:1.5px solid var(--jaune)}
+.ta-niv button{background:transparent; color:#fff; border:0; border-right:1px solid rgba(255,255,255,.25); padding:6px 10px; font:700 .86rem var(--f-titre); cursor:pointer}
+.ta-niv button:last-child{border-right:0}
+.ta-niv button[aria-pressed=true]{background:var(--jaune); color:var(--encre)}
+.ta-niv button:focus-visible{outline:2px solid #fff; outline-offset:-4px}
+.ta-score{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:.88rem; margin-left:auto}
 .ta-score b{color:var(--jaune); font-family:var(--f-titre)}
-.ta-card{display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:14px; align-items:start}
-@media (max-width:760px){ .ta-card{grid-template-columns:1fr} }
-.ta-enonce p{margin:0 0 8px}
-#ta .vec{line-height:1.15}
-.ta-donnees{background:#fff; border:1px solid var(--trait-fin); padding:8px 12px}
-.ta-donnees p{margin:4px 0}
-.ta-svg{width:100%; height:auto; background:#fff; border:1px solid var(--trait-fin)}
+.ta-aide{position:static} .ta-aide summary{cursor:pointer; list-style:none; border:1.5px solid #fff; padding:4px 10px; font:700 .86rem var(--f-titre)}
+.ta-aide summary::-webkit-details-marker{display:none}
+.ta-aide[open] summary{background:#fff; color:var(--encre)}
+.ta-pop{position:absolute; right:12px; top:100%; z-index:20; width:min(560px, calc(100vw - 32px)); background:var(--papier); color:var(--encre);
+  border:2px solid var(--encre); box-shadow:0 8px 24px rgba(0,0,0,.25); padding:6px 14px; font-size:.92rem}
+.ta-pop .formule{margin:6px 0}
+.ta-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.05fr); gap:12px; margin-top:10px; align-items:start}
+@media (max-width:1180px){ .ta-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"don rep" "cor rep"}
+  .ta-col-don{grid-area:don} .ta-col-rep{grid-area:rep} .ta-col-cor{grid-area:cor} }
+@media (max-width:700px){ .ta-grid{grid-template-columns:1fr; grid-template-areas:"don" "rep" "cor"} .ta-score{margin-left:0} }
+.ta-col{background:#fff; border:1px solid var(--trait-fin); padding:8px 12px 10px; min-width:0}
+.ta-col h2{display:flex; align-items:center; gap:8px; font:800 1.02rem var(--f-titre); margin:0 0 6px}
+.ta-col h2 span{display:inline-grid; place-items:center; width:22px; height:22px; background:var(--encre); color:var(--jaune); font-size:.85rem}
+.ta-col h3{font:700 .92rem var(--f-titre); margin:8px 0 4px}
+.ta-col p{margin:0 0 6px}
+#ta-txt{font-size:.92rem}
+#ta .vec{line-height:1} #ta .vec::before{top:-.04em} #ta .vec::after{top:-.24em}
+.ta-donnees{border-left:4px solid var(--n3, #7B3FA0); padding:2px 10px; margin:0 0 6px}
+.ta-donnees p{margin:2px 0}
+.ta-donnees .torseur{font-size:.95rem}
+.ta-svg{display:block; width:100%; max-height:min(300px, 36vh); background:#fff; border:1px solid var(--trait-fin)}
 .ta-svg .ax{stroke:#9AA2A8; stroke-width:1}
 .ta-svg text{font:700 13px var(--f-texte)}
-.ta-rep h3{font:700 1.02rem var(--f-titre); margin:14px 0 6px}
-.ta-row{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end}
-.ta-f{display:inline-flex; flex-direction:column; align-items:center; gap:4px; line-height:1.3; font-size:.8rem; color:var(--encre-2)}
-.ta-f input{width:6.6em; border:1.5px dashed var(--encre-2); padding:5px 6px; background:#fff; font:600 .95rem var(--f-texte); text-align:center}
+.ta-row{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end}
+.ta-f{position:relative; display:inline-flex; flex-direction:column; align-items:center; gap:2px; line-height:1.25; font-size:.78rem;
+  color:var(--encre-2); padding-bottom:14px}
+.ta-f input{width:6.2em; border:1.5px dashed var(--encre-2); padding:4px 5px; background:#fff; font:600 .95rem var(--f-texte); text-align:center}
+.ta-f input:focus{outline:2px solid var(--jaune); outline-offset:1px; border-style:solid}
 .ta-f.ok input{border:2px solid var(--vert); background:var(--vert-pale)}
 .ta-f.ko input{border:2px solid var(--rouge); background:var(--rouge-pale)}
-.ta-tor{display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; max-width:100%; overflow-x:auto}
-.ta-tor .tz-b td{padding:2px 6px; text-align:center}
-.ta-tor .dash{color:var(--encre-2); padding:0 2em}
-#ta-fb.ok{color:var(--vert)} #ta-fb.ko{color:var(--rouge)}
-.ta-corr{background:#fff; border:1px solid var(--trait-fin); border-left:5px solid var(--vert); padding:8px 14px; margin:8px 0}
-.ta-corr p{margin:4px 0}
-.ta-corr .eq{line-height:1.9}
-.ta-fin{background:var(--jaune-pale); border:2px solid var(--jaune); padding:10px 14px; margin:10px 0; font:700 1.1rem var(--f-titre)}
+.ta-att{position:absolute; bottom:0; left:0; right:0; text-align:center; font:700 .74rem var(--f-texte); color:var(--vert); white-space:nowrap}
+.ta-tor{display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; max-width:100%}
+.ta-tor .tz-b td{padding:0 4px; text-align:center; min-width:0}
+.ta-tor .dash{color:var(--encre-2); padding:0 1.6em}
+.ta-act{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px}
+.ta-act .btn{padding:6px 11px; font-size:.9rem}
+kbd{font:600 .72rem var(--f-texte); border:1px solid currentColor; border-radius:3px; padding:0 4px; margin-left:4px; opacity:.8}
+.ta-fb{min-height:1.5em; margin:6px 0 0; font-weight:700}
+.ta-fb.ok{color:var(--vert)} .ta-fb.ko{color:var(--rouge)}
+.ta-corr{border-left:4px solid var(--vert); padding:0 10px; font-size:.9rem}
+.ta-corr p{margin:3px 0}
+.ta-corr .eq{line-height:1.7; margin:2px 0 4px}
+.ta-corr .torseur{font-size:.92rem}
+.ta-vide{color:var(--encre-2)}
+.ta-fin{background:var(--jaune-pale); border:2px solid var(--jaune); padding:6px 12px; margin:8px 0 0; font:700 1.02rem var(--f-titre)}
+.ta-foot{margin-top:12px; color:var(--encre-2)}
+.ta-foot p{margin:4px 0}
+@media (max-width:700px){ #ta .ta-id h1{font-size:1.1rem} .ta-niv button{padding:6px 7px; font-size:.8rem} }
 </style>
 </head>
-<body class="no-mode hub cours-page">
-<section id="home" aria-labelledby="home-title"><div class="home-inner"><div class="cours" id="ta">
-<nav class="c-top no-print" aria-label="Navigation"><a href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg> Accueil</a> <a href="cours-statique-analytique.html">Cours 3 — Statique analytique</a></nav>
-<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head"><span class="mc-tag">Exercice 3.4</span> <span class="pastille n3">Niveau 3</span>
-<h1 id="home-title">Déplacer un torseur</h1><p class="home-sub">Entraînement à volonté : chaque tirage donne un torseur connu
-en A et deux points au hasard ; écris le vecteur BA puis le torseur au point B. Trois niveaux, correction pas à pas,
-série de 10 tirages notée sur 20.</p></header></div></div>
-<section class="part cours-sec" id="ta-rappel" aria-labelledby="ta-rappel-t"><header class="part-head"><div class="part-num" aria-hidden="true">1</div><div><h2 id="ta-rappel-t" style="padding:14px 16px">Rappel : déplacer un torseur de A vers B</h2></div></header><div class="part-body"><p>Un torseur décrit une action mécanique en un point : sa <b>résultante</b> <span class="vec">R</span> (<i>X</i>, <i>Y</i>, <i>Z</i>) et son <b>moment</b> <span class="vec">M</span><sub>A</sub> (<i>L</i>, <i>M</i>, <i>N</i>). Pour l'écrire en un autre point B :</p><div class="formule"><span class="f-main"><span class="vec">R</span><sub>B</sub> = <span class="vec">R</span><sub>A</sub> &nbsp;;&nbsp; <span class="vec">M</span><sub>B</sub> = <span class="vec">M</span><sub>A</sub> + <span class="vec">BA</span> ∧ <span class="vec">R</span></span><span class="f-units">relation de Varignon, « BABAR » : B = A + BA ∧ R<br><span class="vec">BA</span> = A − B (coordonnées de A moins celles de B)</span></div><p>Composantes du produit vectoriel, avec <span class="vec">BA</span> (<i>a</i>, <i>b</i>, <i>c</i>) :</p><div class="formule"><span class="f-main"><span class="vec">BA</span> ∧ <span class="vec">R</span> = ( <i>b</i>·<i>Z</i> − <i>c</i>·<i>Y</i> ; <i>c</i>·<i>X</i> − <i>a</i>·<i>Z</i> ; <i>a</i>·<i>Y</i> − <i>b</i>·<i>X</i> )</span><span class="f-units">dans le plan (x, y) : seule la 3<sup>e</sup> composante reste<br><i>N</i><sub>B</sub> = <i>N</i><sub>A</sub> + <i>a</i>·<i>Y</i> − <i>b</i>·<i>X</i></span></div></div></section><section class="part cours-sec" id="ta-exo" aria-labelledby="ta-exo-t"><header class="part-head"><div class="part-num" aria-hidden="true">2</div><div><h2 id="ta-exo-t" style="padding:14px 16px">Entraînement</h2></div></header><div class="part-body"><div class="ta-niv" role="group" aria-label="Choisir le niveau"><button type="button" class="k3-lia" data-niv="1" aria-pressed="true">1 · Glisseur dans le plan</button><button type="button" class="k3-lia" data-niv="2" aria-pressed="false">2 · Torseur quelconque dans le plan</button><button type="button" class="k3-lia" data-niv="3" aria-pressed="false">3 · Torseur dans l'espace</button></div><div class="ta-score" aria-live="polite"><span>Tirage <b id="ta-n">1</b></span><span>Réussis : <b id="ta-ok">0</b> / <b id="ta-tot">0</b></span><span>Série en cours : <b id="ta-serie">0</b></span><span class="ta-dix">Série de 10 : <b id="ta-dix">0 / 10</b></span></div><div class="ta-card"><div class="ta-enonce"><p id="ta-txt"></p><div class="ta-donnees" id="ta-donnees"></div></div><svg class="ta-svg" id="ta-svg" viewBox="0 0 360 300" role="img" aria-label="Points A et B, résultante en A"></svg></div><div class="ta-rep"><h3>1. Le vecteur BA (en m)</h3><div class="ta-row" id="ta-ba"></div><h3>2. Le torseur au point B (N et N·m)</h3><div class="ta-tor" id="ta-tb"></div></div><p class="k3-foot"><button type="button" class="btn" id="ta-check">Vérifier</button> <button type="button" class="btn ghost" id="ta-sol">Voir la correction</button> <button type="button" class="btn ghost" id="ta-new">Nouveau tirage</button> <b id="ta-fb" aria-live="polite"></b></p><div class="ta-corr" id="ta-corr" hidden></div><div class="ta-fin" id="ta-fin" hidden></div><p class="small">Saisie : nombres décimaux avec une virgule ou un point, signe compris. Tolérance : ± 0,01 m sur BA, ± 0,5 % (au moins 0,1) sur les composantes du torseur. Un tirage n'est compté réussi que si toutes les cases sont justes à la première vérification.</p></div></section>
-<div class="cours-foot no-print"><a class="btn ghost" href="coffre-fort.html">Exercice 3.1</a>
-<a class="btn ghost" href="echelle-pompier.html">Exercice 3.2</a><a class="btn ghost" href="cadre-velo.html">Exercice 3.3</a>
-<a class="btn ghost" href="index.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg> Retour à l'accueil</a></div>
-</div></div></section>
+<body class="no-mode hub cours-page ta-page">
+<section id="home" aria-labelledby="home-title"><div class="ta-app" id="ta">
+<header class="ta-top">
+  <div class="ta-id"><a class="ta-home no-print" href="index.html" title="Retour à l'accueil" aria-label="Retour à l'accueil"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.8V20h4.5v-5.5h4V20h4.5V9.8"/></svg></a>
+    <span class="mc-tag">Exercice 3.4</span><span class="pastille n3">Niveau 3</span>
+    <h1 id="home-title">Déplacer un torseur</h1></div>
+  <div class="ta-niv" role="group" aria-label="Choisir le niveau">
+    <button type="button" data-niv="1" aria-pressed="true" title="Glisseur dans le plan : moment nul en A">1 · Glisseur plan</button>
+    <button type="button" data-niv="2" aria-pressed="false" title="Torseur quelconque dans le plan">2 · Torseur plan</button>
+    <button type="button" data-niv="3" aria-pressed="false" title="Torseur dans l'espace">3 · Torseur 3D</button></div>
+  <details class="ta-aide"><summary>Rappel</summary><div class="ta-pop"><p>La <b>résultante</b> <span class="vec">R</span> ne change pas d'un point à l'autre ; le <b>moment</b> se transporte par la relation de Varignon (« BABAR ») :</p><div class="formule"><span class="f-main"><span class="vec">M</span><sub>B</sub> = <span class="vec">M</span><sub>A</sub> + <span class="vec">BA</span> ∧ <span class="vec">R</span></span><span class="f-units"><span class="vec">BA</span> = A − B (coordonnées de A moins celles de B)</span></div><p>Avec <span class="vec">BA</span> (<i>a</i>, <i>b</i>, <i>c</i>) et <span class="vec">R</span> (<i>X</i>, <i>Y</i>, <i>Z</i>) :</p><div class="formule"><span class="f-main"><span class="vec">BA</span> ∧ <span class="vec">R</span> = ( <i>b</i>·<i>Z</i> − <i>c</i>·<i>Y</i> ; <i>c</i>·<i>X</i> − <i>a</i>·<i>Z</i> ; <i>a</i>·<i>Y</i> − <i>b</i>·<i>X</i> )</span><span class="f-units">dans le plan (x, y), seule la 3<sup>e</sup> composante reste :<br><i>N</i><sub>B</sub> = <i>N</i><sub>A</sub> + <i>a</i>·<i>Y</i> − <i>b</i>·<i>X</i></span></div></div></details>
+  <div class="ta-score" aria-live="polite"><span>Tirage <b id="ta-n">1</b></span><span>Réussis <b id="ta-ok">0</b>/<b id="ta-tot">0</b></span>
+    <span>Série <b id="ta-serie">0</b></span><span>Sur 10 : <b id="ta-dix">0 / 10</b></span></div>
+</header>
+<div class="ta-fin" id="ta-fin" hidden></div>
+<main class="ta-grid">
+  <section class="ta-col ta-col-don" aria-labelledby="ta-h-don"><h2 id="ta-h-don"><span>1</span> Données</h2>
+    <p id="ta-txt"></p><div class="ta-donnees" id="ta-donnees"></div>
+    <svg class="ta-svg" id="ta-svg" viewBox="0 0 360 300" role="img" aria-label="Points A et B, résultante en A"></svg>
+    <p class="ta-3d small" id="ta-3d" hidden>Pas de figure en 3D : travaille sur les coordonnées.</p></section>
+  <section class="ta-col ta-col-rep" aria-labelledby="ta-h-rep"><h2 id="ta-h-rep"><span>2</span> Ta réponse</h2>
+    <h3>Le vecteur <span class="vec">BA</span> (en m)</h3><div class="ta-row" id="ta-ba"></div>
+    <h3>Le torseur au point B (N et N·m)</h3><div class="ta-tor" id="ta-tb"></div>
+    <div class="ta-act"><button type="button" class="btn" id="ta-check" title="Touche Entrée">Vérifier</button>
+      <button type="button" class="btn ghost" id="ta-sol" title="Le tirage compte alors comme manqué">Correction</button>
+      <button type="button" class="btn ghost" id="ta-new">Nouveau tirage</button></div>
+    <p class="ta-fb" id="ta-fb" aria-live="polite"></p></section>
+  <section class="ta-col ta-col-cor" id="ta-col-cor" aria-labelledby="ta-h-cor"><h2 id="ta-h-cor"><span>3</span> Correction</h2>
+    <p class="ta-vide small" id="ta-vide">La correction pas à pas s'affiche ici dès que ta réponse est juste, ou avec
+    le bouton « Correction » (le tirage compte alors comme manqué).</p>
+    <div class="ta-corr" id="ta-corr" hidden></div></section>
+</main>
+<footer class="ta-foot small"><p>Saisie : nombres décimaux avec une virgule ou un point, signe compris ; <kbd>Tab</kbd> passe
+à la case suivante, <kbd>Entrée</kbd> vérifie, puis lance le tirage suivant quand tout est juste. Tolérance : ± 0,01 m sur
+BA, ± 0,5 % (au moins 0,1) sur le torseur. Un tirage n'est compté réussi que si tout est juste à la première vérification.</p>
+<p class="no-print"><a href="cours-statique-analytique.html">Cours 3 — Statique analytique</a> · <a href="coffre-fort.html">Exercice 3.1</a>
+· <a href="echelle-pompier.html">Exercice 3.2</a> · <a href="cadre-velo.html">Exercice 3.3</a> · <a href="index.html">Accueil</a></p></footer>
+</div></section>
 <script>
 (function () {
   "use strict";
@@ -708,7 +770,7 @@ série de 10 tirages notée sur 20.</p></header></div></div>
   }
   function par(x) { return x < 0 ? "(" + fr(x) + ")" : fr(x); }
 
-  var niv = 1, cur = null, essai = 0, nTirage = 0, stats = { ok: 0, tot: 0, serie: 0, dix: 0, dixTot: 0 };
+  var niv = 1, cur = null, essai = 0, nTirage = 0, interagi = false, reussi = false, stats = { ok: 0, tot: 0, serie: 0, dix: 0, dixTot: 0 };
   
   function tirage() {
     var c = function () { return pas(-0.6, 1.2, 0.1); };
@@ -740,10 +802,10 @@ série de 10 tirages notée sur 20.</p></header></div></div>
   function poser() {
     cur = tirage(); essai = 0;
     var plan = niv < 3;
-    q("#ta-txt").innerHTML = "Le torseur de l'action mécanique de 1 sur 2 est connu au point A, dans la base (x, y, z)" +
-      (plan ? " ; le problème est plan (x, y)" : "") + ". Déterminer le vecteur <span class=\"vec\">BA</span>, puis le torseur au point B.";
-    q("#ta-donnees").innerHTML = "<div>" + torseurHtml("1→2", "A", cur.R, cur.MA, plan) + "</div><p class=\"small\">Forces en N, moments en N·m.</p>" +
-      "<p>A " + coord(cur.A) + " &nbsp; · &nbsp; B " + coord(cur.B) + "</p>";
+    q("#ta-txt").innerHTML = "Action mécanique de 1 sur 2, connue au point A" + (plan ? " ; problème plan (x, y)" : " ; problème dans l'espace") +
+      ". Écris le vecteur <span class=\"vec\">BA</span>, puis le torseur au point B.";
+    q("#ta-donnees").innerHTML = "<div>" + torseurHtml("1→2", "A", cur.R, cur.MA, plan) + "</div>" +
+      "<p><b>A</b> " + coord(cur.A) + " &nbsp; <b>B</b> " + coord(cur.B) + "</p><p class=\"small\">Forces en N, moments en N·m.</p>";
     var ba = ["x", "y"].concat(plan ? [] : ["z"]);
     q("#ta-ba").innerHTML = ba.map(function (c, i) { return champ("ba" + i, "BA<sub>" + c + "</sub>"); }).join("");
     if (plan) {
@@ -755,13 +817,18 @@ série de 10 tirages notée sur 20.</p></header></div></div>
         [0, 1, 2].map(function (i) { return "<tr><td>" + champ("r" + i, ["X", "Y", "Z"][i]) + "</td><td>" + champ("m" + i, ["L", "M", "N"][i] + "<sub>B</sub>") + "</td></tr>"; }).join("") +
         "</table></span>";
     }
-    q("#ta-corr").hidden = true; q("#ta-fb").textContent = ""; q("#ta-fb").className = "";
+    q("#ta-corr").hidden = true; q("#ta-vide").hidden = false; q("#ta-fb").textContent = ""; q("#ta-fb").className = "ta-fb";
     figure();
     q("#ta-n").textContent = ++nTirage;
-    var first = q(".ta-f input"); if (first && document.activeElement && document.activeElement.closest && document.activeElement.closest("#ta")) first.focus();
+    // la grille garde sa place : sur un écran étroit, on y revient seulement si elle est sortie de l'écran
+    var grid = q(".ta-grid"), top = grid.getBoundingClientRect().top;
+    if (interagi && top < 0) grid.scrollIntoView({ block: "start", behavior: "smooth" });
+    var first = q(".ta-f input");
+    if (first && (interagi || matchMedia("(min-width: 701px)").matches)) first.focus({ preventScroll: true });
   }
   function figure() {
     var svg = q("#ta-svg");
+    q("#ta-3d").hidden = niv !== 3;
     if (niv === 3) { svg.style.display = "none"; return; }
     svg.style.display = "";
     var A = cur.A, B = cur.B, R = cur.R, nR = Math.hypot(R[0], R[1]);
@@ -834,8 +901,11 @@ série de 10 tirages notée sur 20.</p></header></div></div>
     });
     essai++;
     var fb = q("#ta-fb"), juste = bons === tous.length;
-    fb.className = juste ? "ok" : "ko";
-    fb.textContent = juste ? "✔ Tout est juste !" : "✘ " + (tous.length - bons) + " case" + (tous.length - bons > 1 ? "s" : "") + " à revoir.";
+    fb.className = "ta-fb " + (juste ? "ok" : "ko");
+    fb.textContent = juste ? "✔ Tout est juste ! Entrée : tirage suivant." : "✘ " + (tous.length - bons) + " case" + (tous.length - bons > 1 ? "s" : "") +
+      " à revoir (en rouge) : corrige et vérifie à nouveau.";
+    reussi = juste;
+    if (!juste) { var ko = q(".ta-f.ko input"); if (ko) ko.focus({ preventScroll: true }); }
     if (essai === 1) compter(juste);
     if (juste) corriger();
   }
@@ -870,13 +940,32 @@ série de 10 tirages notée sur 20.</p></header></div></div>
     h += "<div>" + torseurHtml("1→2", "B", R, c.MB, plan) + "</div>";
     if (plan && c.niv === 1) h += '<p class="small">En A, le moment est nul : la droite d\'action de R passe par A. En B, il ne l\'est plus '
       + "(sauf si B est sur cette droite) : c'est le « bras de levier » qui apparaît.</p>";
-    q("#ta-corr").innerHTML = h; q("#ta-corr").hidden = false;
+    q("#ta-corr").innerHTML = h; q("#ta-corr").hidden = false; q("#ta-vide").hidden = true;
+    // valeur attendue sous chaque case fausse ou vide
+    qa(".ta-f").forEach(function (f) {
+      if (f.classList.contains("ok")) return;
+      if (!f.classList.contains("ko")) f.classList.add("ko");
+      var att = f.querySelector(".ta-att") || f.appendChild(document.createElement("span"));
+      att.className = "ta-att"; att.textContent = "→ " + fr(attendu(f.getAttribute("data-k")));
+    });
+    // écran étroit : la correction est sous la réponse ; on la montre en descendant, jamais en remontant
+    var col = q("#ta-col-cor"), r = col.getBoundingClientRect();
+    if (interagi && r.top > innerHeight - 80) col.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   q("#ta-check").addEventListener("click", verifier);
   q("#ta-sol").addEventListener("click", function () { if (essai === 0) { essai = 1; compter(false); } corriger(); });
-  q("#ta-new").addEventListener("click", poser);   // un tirage passé sans réponse n'est pas compté
-  root.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.closest(".ta-f")) { e.preventDefault(); verifier(); } });
+  q("#ta-new").addEventListener("click", function () { reussi = false; poser(); });   // un tirage passé sans réponse n'est pas compté
+  root.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || !e.target.closest(".ta-f")) return;
+    e.preventDefault();
+    if (reussi) { reussi = false; poser(); } else verifier();
+  });
+  root.addEventListener("pointerdown", function () { interagi = true; });
+  root.addEventListener("keydown", function () { interagi = true; }, true);
+  document.addEventListener("click", function (e) {      // fermer le rappel en cliquant ailleurs
+    var d = q(".ta-aide"); if (d.open && !d.contains(e.target)) d.open = false;
+  });
   qa("[data-niv]").forEach(function (b) {
     b.addEventListener("click", function () {
       niv = +b.getAttribute("data-niv");
