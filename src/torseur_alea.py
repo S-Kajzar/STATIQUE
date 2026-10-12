@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Exercice 3.4 (Niveau 3) — Déplacer un torseur : entraînement à valeurs aléatoires, page autonome.
+"""Exercice 2.1 (Niveau 2) — Déplacer un torseur : entraînement à valeurs aléatoires, page autonome.
 
 Chaque tirage donne un torseur connu au point A et les coordonnées de A et de B ; l'élève écrit le vecteur BA puis le
 torseur au point B (relation de Varignon : la résultante ne change pas, M_B = M_A + BA ∧ R). Trois niveaux : glisseur
@@ -25,7 +25,7 @@ def render_torseur_alea(style, hub_css):
     body = f"""<div class="ta-app" id="ta">
 <header class="ta-top">
   <div class="ta-id"><a class="ta-home no-print" href="index.html" title="Retour à l'accueil" aria-label="Retour à l'accueil">{HOUSE}</a>
-    <span class="mc-tag">Exercice 3.4</span><span class="pastille n3">Niveau 3</span>
+    <span class="mc-tag">Exercice 2.1</span><span class="pastille n2">Niveau 2</span>
     <h1 id="home-title">Déplacer un torseur</h1></div>
   <div class="ta-niv" role="group" aria-label="Choisir le niveau">
     <button type="button" data-niv="1" aria-pressed="true" title="Glisseur dans le plan : moment nul en A">1 · Glisseur plan</button>
@@ -56,8 +56,8 @@ def render_torseur_alea(style, hub_css):
 <footer class="ta-foot small"><p>Saisie : nombres décimaux avec une virgule ou un point, signe compris ; <kbd>Tab</kbd> passe
 à la case suivante, <kbd>Entrée</kbd> vérifie, puis lance le tirage suivant quand tout est juste. Tolérance : ± 0,01 m sur
 BA, ± 0,5 % (au moins 0,1) sur le torseur. Un tirage n'est compté réussi que si tout est juste à la première vérification.</p>
-<p class="no-print"><a href="cours-statique-analytique.html">Cours 3 — Statique analytique</a> · <a href="coffre-fort.html">Exercice 3.1</a>
-· <a href="echelle-pompier.html">Exercice 3.2</a> · <a href="cadre-velo.html">Exercice 3.3</a> · <a href="index.html">Accueil</a></p></footer>
+<p class="no-print"><a href="cours-statique-analytique.html">Cours 3 — Statique analytique</a> · <a href="coffre-fort.html">Exercice 2.2</a>
+· <a href="echelle-pompier.html">Exercice 2.3</a> · <a href="cadre-velo.html">Exercice 2.4</a> · <a href="index.html">Accueil</a></p></footer>
 </div>"""
     return f"""<!DOCTYPE html>
 <html lang="fr">
@@ -66,7 +66,7 @@ BA, ± 0,5 % (au moins 0,1) sur le torseur. Un tirage n'est compté réussi que 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Fichier généré par src/generer.py (contenu : src/torseur_alea.py) : ne pas modifier à la main. -->
 <title>Déplacer un torseur — entraînement — Statique</title>
-<meta name="description" content="Entraînement à valeurs aléatoires (niveau 3) : transporter un torseur d'un point A à un point B, dans le plan et dans l'espace, avec correction pas à pas.">
+<meta name="description" content="Entraînement à valeurs aléatoires (niveau 2) : transporter un torseur d'un point A à un point B, dans le plan et dans l'espace, avec correction pas à pas.">
 {style}
 {hub_css}
 {COURS3_CSS}
@@ -112,7 +112,7 @@ CSS = """<style>
 .ta-col p{margin:0 0 6px}
 #ta-txt{font-size:.92rem}
 #ta .vec{line-height:1} #ta .vec::before{top:-.04em} #ta .vec::after{top:-.24em}
-.ta-donnees{border-left:4px solid var(--n3, #7B3FA0); padding:2px 10px; margin:0 0 6px}
+.ta-donnees{border-left:4px solid var(--bleu); padding:2px 10px; margin:0 0 6px}
 .ta-donnees p{margin:2px 0}
 .ta-donnees .torseur{font-size:.95rem}
 .ta-svg{display:block; width:100%; max-height:min(300px, 36vh); background:#fff; border:1px solid var(--trait-fin)}

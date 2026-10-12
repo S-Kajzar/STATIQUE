@@ -371,9 +371,10 @@ def render_cours3(style, hub_css):
               'aria-hidden="true"></span><button type="button" class="btn ghost" id="qz-reset">Recommencer</button></div>')
 
     liens = "".join(f'<a class="btn ghost" href="{h}">{t}</a>' for h, t in
-                    [("coffre-fort.html", "Exercice 3.1 — Porte de coffre-fort"),
-                     ("echelle-pompier.html", "Exercice 3.2 — Échelle de pompier"),
-                     ("cadre-velo.html", "Exercice 3.3 — Cadre de vélo")])
+                    [("deplacer-torseur.html", "Exercice 2.1 — Déplacer un torseur"),
+                     ("coffre-fort.html", "Exercice 2.2 — Porte de coffre-fort"),
+                     ("echelle-pompier.html", "Exercice 2.3 — Échelle de pompier"),
+                     ("cadre-velo.html", "Exercice 2.4 — Cadre de vélo")])
     body = f"""<div class="cours" id="cours-3">
 <nav class="c-top no-print" aria-label="Navigation"><a href="index.html">{HOUSE} Accueil</a></nav>
 <div class="home-top home-top-single"><div class="home-top-l"><header class="home-head"><span class="mc-tag">Cours 3</span> <span class="pastille n3">Niveau 3</span>

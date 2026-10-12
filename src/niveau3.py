@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Niveau 3 de « Statique » : cours 3 (statique analytique, interactif) et exercices 3.1 à 3.3.
+"""Statique analytique : cours 3 (Niveau 3, interactif) et exercices 2.2 à 2.4 (Niveau 2).
 
 Source : séquence « Statique analytique » (rappel du PFS, torseurs des actions mécaniques transmissibles,
 problème plan, méthode de résolution ; exercices 1 « porte de coffre-fort », 2 « échelle de pompier » et
@@ -950,7 +950,7 @@ def dp_velo():
 
 # ============================================================ définition des exercices
 EXOS = [
-    {"page": "coffre-fort.html", "tag": "Exercice 3.1", "level": "Niveau 3", "title": "Porte de coffre-fort",
+    {"page": "coffre-fort.html", "tag": "Exercice 2.2", "level": "Niveau 2", "pastille": "n2", "title": "Porte de coffre-fort",
      "parts": PARTS_COFFRE, "dp": ("Présentation de la porte", dp_coffre), "vign": "carte-coffre-fort.jpg",
      "mots": ["Graphe des liaisons", "Torseurs", "PFS plan", "Gonds"],
      "alt": "Plan de la porte de coffre-fort : bras, porte, gonds A et B, poids P3 et P4",
@@ -961,7 +961,7 @@ EXOS = [
             "pour trouver les actions sur les gonds A et B.",
      "desc": "Statique analytique : graphe des liaisons, torseurs transmissibles dans le plan, application du PFS à "
              "une porte de coffre-fort articulée sur deux gonds."},
-    {"page": "echelle-pompier.html", "tag": "Exercice 3.2", "level": "Niveau 3", "title": "Échelle de pompier",
+    {"page": "echelle-pompier.html", "tag": "Exercice 2.3", "level": "Niveau 2", "pastille": "n2", "title": "Échelle de pompier",
      "parts": PARTS_ECHELLE, "docs": docs_echelle, "vign": "carte-echelle-pompier.jpg",
      "mots": ["Deux forces", "Trois forces", "PFS plan", "Vérin double effet"],
      "toolbar": atelier.toolbar, "sk_bg": {"ECHELLE": ECH.img}, "decor_helpers": "", "decor": {"ECHELLE": ECH.decor_js()},
@@ -976,7 +976,7 @@ EXOS = [
             "en poussant et en tirant.",
      "desc": "Statique : solide soumis à deux puis à trois forces, résolution graphique et calculée d'une échelle de "
              "pompier, capacité d'un vérin double effet en poussant et en tirant."},
-    {"page": "cadre-velo.html", "tag": "Exercice 3.3", "level": "Niveau 3", "title": "Cadre de vélo tout terrain",
+    {"page": "cadre-velo.html", "tag": "Exercice 2.4", "level": "Niveau 2", "pastille": "n2", "title": "Cadre de vélo tout terrain",
      "parts": PARTS_VELO, "dp": ("Présentation du cadre", dp_velo), "vign": "carte-cadre-velo.jpg",
      "mots": ["Isolements successifs", "Amortisseur", "Trois forces", "Pivot"],
      "alt": "Cadre de VTT tout suspendu : cadre avant, bras arrière et amortisseur",

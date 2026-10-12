@@ -42,13 +42,13 @@ async function remplir(page, vals) {
   await page.click("#ta-check");
 }
 
-test("accueil : carte Exercice 3.4 Niveau 3 vers la page d'entraînement", async () => {
+test("accueil : carte Exercice 2.1 Niveau 2 vers la page d'entraînement", async () => {
   const context = await browser.newContext();
   const page = await context.newPage();
   await page.goto(url("index.html"));
   const carte = page.locator(".mode-card", { hasText: "Déplacer un torseur" });
   assert.equal(await carte.count(), 1);
-  assert.match(await carte.locator(".mc-tag").innerText(), /Exercice 3\.4\s*Niveau 3/);
+  assert.match(await carte.locator(".mc-tag").innerText(), /Exercice 2\.1\s*Niveau 2/);
   assert.equal(await carte.locator("a").getAttribute("href"), "deplacer-torseur.html");
   await context.close();
 });

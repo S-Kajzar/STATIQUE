@@ -13,8 +13,8 @@ Ajouter un exercice : déposer sa page dans src/exercices/, sa vignette (480 × 
 la carte dans EXERCICES (avec "page" : nom du fichier publié). Remplacer une carte « en cours d'édition » : même chose,
 en retirant sa ligne de ENCOURS.
 
-Niveau 3 : le cours 3 (src/cours3.py) et les exercices 3.1 à 3.3 (src/niveau3.py) sont générés ici, sur le gabarit,
-au lieu d'être copiés ; leurs cartes sont décrites dans NIVEAU3.
+Cours 3 (src/cours3.py), exercices 2.1 (src/torseur_alea.py) et 2.2 à 2.4 (src/niveau3.py) sont générés ici, sur
+le gabarit, au lieu d'être copiés ; leurs cartes sont décrites dans NIVEAU3.
 """
 import base64
 import html
@@ -38,7 +38,7 @@ SOUS_TITRE = ("Statique du solide : modéliser les actions mécaniques, applique
 
 # Cartes avec contenu : la page est copiée de src/exercices/<source> vers <page> (lien de retour ajouté).
 EXERCICES = [
-    {"rubrique": "exercices", "tag": "Exercice 2.1", "level": "Niveau 2", "title": "Potence à tirant sur mur",
+    {"rubrique": "exercices", "tag": "Exercice 2.5", "level": "Niveau 2", "title": "Potence à tirant sur mur",
      "mots": ["Isolement", "Deux forces", "Trois forces", "Moments", "Vérification"], "vign": "carte-potence.jpg",
      "alt": "Schéma cinématique de la potence : colonne 1, tirant 2, flèche 3", "page": "potence.html",
      "source": "potence-source.html",
@@ -48,8 +48,6 @@ EXERCICES = [
 ]
 # Cartes « en cours d'édition » : (rubrique, étiquette, niveau, titre, mots-clés)
 ENCOURS = [
-    ("cours", "Cours 1", "Niveau 1", "Principe fondamental de la statique", ["Équilibre", "Résultante", "Moment"]),
-    ("cours", "Cours 2", "Niveau 2", "Isolement et théorèmes généraux", ["Isolement", "Deux forces", "Trois forces"]),
     ("formulaire", "Formulaire", None, "Formulaire de statique", ["Formules", "Unités", "Rappels"]),
     ("exercices", "Exercice 1.1", "Niveau 1", "Équilibre d'un solide", ["Bilan des actions", "Équations", "Résolution"]),
     ("etudes", "Étude 1", None, "Étude de cas", ["Système réel", "Isolement", "Dimensionnement"]),
@@ -62,7 +60,7 @@ NIVEAU3 = [
      "bouton": "Lire le cours"},
 ] + [{"rubrique": "exercices", "tag": e["tag"], "level": e["level"], "title": e["title"], "mots": e["mots"],
       "vign": e["vign"], "alt": e["alt"], "page": e["page"], "exo": e} for e in niveau3.EXOS] + [
-    {"rubrique": "exercices", "tag": "Exercice 3.4", "level": "Niveau 3", "title": "Déplacer un torseur",
+    {"rubrique": "exercices", "tag": "Exercice 2.1", "level": "Niveau 2", "title": "Déplacer un torseur",
      "mots": ["Varignon", "Produit vectoriel", "Tirages aléatoires", "Entraînement"], "vign": "carte-deplacer-torseur.jpg",
      "alt": "Torseur connu en A, transporté au point B par la relation de Varignon", "page": "deplacer-torseur.html",
      "bouton": "S'entraîner"}]
@@ -72,8 +70,9 @@ GRAPHIQUE = [{"rubrique": "cours", "tag": "Cours 1.1", "level": "Niveau 1", "tit
               "alt": "Bride de serrage hydraulique et son levier", "page": "cours-statique-graphique.html",
               "bouton": "Lire le cours"}] + [{"rubrique": "graphique", "tag": e["tag"], "level": e["level"], "title": e["title"], "mots": e["mots"],
               "vign": e["vign"], "alt": e["alt"], "page": e["page"]} for e in graphique.EXOS]
-RUBRIQUES = [("cours", "Les cours"), ("formulaire", "Le formulaire"), ("exercices", "Les exercices"),
-             ("graphique", "Statique graphique : exercices sur document réponse"), ("etudes", "Études de cas")]
+RUBRIQUES = [("cours", "Les cours"), ("formulaire", "Le formulaire"),
+             ("graphique", "Statique graphique : exercices sur document réponse"),
+             ("exercices", "Statique analytique : exercices"), ("etudes", "Études de cas")]
 
 HOUSE = ('<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" '
          'stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/>'

@@ -1,3 +1,17 @@
+# Note de livraison — Réorganisation des niveaux
+
+- Les cartes « Cours 1 » et « Cours 2 », en cours d'édition, sont retirées : la rubrique « Les cours » ne garde que
+  le cours 1.1 Statique graphique (Niveau 1), en premier, puis le cours 3 Statique analytique (Niveau 3).
+- La rubrique « Statique graphique : exercices sur document réponse » (exercices 1.2 à 1.5, Niveau 1) passe au-dessus
+  des exercices de statique analytique, rubrique renommée « Statique analytique : exercices ».
+- Les exercices de statique analytique passent au **Niveau 2** (pastille bleue), « Déplacer un torseur » en premier :
+  2.1 Déplacer un torseur (ancien 3.4), 2.2 Porte de coffre-fort (3.1), 2.3 Échelle de pompier (3.2), 2.4 Cadre de vélo
+  (3.3), 2.5 Potence à tirant sur mur (ancien 2.1). Pages, liens du cours 3 et tests suivent la nouvelle numérotation ;
+  les adresses des pages ne changent pas.
+- Les notes de livraison plus bas gardent l'ancienne numérotation (3.1 à 3.4).
+
+---
+
 # Note de livraison — Atelier de tracé : parallèle, sélection, plein écran, correction pas à pas
 
 Améliorations de l'atelier de statique graphique (exercices 1.2 à 1.5 et 3.2) :
