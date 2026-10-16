@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Cours 3 (Niveau 3) — Statique analytique, page autonome et interactive.
+"""Cours 3 (Niveau 2) — Statique analytique, page autonome et interactive.
 
 Contenu repris de la séquence « Statique analytique » : rappel du PFS (énoncé, solide soumis à deux forces,
 généralisation par les torseurs), torseur d'action mécanique transmissible par une liaison, hypothèse du
@@ -377,7 +377,7 @@ def render_cours3(style, hub_css):
                      ("cadre-velo.html", "Exercice 2.4 — Cadre de vélo")])
     body = f"""<div class="cours" id="cours-3">
 <nav class="c-top no-print" aria-label="Navigation"><a href="index.html">{HOUSE} Accueil</a></nav>
-<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head"><span class="mc-tag">Cours 3</span> <span class="pastille n3">Niveau 3</span>
+<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head"><span class="mc-tag">Cours 3</span> <span class="pastille n2">Niveau 2</span>
 <h1 id="home-title">Statique analytique</h1><p class="home-sub">Résoudre un problème de statique par le calcul : le principe
 fondamental de la statique écrit avec des torseurs, le torseur transmissible par chaque liaison, l'hypothèse du problème
 plan et une méthode en quatre étapes. Environ 1 heure, avec des cartes à retourner, deux jeux, un atelier des liaisons,

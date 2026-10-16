@@ -1,3 +1,11 @@
+# Note de livraison — Cours 3 en Niveau 2
+
+- Seule la pastille change : le cours 3 « Statique analytique » passe en **Niveau 2** (pastille bleue), sur sa carte
+  de l'accueil et dans son en-tête ; son nom « Cours 3 » est conservé. La légende de l'accueil ne mentionne plus de
+  Niveau 3 (aucune page n'en porte).
+
+---
+
 # Note de livraison — Exercice 2.1 « Déplacer un torseur » : séries et plein écran
 
 - **Séries** : menu « Série » dans la barre d'en-tête : types de questions à cocher (glisseur plan, torseur plan,

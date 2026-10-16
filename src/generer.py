@@ -52,9 +52,9 @@ ENCOURS = [
     ("exercices", "Exercice 1.1", "Niveau 1", "Équilibre d'un solide", ["Bilan des actions", "Équations", "Résolution"]),
     ("etudes", "Étude 1", None, "Étude de cas", ["Système réel", "Isolement", "Dimensionnement"]),
 ]
-# Niveau 3 : pages générées (cours 3 par src/cours3.py, exercices par src/niveau3.py)
+# Statique analytique (Niveau 2) : pages générées (cours 3 par src/cours3.py, exercices par src/niveau3.py)
 NIVEAU3 = [
-    {"rubrique": "cours", "tag": "Cours 3", "level": "Niveau 3", "title": "Statique analytique",
+    {"rubrique": "cours", "tag": "Cours 3", "level": "Niveau 2", "title": "Statique analytique",
      "mots": ["PFS", "Torseurs", "Problème plan", "Méthode"], "vign": "carte-cours-statique-analytique.jpg",
      "alt": "Solide en équilibre sous deux forces directement opposées", "page": "cours-statique-analytique.html",
      "bouton": "Lire le cours"},
@@ -120,7 +120,7 @@ def render_hub():
     return (f'<div class="home-top home-top-single"><div class="home-top-l"><header class="home-head">'
             f'<h1 id="home-title">{TITRE}</h1><p class="home-sub">{SOUS_TITRE}</p></header></div></div>'
             f'{sections}<p class="home-note small">Pastilles : {pastille("Niveau 1").strip()} premier niveau, '
-            f'{pastille("Niveau 2").strip()} niveau approfondi, {pastille("Niveau 3").strip()} statique analytique. Les cartes légèrement transparentes sont en cours '
+            f'{pastille("Niveau 2").strip()} niveau approfondi. Les cartes légèrement transparentes sont en cours '
             "d'édition. Rien n'est enregistré sur l'ordinateur.</p>")
 
 

@@ -11,7 +11,7 @@ même accueil en cartes illustrées). Publié par GitHub Pages depuis `index.htm
 | `pince-kobelco.html` | Exercice 1.3 (Niveau 1) — Pince de démolition : 3 parties, 11 questions et 2 tracés sur DR, 1 h 05 |
 | `cric-hydraulique.html` | Exercice 1.4 (Niveau 1) — Cric hydraulique roulant : 3 parties, 9 questions et 1 tracé sur DR, 1 h 10 |
 | `suspension-vtt.html` | Exercice 1.5 (Niveau 1) — Suspension arrière de VTT : 3 parties, 11 questions et 1 tracé sur DR, 1 h 10 |
-| `cours-statique-analytique.html` | Cours 3 (Niveau 3) — Statique analytique : balance, jeux, cartes à retourner, atelier des liaisons, calculateur de moment, poutre résolue pas à pas, quiz |
+| `cours-statique-analytique.html` | Cours 3 (Niveau 2) — Statique analytique : balance, jeux, cartes à retourner, atelier des liaisons, calculateur de moment, poutre résolue pas à pas, quiz |
 | `deplacer-torseur.html` | Exercice 2.1 (Niveau 2) — Déplacer un torseur : séries de 5, 10, 15 ou 20 questions aléatoires (glisseur plan, torseur plan, torseur 3D, au choix), vecteur BA en colonne et torseur en B à écrire, figure (perspective en 3D), correction pas à pas, note sur 20 ; page plein écran (3 colonnes, 2 sur tablette, 1 sur téléphone) |
 | `coffre-fort.html` | Exercice 2.2 (Niveau 2) — Porte de coffre-fort : 3 parties, 4 torseurs ou vecteurs à compléter, 2 questions et 1 tracé, 1 h |
 | `echelle-pompier.html` | Exercice 2.3 (Niveau 2) — Échelle de pompier : 5 parties (vérin isolé, résolution graphique sur DR avec l'atelier de tracé, torseurs, PFS en A, capacité du vérin double effet en poussant et en tirant), 1 tracé, 1 h 45 |

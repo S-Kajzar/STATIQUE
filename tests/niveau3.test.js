@@ -39,25 +39,25 @@ async function drawLine(page, sk, x1, y1, x2, y2) {
   await page.mouse.up();
 }
 
-test("accueil : cours 3 (Niveau 3), exercices 2.1 à 2.5 (Niveau 2), statique graphique au-dessus, sans cours en édition", async () => {
+test("accueil : cours 3 et exercices 2.1 à 2.5 en Niveau 2, statique graphique au-dessus, sans cours en édition", async () => {
   const { context, page, errors } = await open("index.html");
   const cards = await page.locator(".mode-card").evaluateAll((cs) => cs.map((c) => [
     c.querySelector(".mc-tag").textContent.trim(), c.querySelector("h3").textContent,
     (c.querySelector("a") || { getAttribute: () => null }).getAttribute("href")]));
-  for (const exp of [["Cours 3 Niveau 3", "Statique analytique", "cours-statique-analytique.html"],
+  for (const exp of [["Cours 3 Niveau 2", "Statique analytique", "cours-statique-analytique.html"],
     ["Exercice 2.1 Niveau 2", "Déplacer un torseur", "deplacer-torseur.html"],
     ["Exercice 2.2 Niveau 2", "Porte de coffre-fort", "coffre-fort.html"],
     ["Exercice 2.3 Niveau 2", "Échelle de pompier", "echelle-pompier.html"],
     ["Exercice 2.4 Niveau 2", "Cadre de vélo tout terrain", "cadre-velo.html"],
     ["Exercice 2.5 Niveau 2", "Potence à tirant sur mur", "potence.html"]])
     assert.ok(cards.some((c) => JSON.stringify(c) === JSON.stringify(exp)), exp.join(" | "));
-  assert.equal(await page.locator(".pastille.n3").count(), 2); // la carte du cours 3 + la légende
+  assert.equal(await page.locator(".pastille.n3").count(), 0); // plus aucune pastille Niveau 3, légende comprise
   // ordre des rubriques et des cartes ; plus aucun cours « en cours d'édition »
   const plan = await page.evaluate(() => Array.from(document.querySelectorAll(".home-choose, .mode-card")).map((e) =>
     e.classList.contains("home-choose") ? "#" + e.textContent : e.querySelector(".mc-tag").textContent.trim().replace(/\s+/g, " ")));
   const iG = plan.indexOf("#Statique graphique : exercices sur document réponse"), iA = plan.indexOf("#Statique analytique : exercices");
   assert.ok(iG > 0 && iA > iG, "statique graphique au-dessus de la statique analytique");
-  assert.deepEqual(plan.slice(1, plan.indexOf("#Le formulaire")), ["Cours 1.1 Niveau 1", "Cours 3 Niveau 3"]);
+  assert.deepEqual(plan.slice(1, plan.indexOf("#Le formulaire")), ["Cours 1.1 Niveau 1", "Cours 3 Niveau 2"]);
   assert.deepEqual(plan.slice(iA + 1).filter((x) => x.startsWith("Exercice 2")),
     ["Exercice 2.1 Niveau 2", "Exercice 2.2 Niveau 2", "Exercice 2.3 Niveau 2", "Exercice 2.4 Niveau 2", "Exercice 2.5 Niveau 2"]);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -68,7 +68,7 @@ test("accueil : cours 3 (Niveau 3), exercices 2.1 à 2.5 (Niveau 2), statique gr
 
 test("cours 3 : balance, jeux, cartes, atelier des liaisons, moment, poutre pas à pas, quiz", async () => {
   const { context, page, errors } = await open("cours-statique-analytique.html");
-  assert.match(await text(page, ".home-head"), /Cours 3[\s\S]*Niveau 3[\s\S]*Statique analytique/);
+  assert.match(await text(page, ".home-head"), /Cours 3[\s\S]*Niveau 2[\s\S]*Statique analytique/);
   assert.equal(await page.locator(".cours-sec").count(), 8);
   // balance : R = P = m g
   await page.fill("#bal-in", "100");
